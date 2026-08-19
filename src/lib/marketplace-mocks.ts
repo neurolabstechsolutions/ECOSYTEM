@@ -1,0 +1,768 @@
+export interface VehicleSpec {
+  engine: string;
+  horsepower: number;
+  torque?: string;
+  acceleration: string; // e.g. "0-100 km/h: 3.8s"
+  traction: "AWD" | "RWD" | "FWD" | "4x4";
+  fuelEconomy?: string; // e.g. "34 MPG / 8.2L/100km"
+  transmissionDetails?: string;
+}
+
+export interface DealershipInfo {
+  name: string;
+  domain: string;
+  tagline: string;
+  phone: string;
+  whatsappPhone: string;
+  whatsappMessageTemplate?: string;
+  address: string;
+  city: string;
+  rating: number;
+  reviewsCount: number;
+  verified: boolean;
+  logoText?: string;
+  businessHours: string;
+  badges: string[];
+}
+
+export interface Vehicle {
+  id: string;
+  brand: string;
+  model: string;
+  trim?: string;
+  year: number;
+  price: number; // in USD
+  currency: string;
+  originalPrice?: number;
+  monthlyEstimate: number; // e.g. $650/mo
+  mileage: number; // in km
+  fuelType: "Gasolina" | "Híbrido" | "Eléctrico" | "Diésel";
+  transmission: "Automática" | "Secuencial / DCT" | "Manual";
+  bodyType: "SUV" | "Sedan" | "Coupe" | "Convertible" | "Pickup" | "Hatchback";
+  region: string;
+  city: string;
+  exteriorColor: string;
+  interiorColor: string;
+  doors: number;
+  condition: "Nuevo" | "Seminuevo Certificado" | "Usado Garantizado";
+  badge?: "Certificado" | "Único Dueño" | "Garantía 2 Años" | "Entrega Inmediata" | "Híbrido Eco" | "Oportunidad";
+  featured?: boolean;
+  vin: string;
+  plateEnding?: string; // e.g. "Terminada en 4"
+  images: string[];
+  specs: VehicleSpec;
+  keyFeatures: string[];
+  inspectionScore: number; // out of 100
+  dealer: DealershipInfo;
+}
+
+export const REGIONS_LIST = [
+  "Todas las Regiones",
+  "Bogotá D.C.",
+  "Medellín (Antioquia)",
+  "Cali (Valle)",
+  "Barranquilla (Atlántico)",
+  "Bucaramanga (Santander)",
+  "Eje Cafetero",
+];
+
+export const BRANDS_LIST = [
+  "Todas las Marcas",
+  "Porsche",
+  "BMW",
+  "Mercedes-Benz",
+  "Audi",
+  "Toyota",
+  "Tesla",
+  "Land Rover",
+  "Volvo",
+  "Ford",
+  "Lexus",
+];
+
+export const BODY_TYPES = [
+  "Todos",
+  "SUV",
+  "Sedan",
+  "Coupe",
+  "Convertible",
+  "Pickup",
+];
+
+export const FUEL_TYPES = [
+  "Todos",
+  "Gasolina",
+  "Híbrido",
+  "Eléctrico",
+  "Diésel",
+];
+
+export const DEFAULT_DEALER: DealershipInfo = {
+  name: "Prestige Auto Hub",
+  domain: "prestige",
+  tagline: "Inventario Exclusivo de Vehículos Premium & Seminuevos Certificados",
+  phone: "+1 (800) 459-2886",
+  whatsappPhone: "573009876543",
+  address: "Av. Principal Luxury Corridor #104-20",
+  city: "Bogotá D.C. & Concesionarios Aliados",
+  rating: 4.9,
+  reviewsCount: 384,
+  verified: true,
+  businessHours: "Lun - Sáb: 8:00 AM - 7:00 PM | Dom: 10:00 AM - 4:00 PM",
+  badges: ["Inspección 150 Puntos", "Garantía Mecánica", "Aprobación de Crédito 24h", "Retoma de Usados"],
+};
+
+export const MOCK_INVENTORY: Vehicle[] = [
+  {
+    id: "car-001",
+    brand: "Porsche",
+    model: "911 Carrera S",
+    trim: "Sport Chrono Package PDK",
+    year: 2023,
+    price: 138500,
+    originalPrice: 145000,
+    currency: "USD",
+    monthlyEstimate: 1850,
+    mileage: 8400,
+    fuelType: "Gasolina",
+    transmission: "Secuencial / DCT",
+    bodyType: "Coupe",
+    region: "Bogotá D.C.",
+    city: "Bogotá - Zona Norte",
+    exteriorColor: "Crayon Gray / Nardo",
+    interiorColor: "Cuero Negro con costuras Rojas",
+    doors: 2,
+    condition: "Seminuevo Certificado",
+    badge: "Certificado",
+    featured: true,
+    vin: "WP0AB2A98NS29104",
+    plateEnding: "Placa terminada en 8",
+    images: [
+      "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "3.0L Boxer Twin-Turbo 6 Cil.",
+      horsepower: 450,
+      torque: "530 Nm",
+      acceleration: "0-100 km/h: 3.5s",
+      traction: "RWD",
+      fuelEconomy: "28 MPG Combinado",
+      transmissionDetails: "PDK 8 Velocidades Doble Embrague",
+    },
+    keyFeatures: [
+      "Paquete Sport Chrono",
+      "Escape Deportivo Activo",
+      "Rines Carrera Classic 20/21''",
+      "Sistema de Sonido BOSE Surround",
+      "Faros LED Matrix PDLS+",
+      "Asientos Deportivos Plus 18 Vías",
+    ],
+    inspectionScore: 99,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-002",
+    brand: "BMW",
+    model: "M4 Competition",
+    trim: "M xDrive Carbon Package",
+    year: 2024,
+    price: 98900,
+    originalPrice: 104000,
+    currency: "USD",
+    monthlyEstimate: 1320,
+    mileage: 4200,
+    fuelType: "Gasolina",
+    transmission: "Automática",
+    bodyType: "Coupe",
+    region: "Medellín (Antioquia)",
+    city: "Medellín - El Poblado",
+    exteriorColor: "Isle of Man Green",
+    interiorColor: "Cuero Merino Silverstone / Negro",
+    doors: 2,
+    condition: "Seminuevo Certificado",
+    badge: "Único Dueño",
+    featured: true,
+    vin: "WBS43AY00PFP88231",
+    plateEnding: "Placa terminada en 3",
+    images: [
+      "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1580274455191-1c62238fa333?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "3.0L BMW M TwinPower Turbo 6L",
+      horsepower: 510,
+      torque: "650 Nm",
+      acceleration: "0-100 km/h: 3.4s",
+      traction: "AWD",
+      fuelEconomy: "24 MPG",
+      transmissionDetails: "M Steptronic 8 Vel. con Drivelogic",
+    },
+    keyFeatures: [
+      "Tracción Total M xDrive configurable",
+      "Techo en Fibra de Carbono",
+      "Frenos M Compound con calipers rojos",
+      "Head-Up Display M con Telemetría",
+      "BMW Live Cockpit Professional con pantalla curva",
+      "Escape M Performance activo",
+    ],
+    inspectionScore: 98,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-003",
+    brand: "Mercedes-Benz",
+    model: "C300 AMG Line",
+    trim: "Night Edition 4MATIC Mild-Hybrid",
+    year: 2023,
+    price: 54900,
+    originalPrice: 58000,
+    currency: "USD",
+    monthlyEstimate: 740,
+    mileage: 16800,
+    fuelType: "Híbrido",
+    transmission: "Automática",
+    bodyType: "Sedan",
+    region: "Bogotá D.C.",
+    city: "Bogotá - Chicó",
+    exteriorColor: "Blanco Polar / Night Package",
+    interiorColor: "Cuero Artico Negro",
+    doors: 4,
+    condition: "Seminuevo Certificado",
+    badge: "Híbrido Eco",
+    featured: true,
+    vin: "W1K2060471F198302",
+    plateEnding: "Placa terminada en 5",
+    images: [
+      "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "2.0L Turbo 4 Cil. + EQ Boost 48V",
+      horsepower: 258,
+      torque: "400 Nm",
+      acceleration: "0-100 km/h: 5.7s",
+      traction: "AWD",
+      fuelEconomy: "38 MPG Combinado",
+      transmissionDetails: "9G-TRONIC Automática 9 Vel.",
+    },
+    keyFeatures: [
+      "Paquete exterior e interior AMG Line",
+      "MBUX Pantalla Central OLED 11.9''",
+      "Luces DIGITAL LIGHT adaptativas",
+      "Sonido Surround Burmester 3D",
+      "Techo Panorámico Corredizo",
+      "Sin restricción de pico y placa (Eco)",
+    ],
+    inspectionScore: 97,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-004",
+    brand: "Land Rover",
+    model: "Defender 110",
+    trim: "X-Dynamic SE P400 3.0 MHEV",
+    year: 2023,
+    price: 94500,
+    originalPrice: 99000,
+    currency: "USD",
+    monthlyEstimate: 1280,
+    mileage: 22000,
+    fuelType: "Híbrido",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Cali (Valle)",
+    city: "Cali - Ciudad Jardín",
+    exteriorColor: "Santorini Black Metallic",
+    interiorColor: "Robustec & Cuero Windsor Ebony",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Garantía 2 Años",
+    featured: true,
+    vin: "SALWR2V45PA771923",
+    plateEnding: "Placa terminada en 1",
+    images: [
+      "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "3.0L i6 Turbocharged MHEV",
+      horsepower: 400,
+      torque: "550 Nm",
+      acceleration: "0-100 km/h: 6.1s",
+      traction: "4x4",
+      fuelEconomy: "26 MPG",
+      transmissionDetails: "Automática ZF 8 Vel. con Reductora",
+    },
+    keyFeatures: [
+      "Suspensión Neumática Electrónica Adaptativa",
+      "Terrain Response 2 con Modos Off-road",
+      "Cámaras 3D Surround 360° con ClearSight",
+      "Sistema de Infoentretenimiento Pivi Pro 11.4''",
+      "Enganche de remolque eléctrico y barras de techo",
+      "Rines de 20'' Gloss Dark Grey",
+    ],
+    inspectionScore: 96,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-005",
+    brand: "Audi",
+    model: "RS6 Avant",
+    trim: "Dynamic Plus Carbon Black",
+    year: 2023,
+    price: 142000,
+    originalPrice: 149000,
+    currency: "USD",
+    monthlyEstimate: 1910,
+    mileage: 11300,
+    fuelType: "Híbrido",
+    transmission: "Automática",
+    bodyType: "Sedan",
+    region: "Bogotá D.C.",
+    city: "Bogotá - Santa Ana",
+    exteriorColor: "Nardo Gray Special Edition",
+    interiorColor: "Cuero Valcona con costuras en Panal",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Certificado",
+    featured: true,
+    vin: "WAUZZZF27PN018247",
+    plateEnding: "Placa terminada en 9",
+    images: [
+      "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "4.0L V8 Twin-Turbo TFSI MHEV",
+      horsepower: 600,
+      torque: "800 Nm",
+      acceleration: "0-100 km/h: 3.6s",
+      traction: "AWD",
+      fuelEconomy: "22 MPG",
+      transmissionDetails: "Tiptronic 8 Vel. con Tracción Quattro",
+    },
+    keyFeatures: [
+      "Tracción Total Quattro con Diferencial Deportivo",
+      "Eje Trasero Direccional Activo",
+      "Frenos Cerámicos RS",
+      "Faros HD Matrix LED con Láser Audi",
+      "Sonido Bang & Olufsen 3D Advanced 19 Altavoces",
+      "Escape Deportivo RS en Negro",
+    ],
+    inspectionScore: 99,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-006",
+    brand: "Tesla",
+    model: "Model Y Performance",
+    trim: "Dual Motor All-Wheel Drive",
+    year: 2024,
+    price: 52900,
+    originalPrice: 56000,
+    currency: "USD",
+    monthlyEstimate: 710,
+    mileage: 6100,
+    fuelType: "Eléctrico",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Medellín (Antioquia)",
+    city: "Medellín - Llanogrande",
+    exteriorColor: "Deep Blue Metallic",
+    interiorColor: "Interior Premium Blanco & Negro",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Entrega Inmediata",
+    featured: false,
+    vin: "5YJYGDED8PF901924",
+    plateEnding: "Placa terminada en 6",
+    images: [
+      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1536700503339-1e4b06520771?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1571127236794-81c0bbfe1ce3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "Dual Motor Eléctrico AWD (514 HP)",
+      horsepower: 514,
+      torque: "660 Nm",
+      acceleration: "0-100 km/h: 3.5s",
+      traction: "AWD",
+      fuelEconomy: "Autonomía EPA: 514 km",
+      transmissionDetails: "Transmisión Eléctrica de 1 Marcha",
+    },
+    keyFeatures: [
+      "Autopilot con Conducción Autónoma Total (FSD)",
+      "Aceleración 0-100 en 3.5s con Modo Pista",
+      "Rines Überturbine de 21 pulgadas",
+      "Frenos Performance con calipers rojos",
+      "Techo de cristal panorámico continuo",
+      "Carga Ultra Rápida Supercharger V3",
+    ],
+    inspectionScore: 98,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-007",
+    brand: "Toyota",
+    model: "Land Cruiser 300",
+    trim: "GR-Sport 3.3L Twin-Turbo Diesel",
+    year: 2023,
+    price: 126000,
+    originalPrice: 132000,
+    currency: "USD",
+    monthlyEstimate: 1690,
+    mileage: 18500,
+    fuelType: "Diésel",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Barranquilla (Atlántico)",
+    city: "Barranquilla - Altos de Riomar",
+    exteriorColor: "Blanco Perla / Detalles GR",
+    interiorColor: "Cuero Negro con costuras GR Rojas",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Certificado",
+    featured: true,
+    vin: "JTEBX7AJ6N4018239",
+    plateEnding: "Placa terminada en 2",
+    images: [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "3.3L V6 Twin-Turbo Diésel",
+      horsepower: 302,
+      torque: "700 Nm",
+      acceleration: "0-100 km/h: 6.9s",
+      traction: "4x4",
+      fuelEconomy: "31 MPG",
+      transmissionDetails: "Direct Shift Automática 10 Vel.",
+    },
+    keyFeatures: [
+      "Suspensión E-KDSS Electrónica Avanzada",
+      "Bloqueos de Diferencial Delantero, Central y Trasero",
+      "Pantalla Táctil HD de 12.3'' con JBL 14 Altavoces",
+      "Toyota Safety Sense 2.5+",
+      "Nevera Central Cool Box",
+      "Blindaje nivel 2 Plus opcional disponible",
+    ],
+    inspectionScore: 97,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-008",
+    brand: "Volvo",
+    model: "XC90 Recharge",
+    trim: "Ultimate T8 Dark Theme Plug-in Hybrid",
+    year: 2023,
+    price: 76500,
+    originalPrice: 82000,
+    currency: "USD",
+    monthlyEstimate: 1030,
+    mileage: 14000,
+    fuelType: "Híbrido",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Bogotá D.C.",
+    city: "Bogotá - Rosales",
+    exteriorColor: "Platinum Gray Metallic",
+    interiorColor: "Cuero Nappa Perforado Ámbar",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Híbrido Eco",
+    featured: false,
+    vin: "YV4A22PK0P1982741",
+    plateEnding: "Placa terminada en 7",
+    images: [
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "2.0L Turbo Supercargado + Motor Eléctrico",
+      horsepower: 455,
+      torque: "709 Nm",
+      acceleration: "0-100 km/h: 5.3s",
+      traction: "AWD",
+      fuelEconomy: "Autonomía EV: 73 km (110 MPGe)",
+      transmissionDetails: "Geartronic Automática 8 Vel.",
+    },
+    keyFeatures: [
+      "7 Pasajeros en 3 Filas de Asientos Reales",
+      "Sonido Bowers & Wilkins High Fidelity 19 Parlantes",
+      "Palanca de Cambios en Cristal Orrefors hecho a mano",
+      "Google Built-In con Asistente y Google Maps nativo",
+      "Purificador de Aire Avanzado PM2.5",
+      "Suspensión Neumática con 4 Modos",
+    ],
+    inspectionScore: 98,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-009",
+    brand: "Ford",
+    model: "Mustang Mach 1",
+    trim: "5.0L V8 Tremec Manual",
+    year: 2022,
+    price: 58900,
+    originalPrice: 63000,
+    currency: "USD",
+    monthlyEstimate: 790,
+    mileage: 15400,
+    fuelType: "Gasolina",
+    transmission: "Manual",
+    bodyType: "Coupe",
+    region: "Bucaramanga (Santander)",
+    city: "Bucaramanga - Cabecera",
+    exteriorColor: "Fighter Jet Gray con franjas Naranjas",
+    interiorColor: "Asientos Recaro en Cuero Negro",
+    doors: 2,
+    condition: "Seminuevo Certificado",
+    badge: "Oportunidad",
+    featured: false,
+    vin: "1FA6P8R05N5512093",
+    plateEnding: "Placa terminada en 0",
+    images: [
+      "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1547744152-14d985cb937f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "5.0L V8 Coyote Naturally Aspirated",
+      horsepower: 470,
+      torque: "569 Nm",
+      acceleration: "0-100 km/h: 4.1s",
+      traction: "RWD",
+      fuelEconomy: "20 MPG",
+      transmissionDetails: "Tremec 3160 Manual 6 Vel. Rev-Match",
+    },
+    keyFeatures: [
+      "Suspensión MagneRide con Calibración de Circuito",
+      "Diferencial Torsen de Deslizamiento Limitado",
+      "Frenos Brembo de 6 pistones delanteros",
+      "Escape con Válvula Activa de 4 Salidas",
+      "Asientos Deportivos Recaro de Fábrica",
+      "Radiadores adicionales del Shelby GT350",
+    ],
+    inspectionScore: 96,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-010",
+    brand: "Porsche",
+    model: "Macan GTS",
+    trim: "2.9L Twin-Turbo PDK",
+    year: 2023,
+    price: 88500,
+    originalPrice: 94000,
+    currency: "USD",
+    monthlyEstimate: 1190,
+    mileage: 12800,
+    fuelType: "Gasolina",
+    transmission: "Secuencial / DCT",
+    bodyType: "SUV",
+    region: "Medellín (Antioquia)",
+    city: "Medellín - Envigado",
+    exteriorColor: "Carmine Red",
+    interiorColor: "Paquete GTS Alcantara / Cuero con costuras Carmine",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Certificado",
+    featured: true,
+    vin: "WP1AB2AY9PLA19024",
+    plateEnding: "Placa terminada en 4",
+    images: [
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "2.9L V6 Twin-Turbocharged",
+      horsepower: 440,
+      torque: "550 Nm",
+      acceleration: "0-100 km/h: 4.3s",
+      traction: "AWD",
+      fuelEconomy: "25 MPG",
+      transmissionDetails: "PDK 7 Velocidades",
+    },
+    keyFeatures: [
+      "Suspensión Neumática con PASM y rebaje de 10mm",
+      "Porsche Torque Vectoring Plus (PTV Plus)",
+      "Paquete Sport Chrono con selector de modos",
+      "Frenos Porsche Surface Coated Brake (PSCB)",
+      "Rines RS Spyder Design de 21'' en Negro Satinado",
+      "Sonido Bose Surround Sound",
+    ],
+    inspectionScore: 98,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-011",
+    brand: "BMW",
+    model: "X5 xDrive45e M-Sport",
+    trim: "Plug-in Hybrid AWD",
+    year: 2023,
+    price: 79900,
+    originalPrice: 85000,
+    currency: "USD",
+    monthlyEstimate: 1070,
+    mileage: 19500,
+    fuelType: "Híbrido",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Bogotá D.C.",
+    city: "Bogotá - Cedritos",
+    exteriorColor: "Mineral White Metallic",
+    interiorColor: "Cuero Vernasca Coffee",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Híbrido Eco",
+    featured: false,
+    vin: "5UXTA6C07N9A48201",
+    plateEnding: "Placa terminada en 8",
+    images: [
+      "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1580274455191-1c62238fa333?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "3.0L Turbo 6L + Motor Eléctrico",
+      horsepower: 394,
+      torque: "600 Nm",
+      acceleration: "0-100 km/h: 5.6s",
+      traction: "AWD",
+      fuelEconomy: "Autonomía Eléctrica: 85 km",
+      transmissionDetails: "Steptronic 8 Vel. con levas al volante",
+    },
+    keyFeatures: [
+      "Paquete Aerodinámico M Sport",
+      "Techo Panorámico Sky Lounge con iluminación LED",
+      "Luces Láser BMW con alcance 500m",
+      "Suspensión neumática autonivelante en 2 ejes",
+      "Acceso de confort y puertas con Soft-Close",
+      "Exento de Pico y Placa nacional",
+    ],
+    inspectionScore: 97,
+    dealer: DEFAULT_DEALER,
+  },
+  {
+    id: "car-012",
+    brand: "Lexus",
+    model: "RX 350 F-Sport",
+    trim: "Luxury AWD All-New Generation",
+    year: 2024,
+    price: 67900,
+    originalPrice: 72000,
+    currency: "USD",
+    monthlyEstimate: 910,
+    mileage: 7200,
+    fuelType: "Gasolina",
+    transmission: "Automática",
+    bodyType: "SUV",
+    region: "Eje Cafetero",
+    city: "Pereira - Circunvalar",
+    exteriorColor: "Iridium Silver Metallic",
+    interiorColor: "Cuero F-Sport Circuit Red",
+    doors: 5,
+    condition: "Seminuevo Certificado",
+    badge: "Único Dueño",
+    featured: false,
+    vin: "2T2HZCAAXRC019842",
+    plateEnding: "Placa terminada en 5",
+    images: [
+      "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      engine: "2.4L Turbo 4 Cil. D-4ST",
+      horsepower: 275,
+      torque: "430 Nm",
+      acceleration: "0-100 km/h: 7.2s",
+      traction: "AWD",
+      fuelEconomy: "29 MPG Combinado",
+      transmissionDetails: "Direct Shift Automática 8 Vel.",
+    },
+    keyFeatures: [
+      "Parrilla Spindle Body exclusiva F-Sport",
+      "Pantalla Táctil Multimedia Lexus Interface de 14''",
+      "Sistema de Audio Mark Levinson 21 Altavoces",
+      "Lexus Safety System+ 3.0",
+      "Suspensión Adaptativa Variable (AVS)",
+      "Head-Up Display a color de 10''",
+    ],
+    inspectionScore: 99,
+    dealer: DEFAULT_DEALER,
+  }
+];
+
+export function getDealershipByDomain(domain: string): DealershipInfo {
+  const formattedDomain = (domain || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+  
+  if (!formattedDomain || formattedDomain === "demo" || formattedDomain === "default") {
+    return DEFAULT_DEALER;
+  }
+
+  // Pre-configured custom domains
+  const presets: Record<string, Partial<DealershipInfo>> = {
+    "autohaus": {
+      name: "Autohaus German Motors",
+      tagline: "Especialistas en Vehículos Alemanes de Alto Rendimiento",
+      phone: "+1 (800) 555-0199",
+      whatsappPhone: "573105550199",
+      city: "Bogotá D.C. & Medellín",
+      rating: 4.95,
+      reviewsCount: 420,
+      badges: ["Garantía Alemana 100%", "Inspección Certificada Dekra", "Financiación Premium"],
+    },
+    "luxurymotors": {
+      name: "Luxury Motors International",
+      tagline: "Curaduría de Superdeportivos y SUVs de Lujo",
+      phone: "+1 (800) 777-9000",
+      whatsappPhone: "573207779000",
+      city: "Medellín - El Poblado",
+      rating: 5.0,
+      reviewsCount: 290,
+      badges: ["Exclusividad Garantizada", "Entrega Puerta a Puerta", "Blindaje Certificado"],
+    },
+    "andina": {
+      name: "Andina Autos & Concesionario",
+      tagline: "Líderes en Compra, Venta y Retoma de Vehículos Multimarca",
+      phone: "+1 (800) 333-1122",
+      whatsappPhone: "573153331122",
+      city: "Cali & Eje Cafetero",
+      rating: 4.88,
+      reviewsCount: 512,
+      badges: ["Financiación Inmediata", "Retoma de Tu Usado", "Garantía de Fábrica"],
+    }
+  };
+
+  const preset = presets[formattedDomain];
+  if (preset) {
+    return {
+      ...DEFAULT_DEALER,
+      domain: formattedDomain,
+      ...preset,
+    };
+  }
+
+  // Auto-generate clean corporate dealership name from custom domain
+  const cleanName = formattedDomain
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  return {
+    ...DEFAULT_DEALER,
+    name: `${cleanName} Motors`,
+    domain: formattedDomain,
+    tagline: `Concesionario Oficial & Marketplace Certificado ${cleanName}`,
+  };
+}
