@@ -98,11 +98,11 @@ export const FUEL_TYPES = [
 ];
 
 export const DEFAULT_DEALER: DealershipInfo = {
-  name: "Prestige Auto Hub",
-  domain: "prestige",
+  name: "Trinova Motors",
+  domain: "jjtrinova",
   tagline: "Inventario Exclusivo de Vehículos Premium & Seminuevos Certificados",
-  phone: "+1 (800) 459-2886",
-  whatsappPhone: "573009876543",
+  phone: "+57 (300) 576-5530",
+  whatsappPhone: "573005765530",
   address: "Av. Principal Luxury Corridor #104-20",
   city: "Bogotá D.C. & Concesionarios Aliados",
   rating: 4.9,
@@ -706,12 +706,22 @@ export const MOCK_INVENTORY: Vehicle[] = [
 export function getDealershipByDomain(domain: string): DealershipInfo {
   const formattedDomain = (domain || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
   
-  if (!formattedDomain || formattedDomain === "demo" || formattedDomain === "default") {
+  if (!formattedDomain || formattedDomain === "demo" || formattedDomain === "default" || formattedDomain.startsWith("ecosystem") || formattedDomain.includes("vercel")) {
     return DEFAULT_DEALER;
   }
 
   // Pre-configured custom domains
   const presets: Record<string, Partial<DealershipInfo>> = {
+    "jjtrinova": {
+      name: "Trinova Motors",
+      tagline: "Marketplace Oficial & Corretaje Vehicular Certificado",
+      phone: "+57 (300) 576-5530",
+      whatsappPhone: "573005765530",
+      city: "Bogotá D.C. & Concesionarios Aliados",
+      rating: 4.98,
+      reviewsCount: 412,
+      badges: ["Mandato Certificado", "Inspección Pericial 360°", "Firma Digital Segura"],
+    },
     "autohaus": {
       name: "Autohaus German Motors",
       tagline: "Especialistas en Vehículos Alemanes de Alto Rendimiento",
@@ -731,16 +741,6 @@ export function getDealershipByDomain(domain: string): DealershipInfo {
       rating: 5.0,
       reviewsCount: 290,
       badges: ["Exclusividad Garantizada", "Entrega Puerta a Puerta", "Blindaje Certificado"],
-    },
-    "andina": {
-      name: "Andina Autos & Concesionario",
-      tagline: "Líderes en Compra, Venta y Retoma de Vehículos Multimarca",
-      phone: "+1 (800) 333-1122",
-      whatsappPhone: "573153331122",
-      city: "Cali & Eje Cafetero",
-      rating: 4.88,
-      reviewsCount: 512,
-      badges: ["Financiación Inmediata", "Retoma de Tu Usado", "Garantía de Fábrica"],
     }
   };
 
@@ -753,16 +753,5 @@ export function getDealershipByDomain(domain: string): DealershipInfo {
     };
   }
 
-  // Auto-generate clean corporate dealership name from custom domain
-  const cleanName = formattedDomain
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-
-  return {
-    ...DEFAULT_DEALER,
-    name: `${cleanName} Motors`,
-    domain: formattedDomain,
-    tagline: `Concesionario Oficial & Marketplace Certificado ${cleanName}`,
-  };
+  return DEFAULT_DEALER;
 }
