@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
+import { GlobalAICopilot } from "@/components/global-ai-copilot"
 
 export default function DashboardLayout({
   children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+      <GlobalAICopilot />
     </SidebarProvider>
   )
 }
