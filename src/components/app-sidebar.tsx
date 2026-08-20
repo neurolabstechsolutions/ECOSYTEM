@@ -24,6 +24,7 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
+    <Sidebar variant="inset" className="bg-white border-r border-slate-200 text-slate-900">
       <SidebarHeader className="p-4 border-b border-slate-200">
         <div className="flex items-center gap-3 px-2">
           <div className="size-11 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-white border border-slate-100 p-0.5 shrink-0">
