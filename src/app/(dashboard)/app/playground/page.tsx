@@ -3,21 +3,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Bot, Send, User, Sparkles, AlertCircle } from "lucide-react";
+import { Bot, Send, User, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-import { useChat } from '@ai-sdk/react';
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export default function PlaygroundPage() {
-  const { messages, sendMessage, status, error } = useChat({
-    api: '/api/chat',
-    maxSteps: 5,
-  });
-  
-  const isLoading = status === 'streaming' || status === 'submitted';
+  const [messages, setMessages] = useState<Message[]>([]);
   const [localInput, setLocalInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +26,69 @@ export default function PlaygroundPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localInput.trim() || isLoading) return;
+
+    const userText = localInput.trim();
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userText,
+    };
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    setLocalInput('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo conectar con el servidor de IA.');
+      }
+
+      if (!response.body) return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantText = '';
+
+      const assistantMsgId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        assistantText += chunk;
+        setMessages(prev =>
+          prev.map(m => (m.id === assistantMsgId ? { ...m, content: assistantText } : m))
+        );
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error en la simulación.');
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `⚠️ Disculpa, ocurrió un error en la simulación: ${err.message}`
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900 p-8 pb-32">
@@ -36,7 +99,7 @@ export default function PlaygroundPage() {
             Centro de IA Interactiva
           </h1>
           <p className="text-lg text-slate-500 mt-4 max-w-2xl mx-auto font-light">
-            Experimenta la capacidad de nuestro agente automatizado de ventas corporativas.
+            Experimenta la capacidad de nuestro agente automatizado de ventas corporativas con Llama 120B.
           </p>
         </div>
 
@@ -44,9 +107,7 @@ export default function PlaygroundPage() {
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-900 rounded-2xl">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error de Conexión</AlertTitle>
-            <AlertDescription>
-              {error?.message ?? String(error)}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
@@ -83,65 +144,9 @@ export default function PlaygroundPage() {
                         <div className={`p-4 rounded-3xl text-[15px] leading-relaxed shadow-sm ${
                           m.role === 'user' 
                             ? 'bg-slate-100 text-slate-800 rounded-tr-sm border border-slate-200/60' 
-                            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm'
+                            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm font-sans whitespace-pre-wrap'
                         }`}>
-                          <div className="whitespace-pre-wrap">
-                            {m.parts && Array.isArray(m.parts) 
-                              ? m.parts.map((part: any, i: number) => {
-                                  if (part.type === 'text') {
-                                    return <span key={i}>{part.text}</span>;
-                                  }
-                                  if (part.type === 'reasoning') {
-                                    return <span key={i} className="text-xs text-slate-400 italic block mb-1">{part.text}</span>;
-                                  }
-                                  return null;
-                                })
-                              : m.content || ''
-                            }
-                          </div>
-                          
-                          {/* Render Tool Invocations gracefully */}
-                          {m.parts && Array.isArray(m.parts) ? (
-                            m.parts.map((part: any, i: number) => {
-                              const isTool = part.type?.startsWith('tool-') || part.type === 'dynamic-tool' || part.type === 'tool' || part.toolName;
-                              if (isTool) {
-                                const name = part.toolName || part.title || part.type?.replace(/^tool-/, '');
-                                const inputData = part.input || part.args;
-                                return (
-                                  <div key={i} className="mt-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-600 shadow-sm">
-                                    <div className="text-black font-semibold mb-2 flex items-center gap-1">
-                                      <Sparkles className="w-3 h-3 text-slate-500" /> Herramienta: {name}
-                                    </div>
-                                    {inputData && (
-                                      <div className="bg-white p-2 rounded-lg border border-slate-100 font-mono text-[10px] text-slate-500 break-all">
-                                        {JSON.stringify(inputData)}
-                                      </div>
-                                    )}
-                                    {part.state === 'output-available' || part.state === 'result' ? (
-                                      <div className="text-black font-medium mt-2 flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Completado
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })
-                          ) : (
-                            m.toolInvocations?.map(tool => (
-                              <div key={tool.toolCallId} className="mt-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-600 shadow-sm">
-                                <div className="text-black font-semibold mb-2 flex items-center gap-1">
-                                  <Sparkles className="w-3 h-3 text-slate-500" /> Ejecutando Herramienta: {tool.toolName}
-                                </div>
-                                <div className="bg-white p-2 rounded-lg border border-slate-100 font-mono text-[10px] text-slate-500 break-all">{JSON.stringify(tool.args)}</div>
-                                {tool.state === 'result' && (
-                                  <div className="text-black font-medium mt-2 flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Terminado con éxito
-                                  </div>
-                                )}
-                              </div>
-                            ))
-                          )}
+                          {m.content}
                         </div>
                       </div>
                     </div>
@@ -153,9 +158,9 @@ export default function PlaygroundPage() {
                       <Bot className="w-5 h-5 animate-pulse" />
                     </div>
                     <div className="p-5 rounded-3xl bg-white border border-slate-200 rounded-tl-sm flex items-center gap-2 shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"></span>
-                      <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"></span>
+                      <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                     </div>
                   </div>
                 )}
@@ -164,12 +169,7 @@ export default function PlaygroundPage() {
           </CardContent>
           
           <CardFooter className="p-5 border-t border-slate-100 bg-white">
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!localInput.trim()) return;
-              sendMessage({ role: 'user', content: localInput });
-              setLocalInput('');
-            }} className="flex w-full gap-3">
+            <form onSubmit={handleSendMessage} className="flex w-full gap-3">
               <input 
                 type="text"
                 value={localInput}
@@ -178,9 +178,9 @@ export default function PlaygroundPage() {
                 className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 focus-visible:ring-slate-300 focus-visible:outline-none rounded-full px-6 py-6 text-base"
               />
               <Button 
-                type="submit"
+                type="submit" 
                 disabled={isLoading || !localInput.trim()} 
-                className="bg-slate-800 hover:bg-slate-700 text-white rounded-full h-auto px-8 transition-all active:scale-95"
+                className="bg-slate-900 hover:bg-black text-white rounded-full h-auto px-8 transition-all active:scale-95"
               >
                 <Send className="w-5 h-5" />
               </Button>
@@ -191,5 +191,3 @@ export default function PlaygroundPage() {
     </div>
   );
 }
-
-

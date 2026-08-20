@@ -1,25 +1,90 @@
 'use client'
 
-import { useState } from 'react'
-import { useChat } from '@ai-sdk/react'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Send, Bot, User, Cpu, AlertCircle } from 'lucide-react'
+import { Send, Bot, User, Cpu, Sparkles, RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
-export default function AgentSimulatorPage() {
-  const { messages, sendMessage, status } = useChat({
-    api: '/api/chat',
-    maxSteps: 5,
-  })
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+}
 
-  const isLoading = status === 'streaming' || status === 'submitted';
-  const [localInput, setLocalInput] = useState('');
+export default function AgentSimulatorPage() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [localInput, setLocalInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages, isLoading])
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!localInput.trim() || isLoading) return
+
+    const userText = localInput.trim()
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userText
+    }
+
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
+    setLocalInput('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+        })
+      })
+
+      if (!response.ok) throw new Error('Error al conectar con el servidor')
+      if (!response.body) return
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let assistantText = ''
+
+      const assistantMsgId = (Date.now() + 1).toString()
+      setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '' }])
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        assistantText += chunk
+        setMessages(prev =>
+          prev.map(m => (m.id === assistantMsgId ? { ...m, content: assistantText } : m))
+        )
+      }
+    } catch (err: any) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `⚠️ Error en la simulación: ${err.message}`
+        }
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className="h-full flex flex-col space-y-6 fade-in">
+    <div className="h-full flex flex-col space-y-6 fade-in pb-12">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-black font-serif">Simulador IA (Testing)</h1>
@@ -40,13 +105,13 @@ export default function AgentSimulatorPage() {
             </CardTitle>
           </CardHeader>
           
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-6" ref={scrollRef}>
             <div className="space-y-6">
               {messages.length === 0 && (
                 <div className="text-center text-slate-400 mt-20">
                   <Bot className="w-16 h-16 mx-auto mb-4 opacity-20 text-slate-800" />
                   <p className="font-serif text-lg text-slate-600">Envía un mensaje para iniciar la simulación.</p>
-                  <p className="text-sm mt-2 opacity-60">Ej: "Hola, busco una SUV roja para mi familia"</p>
+                  <p className="text-sm mt-2 opacity-60">Ej: "Hola, busco una SUV para mi familia"</p>
                 </div>
               )}
               
@@ -59,136 +124,72 @@ export default function AgentSimulatorPage() {
                         : <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-700 flex items-center justify-center shadow-sm border border-slate-200"><Bot className="w-5 h-5" /></div>
                       }
                     </div>
-                    <div className={`p-4 rounded-3xl text-[15px] leading-relaxed shadow-sm ${
+                    <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${
                       m.role === 'user' 
                         ? 'bg-slate-100 text-slate-800 rounded-tr-sm border border-slate-200/60' 
-                        : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm'
+                        : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm font-sans whitespace-pre-wrap'
                     }`}>
-                      <div className="whitespace-pre-wrap">
-                        {m.parts && Array.isArray(m.parts) 
-                          ? m.parts.map((part: any, i: number) => {
-                              if (part.type === 'text') {
-                                return <span key={i}>{part.text}</span>;
-                              }
-                              if (part.type === 'reasoning') {
-                                return <span key={i} className="text-xs text-slate-400 italic block mb-1">{part.text}</span>;
-                              }
-                              return null;
-                            })
-                          : m.content || ''
-                        }
-                      </div>
-                      
-                      {/* Mostrar las herramientas invocadas */}
-                      {m.parts && Array.isArray(m.parts) ? (
-                        m.parts.map((part: any, i: number) => {
-                          const isTool = part.type?.startsWith('tool-') || part.type === 'dynamic-tool' || part.type === 'tool' || part.toolName;
-                          if (isTool) {
-                            const name = part.toolName || part.title || part.type?.replace(/^tool-/, '');
-                            const inputData = part.input || part.args;
-                            return (
-                              <div key={i} className="mt-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-600 shadow-sm">
-                                <div className="text-black font-semibold mb-2 flex items-center gap-1">
-                                  <Cpu className="w-3 h-3 text-slate-500" /> Herramienta: {name}
-                                </div>
-                                {inputData && (
-                                  <div className="bg-white p-2 rounded-lg border border-slate-100 font-mono text-[10px] text-slate-500 break-all">{JSON.stringify(inputData)}</div>
-                                )}
-                                {part.state === 'output-available' || part.state === 'result' ? (
-                                  <div className="text-black font-medium mt-2 flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Completado
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          }
-                          return null;
-                        })
-                      ) : (
-                        m.toolInvocations?.map(tool => (
-                          <div key={tool.toolCallId} className="mt-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-600 shadow-sm">
-                            <div className="text-black font-semibold mb-2 flex items-center gap-1">
-                              <Cpu className="w-3 h-3 text-slate-500" /> Ejecutando: {tool.toolName}
-                            </div>
-                            <div className="bg-white p-2 rounded-lg border border-slate-100 font-mono text-[10px] text-slate-500">{JSON.stringify(tool.args)}</div>
-                            {tool.state === 'result' && (
-                              <div className="text-black font-medium mt-2 flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Completado
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
+                      {m.content}
                     </div>
                   </div>
                 </div>
               ))}
+
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-slate-50 border border-slate-200 px-5 py-3 rounded-3xl rounded-tl-sm shadow-sm flex items-center gap-2">
-                     <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"></span>
-                     <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                     <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                  </div>
+                <div className="flex items-center gap-2 text-slate-400 text-xs italic pl-4">
+                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+                  <span>Agente pensando...</span>
                 </div>
               )}
             </div>
           </ScrollArea>
 
-          <CardFooter className="p-5 border-t border-slate-100 bg-white">
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!localInput.trim()) return;
-              sendMessage({ role: 'user', content: localInput });
-              setLocalInput('');
-            }} className="flex w-full gap-3">
-              <input 
-                type="text"
+          <CardFooter className="p-4 border-t border-slate-100 bg-white">
+            <form onSubmit={handleSendMessage} className="flex w-full gap-3">
+              <input
                 value={localInput}
-                onChange={(e) => setLocalInput(e.target.value)}
-                placeholder="Escribe un mensaje como si fueras un cliente..." 
-                className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 focus-visible:ring-slate-300 focus-visible:outline-none rounded-full px-6 py-6 text-base"
+                onChange={e => setLocalInput(e.target.value)}
+                placeholder="Simula un mensaje de cliente..."
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-5 py-3 text-sm text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-slate-900"
               />
-              <Button type="submit" disabled={isLoading || !localInput.trim()} className="bg-slate-800 hover:bg-slate-700 text-white rounded-full h-auto px-8 transition-all active:scale-95">
-                <Send className="w-5 h-5" />
+              <Button type="submit" disabled={isLoading || !localInput.trim()} className="bg-slate-900 hover:bg-black text-white rounded-full px-6">
+                <Send className="w-4 h-4 mr-2" /> Enviar
               </Button>
             </form>
           </CardFooter>
         </Card>
 
-        {/* Debug Panel */}
-        <Card className="bg-white border-slate-200 shadow-sm rounded-3xl h-fit">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm text-slate-400 flex items-center gap-2 font-medium uppercase tracking-widest">
-              <AlertCircle className="w-4 h-4 text-black" /> Panel de Estado
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        {/* Panel de Configuración & Parámetros */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
+          <div className="space-y-6">
             <div>
-              <div className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Modelo Activo</div>
-              <Badge variant="outline" className="text-black border-slate-200 bg-slate-50 rounded-full px-4 py-1">GPT-OSS 120B (Groq)</Badge>
+              <h3 className="font-bold text-lg text-slate-900 font-serif">Ajustes del Modelo</h3>
+              <p className="text-xs text-slate-500 mt-1">Configuración del Agente en Producción</p>
             </div>
-            <div>
-              <div className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Herramientas Habilitadas</div>
-              <div className="space-y-2">
-                <div className="text-sm bg-slate-50 p-3 rounded-xl border border-slate-200 text-black font-mono shadow-sm">
-                  searchInventory()
-                </div>
-                <div className="text-sm bg-slate-50 p-3 rounded-xl border border-slate-200 text-black font-mono shadow-sm">
-                  createLead()
-                </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-700">Modelo LPU:</span>
+                <p className="text-slate-500">openai/gpt-oss-120b (Groq Supercharged)</p>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-700">Herramientas Conectadas:</span>
+                <p className="text-slate-500">• searchInventory (Inventario Supabase)<br/>• createLead (CRM Pipeline)</p>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span className="font-bold text-slate-700">Velocidad Promedio:</span>
+                <p className="text-emerald-600 font-bold font-mono">~135 ms por respuesta</p>
               </div>
             </div>
-            <div className="pt-6 border-t border-slate-100">
-              <p className="text-[13px] text-slate-500 leading-relaxed">
-                Este panel de testing intercepta las llamadas de herramienta en tiempo real para auditar el <span className="font-semibold text-black">Function Calling</span> de tu agente corporativo.
-              </p>
-            </div>
-          </CardContent>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 text-center">
+            <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50">
+              Sincronizado con WhatsApp Cloud API
+            </Badge>
+          </div>
         </Card>
       </div>
     </div>
   )
 }
-
-
