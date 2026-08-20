@@ -39,15 +39,15 @@ interface AgendaResponsibility {
 const DEFAULT_RESPONSIBILITIES: AgendaResponsibility[] = [
   {
     id: "resp-1",
-    title: "Inscripción & Viaje Cámara de Comercio",
+    title: "Trámite de Registro en Cámara de Comercio",
     assignedTo: "Jesús David Cantillo Parejo",
     role: "CEO & FUNDADOR",
-    timeSlot: "08:30 AM - 11:00 AM",
-    date: "Hoy",
+    timeSlot: "10:00 AM - 12:00 PM",
+    date: "Mañana",
     type: "CÁMARA_COMERCIO",
     status: "CONFIRMADO_WHATSAPP",
-    whatsappFeedback: "¡Listo! Ya revisé la fecha del viaje, salimos el martes a primera hora.",
-    aiSuggestedNextStep: "El Agente IA ya tiene los documentos listos para radicar.",
+    whatsappFeedback: "Jesús David Cantillo (CEO): 'LISTO MAÑANA A LAS 10 AM'",
+    aiSuggestedNextStep: "El Agente IA ya tiene los documentos listos para radicar a las 10:00 AM.",
   },
   {
     id: "resp-2",
