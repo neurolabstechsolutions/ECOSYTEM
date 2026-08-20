@@ -248,9 +248,14 @@ async function connectToWhatsApp() {
     if (type !== 'notify') return;
 
     for (const msg of messages) {
-      if (!msg.message || msg.key.fromMe) continue;
+      if (!msg.message) continue;
 
       const sender = msg.key.remoteJid;
+      const isGroup = sender.includes('@g.us');
+
+      // For direct private chats, ignore fromMe. For groups, process fromMe to capture the CEO/Owner's response!
+      if (msg.key.fromMe && !isGroup) continue;
+
       const cleanPhone = sender.replace(/[^0-9]/g, '');
       let text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
       
