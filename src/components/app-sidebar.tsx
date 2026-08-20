@@ -24,15 +24,15 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <Sidebar variant="inset" className="bg-white border-r border-slate-200 text-slate-900">
       <SidebarHeader className="p-4 border-b border-slate-200">
-        <div className="flex items-center gap-2 px-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white">
-            <Icons.BrainCircuit size={20} />
+        <div className="flex items-center gap-3 px-2">
+          <div className="size-11 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-white border border-slate-100 p-0.5 shrink-0">
+            <img src="/neurolabs-logo.jpg" alt="NeuroLabs Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-semibold font-serif text-lg tracking-tight">NeuroLabs Tech</span>
-            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Solutions SAS</span>
+            <span className="font-bold font-serif text-lg tracking-tight text-slate-950">NeuroLabs</span>
+            <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">TECH SOLUTIONS S.A.S.</span>
+            <span className="text-[10px] text-emerald-600 font-serif italic">Innovación sin Límites</span>
           </div>
         </div>
       </SidebarHeader>
