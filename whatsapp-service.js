@@ -528,8 +528,20 @@ _NeuroLabs Tech Solutions S.A.S. • Innovación sin Límites_`;
     for (const target of targets) {
       try {
         let jid = '';
-        if (target.includes('@g.us')) {
-          // WhatsApp Group
+        if (target.includes('chat.whatsapp.com/')) {
+          // Resolve Invite Code from link (e.g. FjdEH69MXub9ZhlZXaXD6j)
+          const inviteCode = target.split('chat.whatsapp.com/')[1].split(/[?&/]/)[0];
+          console.log(`🔗 [GROUP INVITE] Intentando unir o resolver código de grupo: ${inviteCode}`);
+          try {
+            const groupInfo = await sock.groupGetInviteInfo(inviteCode);
+            jid = groupInfo.id;
+            // Try to accept invite if not already in group
+            await sock.groupAcceptInvite(inviteCode).catch(() => {});
+          } catch (invErr) {
+            console.log(`Intentando resolver invite JID: ${invErr.message}`);
+          }
+        } else if (target.includes('@g.us')) {
+          // WhatsApp Group JID
           jid = target;
         } else {
           // Individual Phone
@@ -537,9 +549,11 @@ _NeuroLabs Tech Solutions S.A.S. • Innovación sin Límites_`;
           jid = `${cleanNumber}@s.whatsapp.net`;
         }
 
-        await sock.sendMessage(jid, { text: taskWhatsAppMessage });
-        console.log(`✅ [TASK DISPATCH] Tarea "${title}" enviada simultáneamente a: ${jid}`);
-        sentResults.push(target);
+        if (jid) {
+          await sock.sendMessage(jid, { text: taskWhatsAppMessage });
+          console.log(`✅ [TASK DISPATCH] Tarea "${title}" enviada exitosamente a: ${jid}`);
+          sentResults.push(target);
+        }
       } catch (sendErr) {
         console.error(`Error enviando a ${target}:`, sendErr.message);
       }
