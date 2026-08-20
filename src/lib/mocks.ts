@@ -23,6 +23,7 @@ export const MOCK_USER = {
 
 export const MOCK_SIDEBAR_LINKS = [
   { name: 'Dashboard', path: '/', icon: 'LayoutDashboard' },
+  { name: 'Tareas & Metas del Equipo', path: '/tasks', icon: 'CheckSquare' },
   { name: 'Campañas & Outbound AI', path: '/campaigns', icon: 'Megaphone' },
   { name: 'Contactos B2B', path: '/contacts', icon: 'Users' },
   { name: 'Pipeline de Ventas', path: '/leads', icon: 'Target' },
