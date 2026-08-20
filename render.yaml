@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ecosystem
+    runtime: node
+    buildCommand: npm install
+    startCommand: node whatsapp-service.js
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 3000
