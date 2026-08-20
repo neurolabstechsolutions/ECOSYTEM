@@ -678,7 +678,32 @@ export default function AutomationsPage() {
   const [isTestingRun, setIsTestingRun] = useState<boolean>(false);
   const [testRunStepIndex, setTestRunStepIndex] = useState<number>(-1);
   const [testResultModalOpen, setTestResultModalOpen] = useState<boolean>(false);
-  const [searchBlockQuery, setSearchBlockQuery] = useState<string>("");
+  const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>(MOCK_LOGS);
+
+  // Auto-sync real-time workflow executions from Render WhatsApp Engine
+  useEffect(() => {
+    const syncRealLogs = async () => {
+      try {
+        const res = await fetch('/api/whatsapp/workflow-logs');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.logs && data.logs.length > 0) {
+            setExecutionLogs((prev) => {
+              const liveIds = new Set(data.logs.map((l: any) => l.id));
+              const nonDuplicatePrev = prev.filter((l) => !liveIds.has(l.id));
+              return [...data.logs, ...nonDuplicatePrev];
+            });
+          }
+        }
+      } catch (err) {
+        console.log("Syncing workflow execution logs...");
+      }
+    };
+
+    syncRealLogs();
+    const interval = setInterval(syncRealLogs, 3500);
+    return () => clearInterval(interval);
+  }, []);
   const [selectedBlockCategory, setSelectedBlockCategory] = useState<string>("All");
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [searchWorkflowQuery, setSearchWorkflowQuery] = useState<string>("");
