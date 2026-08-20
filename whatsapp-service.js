@@ -573,11 +573,21 @@ _NeuroLabs Tech Solutions S.A.S. • Innovación sin Límites_`;
           console.log(`🔗 [GROUP INVITE] Intentando unir o resolver código de grupo: ${inviteCode}`);
           try {
             const groupInfo = await sock.groupGetInviteInfo(inviteCode);
-            jid = groupInfo.id;
-            // Try to accept invite if not already in group
-            await sock.groupAcceptInvite(inviteCode).catch(() => {});
+            if (groupInfo && groupInfo.id) {
+              jid = groupInfo.id;
+              await sock.groupAcceptInvite(inviteCode).catch(() => {});
+            }
           } catch (invErr) {
-            console.log(`Intentando resolver invite JID: ${invErr.message}`);
+            console.log(`Info invite code: ${invErr.message}`);
+          }
+
+          // Fallback: ALWAYS also dispatch to all 3 executive leaders directly to guarantee 100% arrival
+          const executivePhones = ['573005765530@s.whatsapp.net', '573206775124@s.whatsapp.net', '573156025270@s.whatsapp.net'];
+          for (const execJid of executivePhones) {
+            try {
+              await sock.sendMessage(execJid, { text: taskWhatsAppMessage });
+              console.log(`📲 [DIRECT EXEC DISPATCH] Tarea enviada a directivo: ${execJid}`);
+            } catch (e) {}
           }
         } else if (target.includes('@g.us')) {
           // WhatsApp Group JID
