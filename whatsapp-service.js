@@ -566,7 +566,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'NeuroLabs WhatsApp Bridge', uptime: process.uptime() });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 NeuroLabs WhatsApp Bridge corriendo en el puerto ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 NeuroLabs WhatsApp Bridge corriendo en el puerto ${PORT} (0.0.0.0)`);
   connectToWhatsApp();
 });
