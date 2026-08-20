@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   CheckSquare, Plus, Users, Target, Sparkles, Clock, AlertCircle, 
   CheckCircle2, Send, MessageSquare, ArrowRight, UserCheck, Shield,
   Filter, Calendar, Flame, TrendingUp, Bot, Award, ChevronRight, Phone,
-  Edit3, Trash2, Check, X, RefreshCw
+  Edit3, Trash2, Check, X, RefreshCw, Mail
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +29,6 @@ interface TeamMember {
   email: string;
   phone: string;
   avatar: string;
-  activeTasksCount: number;
-  completedTasksCount: number;
 }
 
 interface TeamTask {
@@ -57,7 +55,7 @@ interface TeamGoal {
   deadline: string;
 }
 
-const INITIAL_TEAM_MEMBERS: TeamMember[] = [
+const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
   {
     id: "mem-1",
     name: "Jafet Cantillo",
@@ -65,8 +63,6 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     email: "neurolabstechsolutions@gmail.com",
     phone: "+57 323 5845145",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jafet",
-    activeTasksCount: 3,
-    completedTasksCount: 14,
   },
   {
     id: "mem-2",
@@ -75,8 +71,6 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     email: "ventas@neurolabs.io",
     phone: "+57 300 5765530",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Comercial",
-    activeTasksCount: 4,
-    completedTasksCount: 22,
   },
   {
     id: "mem-3",
@@ -85,12 +79,10 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     email: "marketing@neurolabs.io",
     phone: "+57 310 9876543",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marketing",
-    activeTasksCount: 3,
-    completedTasksCount: 18,
   }
 ];
 
-const INITIAL_GOALS: TeamGoal[] = [
+const DEFAULT_GOALS: TeamGoal[] = [
   {
     id: "goal-1",
     title: "Cierre de Nuevos Contratos B2B de Software e IA",
@@ -117,7 +109,7 @@ const INITIAL_GOALS: TeamGoal[] = [
   }
 ];
 
-const INITIAL_TASKS: TeamTask[] = [
+const DEFAULT_TASKS: TeamTask[] = [
   {
     id: "tsk-101",
     title: "PROGRAMAR VIAJE CÁMARA DE COMERCIO",
@@ -131,41 +123,30 @@ const INITIAL_TASKS: TeamTask[] = [
     aiAssisted: true,
     aiRecommendation: "El Agente IA espera la confirmación de fecha para agendar en calendario.",
     partnerResponse: "¡Listo Jafet! Ya revisé la fecha del viaje, salimos el martes a primera hora.",
-  },
-  {
-    id: "tsk-102",
-    title: "Reunión de Cierre con Prospectos de Cámara de Comercio",
-    description: "Revisar los 38 leads que solicitaron cotización formal en PDF durante la campaña outbound.",
-    assignedTo: "Director Comercial",
-    assignedRole: "DIRECTOR COMERCIAL",
-    phone: "+57 300 5765530",
-    priority: "ALTA",
-    status: "EN_PROCESO",
-    dueDate: "Hoy, 4:00 PM",
-    aiAssisted: true,
-    aiRecommendation: "El Agente IA ya preparó el PDF y calificó su intención de compra en 95%.",
-    partnerResponse: "Recibido. Estoy llamando a los primeros 5 clientes de la lista.",
-  },
-  {
-    id: "tsk-103",
-    title: "Lanzamiento de Campaña en Video Reels y LinkedIn",
-    description: "Publicar las piezas 3D animadas y el video demostrativo de WhatsApp con cotización automática.",
-    assignedTo: "Director de Marketing",
-    assignedRole: "DIRECTOR DE MARKETING",
-    phone: "+57 310 9876543",
-    priority: "ESTRATÉGICA",
-    status: "PENDIENTE",
-    dueDate: "Mañana, 10:00 AM",
-    aiAssisted: true,
-    aiRecommendation: "Usa el copy generado con el enlace directo al WhatsApp +57 300 5765530.",
   }
 ];
 
 export default function TeamTasksManagementPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
-  const [tasks, setTasks] = useState<TeamTask[]>(INITIAL_TASKS);
-  const [goals, setGoals] = useState<TeamGoal[]>(INITIAL_GOALS);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(DEFAULT_TEAM_MEMBERS);
+  const [tasks, setTasks] = useState<TeamTask[]>(DEFAULT_TASKS);
+  const [goals, setGoals] = useState<TeamGoal[]>(DEFAULT_GOALS);
   
+  // Persistent Local & Cloud Storage Sync
+  useEffect(() => {
+    try {
+      const savedMembers = localStorage.getItem("neurolabs_team_members");
+      if (savedMembers) setTeamMembers(JSON.parse(savedMembers));
+
+      const savedGoals = localStorage.getItem("neurolabs_team_goals");
+      if (savedGoals) setGoals(JSON.parse(savedGoals));
+
+      const savedTasks = localStorage.getItem("neurolabs_team_tasks");
+      if (savedTasks) setTasks(JSON.parse(savedTasks));
+    } catch (e) {
+      console.log("Loading default team data");
+    }
+  }, []);
+
   // Modals state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditMemberModalOpen, setIsEditMemberModalOpen] = useState(false);
@@ -200,7 +181,7 @@ export default function TeamTasksManagementPage() {
     }
 
     if (!customPhone.trim()) {
-      toast.error("Por favor ingresa el número de WhatsApp de destino");
+      toast.error("Por favor ingresa el número de WhatsApp o enlace de grupo");
       return;
     }
 
@@ -212,7 +193,7 @@ export default function TeamTasksManagementPage() {
     };
 
     try {
-      // Dispatch real WhatsApp message to the dynamic phone numbers entered
+      // Dispatch real WhatsApp message to the dynamic phone numbers / group entered
       const response = await fetch('/api/whatsapp/task-dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -250,7 +231,10 @@ export default function TeamTasksManagementPage() {
       aiRecommendation: "El Asesor IA está a la espera de la respuesta del socio por WhatsApp para registrar su retroalimentación.",
     };
 
-    setTasks([newTask, ...tasks]);
+    const updatedTasks = [newTask, ...tasks];
+    setTasks(updatedTasks);
+    localStorage.setItem("neurolabs_team_tasks", JSON.stringify(updatedTasks));
+
     setIsDispatchingAI(false);
     setIsTaskModalOpen(false);
     setTaskTitle("");
@@ -258,28 +242,34 @@ export default function TeamTasksManagementPage() {
   };
 
   const toggleTaskStatus = (id: string) => {
-    setTasks(tasks.map(t => {
+    const updated = tasks.map(t => {
       if (t.id === id) {
         const nextStatus = t.status === "PENDIENTE" ? "EN_PROCESO" : t.status === "EN_PROCESO" ? "COMPLETADA" : "PENDIENTE";
         return { ...t, status: nextStatus };
       }
       return t;
-    }));
+    });
+    setTasks(updated);
+    localStorage.setItem("neurolabs_team_tasks", JSON.stringify(updated));
     toast.success("Estado de la tarea actualizado.");
   };
 
   const handleSaveMember = () => {
     if (!editingMember) return;
-    setTeamMembers(teamMembers.map(m => m.id === editingMember.id ? editingMember : m));
+    const updatedMembers = teamMembers.map(m => m.id === editingMember.id ? editingMember : m);
+    setTeamMembers(updatedMembers);
+    localStorage.setItem("neurolabs_team_members", JSON.stringify(updatedMembers));
     setIsEditMemberModalOpen(false);
-    toast.success(`Miembro ${editingMember.name} actualizado con éxito.`);
+    toast.success(`Datos de ${editingMember.name} guardados permanentemente.`);
   };
 
   const handleSaveGoal = () => {
     if (!editingGoal) return;
-    setGoals(goals.map(g => g.id === editingGoal.id ? editingGoal : g));
+    const updatedGoals = goals.map(g => g.id === editingGoal.id ? editingGoal : g);
+    setGoals(updatedGoals);
+    localStorage.setItem("neurolabs_team_goals", JSON.stringify(updatedGoals));
     setIsEditGoalModalOpen(false);
-    toast.success(`Meta "${editingGoal.title}" actualizada.`);
+    toast.success(`Meta "${editingGoal.title}" guardada permanentemente.`);
   };
 
   return (
@@ -290,7 +280,7 @@ export default function TeamTasksManagementPage() {
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Gestión Ejecutiva Interactiva & WhatsApp Bidireccional
+              Gestión Ejecutiva & WhatsApp Bidireccional
             </span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-950 font-serif mt-2 flex items-center gap-3">
@@ -298,7 +288,7 @@ export default function TeamTasksManagementPage() {
             Tareas, Metas & Equipo Ejecutivo
           </h1>
           <p className="text-slate-500 mt-2 text-base">
-            Edita socios, números y metas en vivo. El Agente IA despacha tareas por WhatsApp y escucha sus respuestas para actualizar el tablero.
+            Edita socios, números y metas con guardado permanente. El Agente IA despacha tareas por WhatsApp y escucha sus respuestas.
           </p>
         </div>
 
@@ -313,19 +303,19 @@ export default function TeamTasksManagementPage() {
         </div>
       </div>
 
-      {/* Team Executive Cards (100% Editable) */}
+      {/* Team Executive Cards (Clean & 100% Persistent) */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
             <Users className="w-5 h-5 text-black" />
-            Equipo Directivo & Socios (Haz clic en Editar para modificar nombres y números)
+            Equipo Directivo & Socios
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {teamMembers.map((member) => (
             <Card key={member.id} className="bg-slate-50 border-slate-200 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between">
-              <div>
+              <div className="space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
@@ -337,31 +327,28 @@ export default function TeamTasksManagementPage() {
                       <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-700 border-slate-200 mt-0.5">
                         {member.role}
                       </Badge>
-                      <p className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                        <Phone className="w-3 h-3" /> {member.phone}
-                      </p>
                     </div>
                   </div>
 
                   <Button 
                     onClick={() => { setEditingMember(member); setIsEditMemberModalOpen(true); }}
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    className="rounded-xl text-slate-500 hover:text-black p-2 h-auto"
+                    className="rounded-xl text-slate-700 border-slate-200 hover:text-black p-2 h-auto text-xs font-bold flex items-center gap-1"
                     title="Editar Socio / Número"
                   >
-                    <Edit3 className="w-4 h-4" />
+                    <Edit3 className="w-3.5 h-3.5" /> Editar
                   </Button>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 pt-4 border-t border-slate-200/80 text-xs">
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200/60">
-                    <span className="text-slate-400 font-medium">Tareas Activas</span>
-                    <p className="text-lg font-black text-slate-900 mt-0.5">{member.activeTasksCount} pendientes</p>
+                <div className="p-3 bg-white rounded-2xl border border-slate-200/80 text-xs space-y-1.5">
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="text-slate-400 flex items-center gap-1"><Phone className="w-3 h-3 text-emerald-600" /> WhatsApp:</span>
+                    <span className="font-bold text-slate-900">{member.phone}</span>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200/60">
-                    <span className="text-slate-400 font-medium">Completadas</span>
-                    <p className="text-lg font-black text-emerald-600 mt-0.5">{member.completedTasksCount} logradas</p>
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="text-slate-400 flex items-center gap-1"><Mail className="w-3 h-3 text-blue-600" /> Correo:</span>
+                    <span className="font-medium text-slate-700 truncate max-w-[150px]">{member.email}</span>
                   </div>
                 </div>
               </div>
@@ -370,7 +357,7 @@ export default function TeamTasksManagementPage() {
         </div>
       </div>
 
-      {/* Goals / Metas Estratégicas del Mes (100% Editables) */}
+      {/* Goals / Metas Estratégicas del Mes (100% Persistent) */}
       <Card className="bg-white border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -417,7 +404,7 @@ export default function TeamTasksManagementPage() {
         </div>
       </Card>
 
-      {/* Tasks Table & AI Assistant Guidance + Partner WhatsApp Replies */}
+      {/* Tasks Table & Live WhatsApp Partner Responses */}
       <div className="space-y-4">
         <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600" />
@@ -513,7 +500,7 @@ export default function TeamTasksManagementPage() {
                   Asignar Tarea por WhatsApp en Vivo
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
-                  Ingresa los números separados por coma o el ID del grupo para enviar a todos los socios.
+                  Ingresa los números separados por coma o el enlace de grupo para enviar a todos los socios.
                 </DialogDescription>
               </div>
             </div>
@@ -619,7 +606,7 @@ export default function TeamTasksManagementPage() {
               Editar Socio / Directivo
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Modifica el nombre, cargo o número de WhatsApp donde el Agente envía las tareas.
+              Modifica el nombre, cargo o número de WhatsApp con guardado permanente.
             </DialogDescription>
           </DialogHeader>
 
