@@ -15,8 +15,9 @@ let connectionStatus = 'DISCONNECTED';
 let connectedNumber = null;
 let sock = null;
 
-// Track user session activity and timers (2 minutes timeout auto-close)
+// Realtime In-Memory Data Store (Synchronized with NeuroLabs Dashboard)
 const activeSessions = new Map(); // sender -> { lastActivity: number, timer: Timeout }
+const liveConversations = new Map(); // sender -> { id, contact, lastMessage, messages: [], handlingStatus, unreadCount }
 
 // Initialize Groq AI Client
 const groq = createOpenAI({
@@ -66,11 +67,51 @@ async function connectToWhatsApp() {
       if (!msg.message || msg.key.fromMe) continue;
 
       const sender = msg.key.remoteJid;
+      const cleanPhone = sender.replace(/[^0-9]/g, '');
       const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+      const pushName = msg.pushName || `Cliente (+${cleanPhone})`;
 
       if (!text.trim() || sender.includes('@g.us')) continue;
 
-      console.log(`[Baileys Inbound] De: ${sender} -> "${text}"`);
+      console.log(`[Baileys Inbound] De: ${pushName} (${cleanPhone}) -> "${text}"`);
+
+      // Store in Live Conversation Registry
+      if (!liveConversations.has(sender)) {
+        liveConversations.set(sender, {
+          id: `conv_${cleanPhone}`,
+          contact: {
+            id: `usr_${cleanPhone}`,
+            name: pushName,
+            phone: `+${cleanPhone}`,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanPhone}`,
+            tenant: 'NeuroLabs Tech Solutions',
+            email: `cliente_${cleanPhone}@whatsapp.user`,
+          },
+          lastMessage: {
+            id: msg.key.id || Date.now().toString(),
+            sender: 'user',
+            text: text,
+            timestamp: new Date().toISOString(),
+          },
+          handlingStatus: 'AI_HANDLING',
+          unreadCount: 0,
+          messages: [],
+        });
+      }
+
+      const conv = liveConversations.get(sender);
+      conv.lastMessage = {
+        id: msg.key.id || Date.now().toString(),
+        sender: 'user',
+        text: text,
+        timestamp: new Date().toISOString(),
+      };
+      conv.messages.push({
+        id: msg.key.id || Date.now().toString(),
+        sender: 'user',
+        text: text,
+        timestamp: new Date().toISOString(),
+      });
 
       // Clear existing inactivity timer for this user
       if (activeSessions.has(sender)) {
@@ -104,13 +145,34 @@ IDENTIDAD Y PROTOCOLO:
         console.log(`[Baileys Outbound] Respondiendo a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
 
+        // Save AI Response in conversation history
+        conv.messages.push({
+          id: (Date.now() + 1).toString(),
+          sender: 'ai',
+          text: aiReply,
+          timestamp: new Date().toISOString(),
+        });
+        conv.lastMessage = {
+          id: (Date.now() + 1).toString(),
+          sender: 'ai',
+          text: aiReply,
+          timestamp: new Date().toISOString(),
+        };
+
         // Set 2-minute inactivity auto-closing timer
         const timer = setTimeout(async () => {
           try {
             console.log(`[Session Timeout] Cerrando chat por inactividad (2 mins) para: ${sender}`);
-            await sock.sendMessage(sender, {
-              text: '⏱️ *Sesión en pausa por inactividad (2 minutos)*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨'
+            const closingText = '⏱️ *Sesión en pausa por inactividad (2 minutos)*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨';
+            await sock.sendMessage(sender, { text: closingText });
+            
+            conv.messages.push({
+              id: (Date.now() + 2).toString(),
+              sender: 'ai',
+              text: closingText,
+              timestamp: new Date().toISOString(),
             });
+
             activeSessions.delete(sender);
           } catch (err) {
             console.error('Error al enviar mensaje de cierre por inactividad:', err);
@@ -131,6 +193,16 @@ app.get('/qr', (req, res) => {
   res.json({
     status: connectionStatus,
     qr: currentQR,
+    phone: connectedNumber
+  });
+});
+
+app.get('/conversations', (req, res) => {
+  const convList = Array.from(liveConversations.values());
+  res.json({
+    conversations: convList,
+    total: convList.length,
+    status: connectionStatus,
     phone: connectedNumber
   });
 });

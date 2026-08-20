@@ -50,6 +50,49 @@ export default function ConversationsInboxPage() {
     });
   }, [conversations, searchQuery, filterMode]);
 
+  // Auto-sync real-time WhatsApp conversations from Render Bridge
+  useEffect(() => {
+    const syncLiveChats = async () => {
+      try {
+        const res = await fetch('/api/whatsapp/conversations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.conversations && data.conversations.length > 0) {
+            setConversations((prev) => {
+              const liveIds = new Set(data.conversations.map((c: any) => c.id));
+              const nonDuplicatePrev = prev.filter((c) => !liveIds.has(c.id));
+              return [...data.conversations, ...nonDuplicatePrev];
+            });
+
+            // Update messages map
+            setMessagesMap((prev) => {
+              const updated = { ...prev };
+              data.conversations.forEach((c: any) => {
+                if (c.messages && c.messages.length > 0) {
+                  updated[c.id] = c.messages.map((m: any) => ({
+                    id: m.id,
+                    conversationId: c.id,
+                    sender: m.sender === 'user' ? 'customer' : 'ai',
+                    text: m.text,
+                    timestamp: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    status: 'read',
+                  }));
+                }
+              });
+              return updated;
+            });
+          }
+        }
+      } catch (err) {
+        console.log('Syncing WhatsApp inbox...');
+      }
+    };
+
+    syncLiveChats();
+    const interval = setInterval(syncLiveChats, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages, isAiGenerating]);
