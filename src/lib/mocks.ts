@@ -23,6 +23,7 @@ export const MOCK_USER = {
 
 export const MOCK_SIDEBAR_LINKS = [
   { name: 'Dashboard', path: '/', icon: 'LayoutDashboard' },
+  { name: 'Centro de Clientes & SaaS', path: '/clients-hub', icon: 'Building2' },
   { name: 'Tareas & Metas del Equipo', path: '/tasks', icon: 'CheckSquare' },
   { name: 'Campañas & Outbound AI', path: '/campaigns', icon: 'Megaphone' },
   { name: 'Contactos B2B', path: '/contacts', icon: 'Users' },
@@ -38,7 +39,7 @@ export const MOCK_SIDEBAR_LINKS = [
   { name: 'Analytics & BI', path: '/analytics', icon: 'BarChart3' },
   { name: 'Integraciones', path: '/integrations', icon: 'Plug' },
   { name: 'Uso y Costos', path: '/usage', icon: 'Coins' },
-  { name: 'Facturación', path: '/billing', icon: 'CreditCard' },
+  { name: 'Facturación & Planes', path: '/billing', icon: 'CreditCard' },
   { name: 'Usuarios & Accesos', path: '/users', icon: 'UsersCog' },
   { name: 'Configuración', path: '/settings', icon: 'Settings' },
 ];
