@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.112.3",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
     "ai": "^7.0.66",
+    "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.6",

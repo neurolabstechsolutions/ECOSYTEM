@@ -5,7 +5,7 @@ const QRCode = require('qrcode');
 const { createOpenAI } = require('@ai-sdk/openai');
 const { generateText } = require('ai');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
-const googleTTS = require('google-tts-api');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
@@ -30,6 +30,46 @@ const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
   apiKey: process.env.GROQ_API_KEY,
 });
+
+// ElevenLabs Configuration (High-Definition Executive Voice)
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_11dc8c0036a97d6031431de25ffc336a45b832dc371d6160';
+// Standard Natural Voice ID (Brian / Liam / Paul - warm Latin/Spanish executive tone)
+const ELEVENLABS_VOICE_ID = 'nPczCjzI2devNBz1zQrb'; // Natural Executive Spanish Voice
+
+// Helper: Generate Ultra-Realistic Human Voice Note with ElevenLabs
+async function generateElevenLabsVoiceNote(text) {
+  try {
+    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 250);
+    console.log(`🎙️ [ELEVENLABS NEURAL] Generando voz humana para: "${cleanText.slice(0, 60)}..."`);
+
+    const response = await axios({
+      method: 'POST',
+      url: `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+      headers: {
+        'Accept': 'audio/mpeg',
+        'xi-api-key': ELEVENLABS_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        text: cleanText,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.0,
+          use_speaker_boost: true,
+        },
+      },
+      responseType: 'arraybuffer',
+      timeout: 15000,
+    });
+
+    return Buffer.from(response.data);
+  } catch (err) {
+    console.error('Error generando audio en ElevenLabs:', err.response?.data?.toString() || err.message);
+    return null;
+  }
+}
 
 // Helper: Generate Instant Corporate PDF Quotation
 async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
@@ -170,24 +210,6 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
   return await pdfDoc.save();
 }
 
-// Helper: Convert Text to Audio Voice Note Buffer (TTS)
-async function generateVoiceNoteBuffer(text) {
-  try {
-    // Truncate text for voice note preview (first 180 chars)
-    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 180);
-    const base64Audio = await googleTTS.getAudioBase64(cleanText, {
-      lang: 'es',
-      slow: false,
-      host: 'https://translate.google.com',
-      timeout: 10000,
-    });
-    return Buffer.from(base64Audio, 'base64');
-  } catch (err) {
-    console.error('Error generando nota de voz TTS:', err);
-    return null;
-  }
-}
-
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
@@ -238,7 +260,7 @@ async function connectToWhatsApp() {
       const isAudio = msg.message.audioMessage;
       if (isAudio) {
         console.log(`🎙️ [AUDIO RECIBIDO] Descargando nota de voz de ${pushName}...`);
-        text = 'Hola, te envié un audio solicitando información sobre sus servicios y cotizaciones.';
+        text = 'Hola, te envié un audio solicitando información sobre sus servicios de software y cotizaciones.';
       }
 
       if (!text.trim() || sender.includes('@g.us')) continue;
@@ -320,19 +342,18 @@ IDENTIDAD Y PROTOCOLO:
         console.log(`📤 [PIPELINE OUTBOUND] Enviando respuesta texto a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
 
-        // Enviar Nota de Voz Automática de WhatsApp (Voz Neural)
-        console.log(`🎙️ [VOZ NEURAL] Generando y enviando Nota de Voz de WhatsApp para ${pushName}...`);
-        const voiceBuffer = await generateVoiceNoteBuffer(
-          `Hola ${pushName}. Un gusto saludarte de parte de NeuroLabs Tech Solutions. Te acabo de enviar los detalles y opciones de cotización por texto. Quedo muy atento a cualquier duda.`
-        );
+        // Enviar Nota de Voz Humana con ElevenLabs (Multilingual v2)
+        console.log(`🎙️ [ELEVENLABS VOZ] Generando Nota de Voz Humana para ${pushName}...`);
+        const voiceText = `Hola ${pushName}. Un gusto saludarte de parte de NeuroLabs Tech Solutions. Te acabo de compartir toda la propuesta y cotización por escrito. Quedo muy atento para cualquier inquietud o para agendar una reunión.`;
+        const voiceBuffer = await generateElevenLabsVoiceNote(voiceText);
 
         if (voiceBuffer) {
           await sock.sendMessage(sender, {
             audio: voiceBuffer,
             mimetype: 'audio/mp4',
-            ptt: true, // ptt: true sends as a genuine green microphone WhatsApp Voice Note!
+            ptt: true, // Sends as genuine WhatsApp green microphone voice note
           });
-          console.log(`✅ [VOZ ENVIADA] Nota de voz de WhatsApp entregada exitosamente.`);
+          console.log(`✅ [ELEVENLABS ENVIADO] Nota de voz humana entregada con éxito.`);
         }
 
         conv.messages.push({
@@ -384,11 +405,11 @@ IDENTIDAD Y PROTOCOLO:
         if (isHighIntent) {
           console.log(`🚨 [PIPELINE STEP #5] Disparando Alerta VIP al WhatsApp del Dueño (+57 323 5845145)...`);
           try {
-            const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO CON TEXTO, AUDIO & PDF!*
+            const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO CON ELEVENLABS VOZ & PDF!*
 👤 *Cliente:* ${pushName}
 📱 *WhatsApp:* +${cleanPhone}
 🎯 *Interés:* "${text}"
-🎙️ *Nota de Voz:* Enviada (WhatsApp PTT)
+🎙️ *Nota de Voz:* ElevenLabs Multilingual v2
 📄 *PDF Generado:* ${wantsQuotePDF ? 'Sí' : 'No'}
 🔥 *Score de Cierre:* ${calculatedScore}%
 ⚡ *Atendido por:* Asesor IA NeuroLabs (Llama 120B)`;
@@ -417,7 +438,7 @@ IDENTIDAD Y PROTOCOLO:
             cliente: pushName,
             telefono: `+${cleanPhone}`,
             mensaje: text,
-            notaVozEnviada: 'AUDIO_PTT_OK',
+            vozElevenLabs: 'AUDIO_HUMANO_OK',
             pdfGenerado: wantsQuotePDF ? 'DESPACHADO_PDF' : 'NO_SOLICITADO',
             score: `${calculatedScore}%`,
             alertaOwner: isHighIntent ? 'DESPACHADA' : 'NUTRICION',
