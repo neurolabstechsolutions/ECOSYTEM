@@ -23,6 +23,7 @@ export const MOCK_USER = {
 
 export const MOCK_SIDEBAR_LINKS = [
   { name: 'Dashboard', path: '/', icon: 'LayoutDashboard' },
+  { name: 'Campañas & Outbound AI', path: '/campaigns', icon: 'Megaphone' },
   { name: 'Contactos', path: '/contacts', icon: 'Users' },
   { name: 'Leads (Pipeline)', path: '/leads', icon: 'Target' },
   { name: 'Conversaciones', path: '/conversations', icon: 'MessageSquare' },
@@ -39,7 +40,7 @@ export const MOCK_SIDEBAR_LINKS = [
   { name: 'Facturación', path: '/billing', icon: 'CreditCard' },
   { name: 'Usuarios', path: '/users', icon: 'UsersCog' },
   { name: 'Configuración', path: '/settings', icon: 'Settings' },
-]
+];
 
 // FASE 3: CRM MOCKS
 export const MOCK_CONTACTS = [
