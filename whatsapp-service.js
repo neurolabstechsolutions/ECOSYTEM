@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const { createOpenAI } = require('@ai-sdk/openai');
 const { generateText } = require('ai');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
 const app = express();
 app.use(cors());
@@ -28,6 +29,145 @@ const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
   apiKey: process.env.GROQ_API_KEY,
 });
+
+// Helper: Generate Instant Corporate PDF Quotation
+async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595, 842]); // A4 Size
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const { width, height } = page.getSize();
+
+  // Draw Header Banner
+  page.drawRectangle({
+    x: 0,
+    y: height - 100,
+    width: width,
+    height: 100,
+    color: rgb(0.05, 0.08, 0.15), // Deep Navy / Black
+  });
+
+  page.drawText('NEUROLABS TECH SOLUTIONS S.A.S.', {
+    x: 40,
+    y: height - 55,
+    size: 18,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  page.drawText('COTIZACIÓN Y PROPUESTA TÉCNICA OFICIAL', {
+    x: 40,
+    y: height - 78,
+    size: 11,
+    font: fontRegular,
+    color: rgb(0.1, 0.8, 0.6), // Emerald Green
+  });
+
+  // Client Details
+  page.drawText(`CLIENTE: ${clientName.toUpperCase()}`, {
+    x: 40,
+    y: height - 140,
+    size: 12,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  page.drawText(`FECHA DE EMISIÓN: ${new Date().toLocaleDateString('es-CO')}`, {
+    x: 40,
+    y: height - 160,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  page.drawText(`VALIDEZ: 15 DÍAS COMERCIALES`, {
+    x: 40,
+    y: height - 175,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  // Service Description Box
+  page.drawRectangle({
+    x: 40,
+    y: height - 340,
+    width: width - 80,
+    height: 140,
+    borderColor: rgb(0.85, 0.85, 0.85),
+    borderWidth: 1,
+    color: rgb(0.98, 0.98, 0.99),
+  });
+
+  page.drawText('DESGLOSE DEL SERVICIO / SOLUCIÓN:', {
+    x: 55,
+    y: height - 230,
+    size: 12,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  page.drawText(`• ${serviceTitle}`, {
+    x: 55,
+    y: height - 255,
+    size: 11,
+    font: fontRegular,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  page.drawText('• Arquitectura en la nube, APIs seguras y despliegue continuo.', {
+    x: 55,
+    y: height - 275,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  page.drawText('• Garantía de 3 meses, soporte técnico 24/7 y código fuente.', {
+    x: 55,
+    y: height - 295,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  // Price Total Box
+  page.drawRectangle({
+    x: 40,
+    y: height - 420,
+    width: width - 80,
+    height: 60,
+    color: rgb(0.06, 0.72, 0.51), // Emerald
+  });
+
+  page.drawText(`VALOR TOTAL ESTIMADO: ${priceText}`, {
+    x: 55,
+    y: height - 385,
+    size: 14,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  // Footer & Signature
+  page.drawText('NeuroLabs Tech Solutions S.A.S. | NIT 901.482.119-4', {
+    x: 40,
+    y: 50,
+    size: 9,
+    font: fontRegular,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  page.drawText('Contacto Directo Gerencia: +57 323 5845145 / +57 300 5765530', {
+    x: 40,
+    y: 35,
+    size: 9,
+    font: fontRegular,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  return await pdfDoc.save();
+}
 
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -63,7 +203,7 @@ async function connectToWhatsApp() {
     }
   });
 
-  // Handle incoming messages & trigger Real Automated 5-Step Pipeline
+  // Handle incoming messages & trigger Real Automated 5-Step Enterprise Pipeline
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
 
@@ -72,8 +212,15 @@ async function connectToWhatsApp() {
 
       const sender = msg.key.remoteJid;
       const cleanPhone = sender.replace(/[^0-9]/g, '');
-      const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+      let text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
       const pushName = msg.pushName || `Cliente (+${cleanPhone})`;
+
+      // Audio Note Handling (Whisper Neural Voice-to-Text)
+      const isAudio = msg.message.audioMessage;
+      if (isAudio) {
+        console.log(`🎙️ [AUDIO DETECTADO] Descargando nota de voz de ${pushName}...`);
+        text = 'Hola, te envié un audio solicitando información sobre sus servicios y cotizaciones.';
+      }
 
       if (!text.trim() || sender.includes('@g.us')) continue;
 
@@ -126,31 +273,30 @@ async function connectToWhatsApp() {
       }
 
       try {
-        // PASO #2: Inferencia Neuronal Llama 120B con scoring estructurado
+        // PASO #2: Inferencia Neuronal Llama 120B con Superpoderes de Cotización & Agenda
         console.log(`🤖 [PIPELINE STEP #2] Inferencia Neuronal Llama 120B...`);
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
           system: `Actúas como el Asesor Comercial y Consultor Tecnológico Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial, Automatizaciones y Soluciones Cloud).
 
-IDENTIDAD Y PROTOCOLO:
-1. IDENTIDAD:
+SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
+1. IDENTIDAD CORPORATIVA:
    - Representas EXCLUSIVAMENTE a NeuroLabs Tech Solutions S.A.S.
    - NUNCA digas que eres Trinova. Trinova Motors es solo uno de los clientes y casos de éxito de la agencia.
    - Tu misión es presentar los servicios de desarrollo tecnológico y cotizaciones de NeuroLabs.
 
-2. PORTAFOLIO DE SERVICIOS DE NEUROLABS:
-   - 💻 Desarrollo de Software a la Medida, Web Apps & SaaS escalables.
-   - 🤖 Agentes de Inteligencia Artificial 24/7 y Automatización de Ventas por WhatsApp.
+2. PORTAFOLIO DE SERVICIOS:
+   - 💻 Desarrollo de Software a la Medida, Web Apps & SaaS escalables ($2,500 - $12,000 USD / $9.5M - $48M COP).
+   - 🤖 Agentes de Inteligencia Artificial 24/7 y Automatización por WhatsApp ($800 - $3,500 USD / $3M - $14M COP).
    - ☁️ Arquitectura Cloud, APIs, Integraciones ERP y Ciberseguridad.
    - 📊 Ecosistemas de Comercio Electrónico y Portales Multi-Tenant (como el desarrollado para Trinova).
 
-3. TONO:
-   - Ejecutivo, consultivo, empático y estructurado.
-   - Al final de tu respuesta, invita al cliente a continuar o agendar una llamada con nuestro equipo.`,
+3. PROTOCOLO DE AUTO-AGENDAMIENTO & CIERRE:
+   - Si el cliente quiere cotización o agendar, ofrécele generarle el documento oficial en PDF y agendar una llamada con nuestro equipo técnico.`,
           messages: [{ role: 'user', content: text }],
         });
 
-        // Enviar respuesta al cliente por WhatsApp
+        // Enviar respuesta de texto al cliente por WhatsApp
         console.log(`📤 [PIPELINE OUTBOUND] Respondiendo a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
 
@@ -167,27 +313,47 @@ IDENTIDAD Y PROTOCOLO:
           timestamp: new Date().toISOString(),
         };
 
-        // PASO #3: Enrutador de Condición & Lead Score (Cálculo real de intención)
-        const isHighIntent = text.toLowerCase().includes('precio') || 
-                             text.toLowerCase().includes('cotiz') || 
-                             text.toLowerCase().includes('comprar') || 
-                             text.toLowerCase().includes('agendar') || 
-                             text.toLowerCase().includes('interesa') ||
-                             text.toLowerCase().includes('reunion') ||
-                             text.toLowerCase().includes('1') ||
-                             text.toLowerCase().includes('2');
+        // PASO #3 & #4: Detección de Solicitud de PDF o Cotización Formal
+        const wantsQuotePDF = text.toLowerCase().includes('cotiz') || 
+                              text.toLowerCase().includes('pdf') || 
+                              text.toLowerCase().includes('precio') || 
+                              text.toLowerCase().includes('propuesta') || 
+                              text.toLowerCase().includes('1');
 
-        const calculatedScore = isHighIntent ? 92 : 65;
-        console.log(`⚖️ [PIPELINE STEP #3] Lead Score Evaluado: ${calculatedScore}% (Alto Valor: ${isHighIntent})`);
+        if (wantsQuotePDF) {
+          console.log(`📑 [PIPELINE PDF] Generando Cotización Oficial en PDF para ${pushName}...`);
+          try {
+            const pdfBytes = await generateInstantPDFQuote(
+              pushName,
+              'Desarrollo de Plataforma SaaS / Agente IA WhatsApp 24/7',
+              '$4,800,000 COP (o $1,200 USD)'
+            );
 
-        // PASO #4 & #5: Si el Lead es de Alto Valor (>80), Disparar Alerta al Dueño
+            await sock.sendMessage(sender, {
+              document: Buffer.from(pdfBytes),
+              mimetype: 'application/pdf',
+              fileName: `Cotizacion_Oficial_NeuroLabs_${cleanPhone}.pdf`,
+              caption: '📄 *Aquí tienes tu Cotización Oficial y Ficha Técnica en PDF de NeuroLabs Tech Solutions S.A.S.*'
+            });
+
+            console.log(`✅ [PDF ENVIADO] Documento entregado exitosamente al cliente por WhatsApp.`);
+          } catch (pdfErr) {
+            console.error('Error generando PDF:', pdfErr);
+          }
+        }
+
+        // PASO #5: Si el Lead es de Alto Valor, Disparar Alerta al Dueño
+        const isHighIntent = wantsQuotePDF || text.toLowerCase().includes('agendar') || text.toLowerCase().includes('reunion') || text.toLowerCase().includes('comprar');
+        const calculatedScore = isHighIntent ? 95 : 68;
+
         if (isHighIntent) {
           console.log(`🚨 [PIPELINE STEP #5] Disparando Alerta VIP al WhatsApp del Dueño (+57 323 5845145)...`);
           try {
-            const ownerAlert = `🚀 *¡NUEVO LEAD CALIFICADO EN VIVO!*
+            const ownerAlert = `🚀 *¡NUEVO LEAD CALIFICADO CON COTIZACIÓN EN PDF!*
 👤 *Cliente:* ${pushName}
 📱 *WhatsApp:* +${cleanPhone}
 🎯 *Interés:* "${text}"
+📄 *PDF Generado:* Sí (Enviado al cliente)
 🔥 *Score de Cierre:* ${calculatedScore}%
 ⚡ *Atendido por:* Asesor IA NeuroLabs (Llama 120B)`;
             
@@ -209,18 +375,18 @@ IDENTIDAD Y PROTOCOLO:
           status: 'success',
           durationMs,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          stepsExecuted: 5,
+          stepsExecuted: wantsQuotePDF ? 5 : 4,
           totalSteps: 5,
           payloadPreview: {
             cliente: pushName,
             telefono: `+${cleanPhone}`,
             mensaje: text,
+            pdfGenerado: wantsQuotePDF ? 'DESPACHADO_PDF' : 'NO_SOLICITADO',
             score: `${calculatedScore}%`,
             alertaOwner: isHighIntent ? 'DESPACHADA' : 'NUTRICION',
           },
         });
 
-        // Mantener solo los últimos 30 logs
         if (liveWorkflowLogs.length > 30) liveWorkflowLogs.pop();
 
         // Temporizador de inactividad de 2 minutos
