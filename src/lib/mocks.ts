@@ -152,48 +152,92 @@ export interface Integration {
 
 export const MOCK_INTEGRATIONS: Integration[] = [
   {
+    id: "whatsapp-baileys-qr",
+    name: "WhatsApp Direct QR Bridge (Socket Baileys)",
+    provider: "Render Microservice & Baileys",
+    category: "Communication",
+    description: "Vinculación directa por código QR sin Meta for Developers. Atiende y responde mensajes 24/7 con costo $0.",
+    status: "CONNECTED",
+    lastSync: "En vivo",
+    iconType: "whatsapp",
+    colorScheme: {
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/30",
+      glow: "shadow-emerald-500/10",
+      text: "text-emerald-600"
+    },
+    metrics: { latencyMs: 135, requestsToday: 1845, uptime: "100%", eventsProcessed: 1420 },
+    authType: "QR Code Scan",
+    webhookUrl: "https://ecosytem.onrender.com",
+    docsUrl: "https://ecosytem.onrender.com/qr",
+    configFields: [
+      { key: "serviceUrl", label: "Render Endpoint URL", type: "text", value: "https://ecosytem.onrender.com" },
+      { key: "pairingPhone", label: "Número Vinculado", type: "text", value: "+57 300 5765530" }
+    ]
+  },
+  {
+    id: "groq-lpu-engine",
+    name: "Groq LPU AI Engine (GPT-OSS 120B)",
+    provider: "Groq Inc. (Inferencia LPU)",
+    category: "AI & ML",
+    description: "Cerebro neuronal ultra-rápido (<150ms de latencia) para cotizaciones en vivo, clasificación de leads y soporte 24/7.",
+    status: "CONNECTED",
+    lastSync: "En vivo",
+    iconType: "openai",
+    colorScheme: {
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/30",
+      glow: "shadow-purple-500/10",
+      text: "text-purple-600"
+    },
+    metrics: { latencyMs: 120, requestsToday: 34500, uptime: "99.99%", eventsProcessed: 98120 },
+    authType: "API Key",
+    configFields: [
+      { key: "model", label: "Modelo Activo", type: "text", value: "openai/gpt-oss-120b" },
+      { key: "apiKey", label: "Groq Secret Key", type: "password", value: "gsk_Wv5TsWK8..." }
+    ]
+  },
+  {
+    id: "supabase-postgres",
+    name: "Supabase Multi-Tenant Database & CRM",
+    provider: "Supabase Inc.",
+    category: "Data & Storage",
+    description: "Almacenamiento relacional de contactos, leads calificados, expedientes y contratos con seguridad PostgreSQL RLS.",
+    status: "CONNECTED",
+    lastSync: "En vivo",
+    iconType: "database",
+    colorScheme: {
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      glow: "shadow-blue-500/10",
+      text: "text-blue-600"
+    },
+    metrics: { latencyMs: 45, requestsToday: 8200, uptime: "99.99%", eventsProcessed: 12400 },
+    authType: "JWT & Anon Key",
+    configFields: [
+      { key: "projectUrl", label: "Supabase Project URL", type: "text", value: "https://fqxqeqdsqdampuzeiomx.supabase.co" }
+    ]
+  },
+  {
     id: "meta-whatsapp",
-    name: "Meta WhatsApp Cloud API",
+    name: "Meta WhatsApp Cloud API (Alternativo)",
     provider: "Meta Platforms",
     category: "Communication",
-    description: "Automate outbound messaging, customer support notifications, and interactive chat flows via official WhatsApp Business API.",
+    description: "Canal empresarial opcional mediante Cloud API de Meta Developers con Webhook verificado.",
     status: "CONNECTED",
     lastSync: "2 mins ago",
     iconType: "whatsapp",
     colorScheme: {
-      bg: "bg-emerald-500/10 dark:bg-emerald-950/40",
-      border: "border-emerald-500/30 dark:border-emerald-700/40",
-      glow: "shadow-emerald-500/10",
-      text: "text-emerald-500 dark:text-emerald-400"
+      bg: "bg-slate-500/10",
+      border: "border-slate-300",
+      glow: "shadow-slate-500/10",
+      text: "text-slate-700"
     },
-    metrics: { latencyMs: 142, requestsToday: 12450, uptime: "99.98%", eventsProcessed: 8940 },
-    authType: "OAuth 2.0",
-    webhookUrl: "https://api.neurometric.io/v1/webhooks/whatsapp",
-    docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api",
+    metrics: { latencyMs: 142, requestsToday: 450, uptime: "99.98%", eventsProcessed: 420 },
+    authType: "OAuth 2.0 / Bearer",
+    webhookUrl: "https://neurolabs-ecosystem.vercel.app/api/webhooks/whatsapp",
     configFields: [
-      { key: "phoneNumberId", label: "Phone Number ID", type: "text", value: "109847291847192" },
-      { key: "systemToken", label: "Permanent Access Token", type: "password", value: "EAAGxxxx" }
-    ]
-  },
-  {
-    id: "openai",
-    name: "OpenAI Platform",
-    provider: "OpenAI Inc.",
-    category: "AI & ML",
-    description: "High-throughput neural models (GPT-4o, o3-mini) for automated cognitive reasoning, entity extraction, and knowledge embeddings.",
-    status: "CONNECTED",
-    lastSync: "Just now",
-    iconType: "openai",
-    colorScheme: {
-      bg: "bg-teal-500/10 dark:bg-teal-950/40",
-      border: "border-teal-500/30 dark:border-teal-700/40",
-      glow: "shadow-teal-500/10",
-      text: "text-teal-500 dark:text-teal-400"
-    },
-    metrics: { latencyMs: 380, requestsToday: 48920, uptime: "99.95%", eventsProcessed: 320140 },
-    authType: "API Key",
-    configFields: [
-      { key: "apiKey", label: "API Secret Key", type: "password", value: "sk-proj-..." }
+      { key: "phoneNumberId", label: "Phone Number ID", type: "text", value: "1300772036447433" }
     ]
   }
 ];
