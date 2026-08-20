@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { 
   CheckSquare, Plus, Users, Target, Sparkles, Clock, AlertCircle, 
   CheckCircle2, Send, MessageSquare, ArrowRight, UserCheck, Shield,
-  Filter, Calendar, Flame, TrendingUp, Bot, Award, ChevronRight
+  Filter, Calendar, Flame, TrendingUp, Bot, Award, ChevronRight, Phone
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,8 +36,9 @@ interface TeamTask {
   id: string;
   title: string;
   description: string;
-  assignedTo: string; // Member name
+  assignedTo: string;
   assignedRole: string;
+  phone: string;
   priority: "ALTA" | "MEDIA" | "ESTRATÉGICA";
   status: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA";
   dueDate: string;
@@ -121,6 +122,7 @@ const INITIAL_TASKS: TeamTask[] = [
     description: "Revisar los 38 leads que solicitaron cotización formal en PDF durante la campaña outbound de WhatsApp.",
     assignedTo: "Director Comercial",
     assignedRole: "DIRECTOR COMERCIAL",
+    phone: "+57 300 5765530",
     priority: "ALTA",
     status: "EN_PROCESO",
     dueDate: "Hoy, 4:00 PM",
@@ -133,6 +135,7 @@ const INITIAL_TASKS: TeamTask[] = [
     description: "Publicar las piezas 3D animadas y el video demostrativo de WhatsApp con cotización automática.",
     assignedTo: "Director de Marketing",
     assignedRole: "DIRECTOR DE MARKETING",
+    phone: "+57 310 9876543",
     priority: "ESTRATÉGICA",
     status: "PENDIENTE",
     dueDate: "Mañana, 10:00 AM",
@@ -145,6 +148,7 @@ const INITIAL_TASKS: TeamTask[] = [
     description: "Validación de acuerdos corporativos y contratos de tecnología para clientes corporativos.",
     assignedTo: "Jafet Cantillo",
     assignedRole: "CEO & FUNDADOR",
+    phone: "+57 323 5845145",
     priority: "ESTRATÉGICA",
     status: "EN_PROCESO",
     dueDate: "Viernes, 2:00 PM",
@@ -157,6 +161,7 @@ const INITIAL_TASKS: TeamTask[] = [
     description: "Hacer llamada de cortesía a las 12 empresas que descargaron la propuesta técnica ayer.",
     assignedTo: "Director Comercial",
     assignedRole: "DIRECTOR COMERCIAL",
+    phone: "+57 300 5765530",
     priority: "MEDIA",
     status: "PENDIENTE",
     dueDate: "Hoy, 5:30 PM",
@@ -174,9 +179,19 @@ export default function TeamTasksManagementPage() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
   const [taskAssignee, setTaskAssignee] = useState("Director Comercial");
+  const [customPhone, setCustomPhone] = useState("+57 300 5765530");
   const [taskPriority, setTaskPriority] = useState<"ALTA" | "MEDIA" | "ESTRATÉGICA">("ALTA");
   const [taskDueDate, setTaskDueDate] = useState("Hoy");
   const [isDispatchingAI, setIsDispatchingAI] = useState(false);
+
+  // Update phone automatically when selecting a preset member
+  const handleAssigneeChange = (name: string) => {
+    setTaskAssignee(name);
+    const found = TEAM_MEMBERS.find(m => m.name === name);
+    if (found) {
+      setCustomPhone(found.phone);
+    }
+  };
 
   const handleCreateTask = async () => {
     if (!taskTitle.trim()) {
@@ -184,17 +199,26 @@ export default function TeamTasksManagementPage() {
       return;
     }
 
+    if (!customPhone.trim()) {
+      toast.error("Por favor ingresa el número de WhatsApp de destino");
+      return;
+    }
+
     setIsDispatchingAI(true);
-    const selectedMem = TEAM_MEMBERS.find(m => m.name === taskAssignee) || TEAM_MEMBERS[1];
+    const selectedMem = TEAM_MEMBERS.find(m => m.name === taskAssignee) || {
+      name: taskAssignee,
+      role: "MIEMBRO DEL EQUIPO",
+      phone: customPhone
+    };
 
     try {
-      // Dispatch real WhatsApp message to the team member's phone number
+      // Dispatch real WhatsApp message to the dynamic phone number entered
       const response = await fetch('/api/whatsapp/task-dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: selectedMem.phone,
-          memberName: selectedMem.name,
+          phone: customPhone,
+          memberName: taskAssignee,
           role: selectedMem.role,
           title: taskTitle,
           description: taskDesc,
@@ -204,9 +228,9 @@ export default function TeamTasksManagementPage() {
       });
 
       if (response.ok) {
-        toast.success(`📲 ¡Mensaje de WhatsApp enviado en vivo a ${selectedMem.name} (${selectedMem.phone})!`);
+        toast.success(`📲 ¡Mensaje de WhatsApp enviado en vivo a ${customPhone}!`);
       } else {
-        toast.info(`Tarea registrada en sistema (El WhatsApp de ${selectedMem.name} recibirá notificación).`);
+        toast.info(`Tarea registrada en sistema (El WhatsApp de destino recibirá notificación).`);
       }
     } catch (err) {
       console.log('Dispatching local fallback...');
@@ -216,13 +240,14 @@ export default function TeamTasksManagementPage() {
       id: `tsk-${Date.now().toString().slice(-3)}`,
       title: taskTitle,
       description: taskDesc || "Seguimiento coordinado con asistencia del Agente IA de NeuroLabs.",
-      assignedTo: selectedMem.name,
+      assignedTo: taskAssignee,
       assignedRole: selectedMem.role,
+      phone: customPhone,
       priority: taskPriority,
       status: "PENDIENTE",
       dueDate: taskDueDate,
       aiAssisted: true,
-      aiRecommendation: "El Asesor IA monitoreará el avance y enviará notificación de cumplimiento por WhatsApp.",
+      aiRecommendation: "El Asesor IA monitoreará el avance y enviará recordatorios automáticos por WhatsApp.",
     };
 
     setTasks([newTask, ...tasks]);
@@ -251,7 +276,7 @@ export default function TeamTasksManagementPage() {
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Gestión Ejecutiva & Asistencia IA
+              Gestión Ejecutiva & Notificación WhatsApp Real
             </span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-950 font-serif mt-2 flex items-center gap-3">
@@ -259,7 +284,7 @@ export default function TeamTasksManagementPage() {
             Tareas, Metas & Equipo Ejecutivo
           </h1>
           <p className="text-slate-500 mt-2 text-base">
-            Coordina al CEO, Director Comercial y Director de Marketing con asistencia y seguimiento autónomo de tu Agente IA.
+            Coloca el número de WhatsApp de cualquier compañero o líder y tu Agente IA le enviará la tarea y hará seguimiento en vivo.
           </p>
         </div>
 
@@ -269,7 +294,7 @@ export default function TeamTasksManagementPage() {
             className="bg-slate-950 hover:bg-black text-white rounded-2xl shadow-md px-5 py-6 font-bold flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Asignar Tarea al Equipo</span>
+            <span>Asignar Tarea por WhatsApp</span>
           </Button>
         </div>
       </div>
@@ -289,6 +314,9 @@ export default function TeamTasksManagementPage() {
                   <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-700 border-slate-200 mt-0.5">
                     {member.role}
                   </Badge>
+                  <p className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> {member.phone}
+                  </p>
                 </div>
               </div>
             </div>
@@ -350,7 +378,7 @@ export default function TeamTasksManagementPage() {
       <div className="space-y-4">
         <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600" />
-          Tablero de Tareas con Asistencia del Agente IA
+          Tablero de Tareas con Notificación WhatsApp Directa
         </h3>
 
         <div className="grid gap-4">
@@ -378,6 +406,10 @@ export default function TeamTasksManagementPage() {
                     <span className="text-xs text-slate-400 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> {task.dueDate}
                     </span>
+
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      <Phone className="w-3 h-3" /> WhatsApp: {task.phone}
+                    </span>
                   </div>
 
                   <h4 className="font-bold text-base text-slate-900">{task.title}</h4>
@@ -386,7 +418,7 @@ export default function TeamTasksManagementPage() {
                   {task.aiAssisted && (
                     <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
                       <Bot className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span><strong>Sugerencia del Agente IA:</strong> {task.aiRecommendation}</span>
+                      <span><strong>Asistencia IA:</strong> {task.aiRecommendation}</span>
                     </div>
                   )}
                 </div>
@@ -424,10 +456,10 @@ export default function TeamTasksManagementPage() {
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold font-serif text-slate-950">
-                  Asignar Tarea al Equipo
+                  Asignar Tarea por WhatsApp en Vivo
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
-                  El Agente IA supervisará el cumplimiento y asistirá al responsable.
+                  Ingresa el número celular de destino y el Agente IA enviará el mensaje oficial por WhatsApp.
                 </DialogDescription>
               </div>
             </div>
@@ -444,17 +476,28 @@ export default function TeamTasksManagementPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Asignar a Miembro del Equipo</label>
-              <select 
-                value={taskAssignee}
-                onChange={(e) => setTaskAssignee(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800"
-              >
-                <option value="Jafet Cantillo">Jafet Cantillo (CEO & Fundador)</option>
-                <option value="Director Comercial">Director Comercial</option>
-                <option value="Director de Marketing">Director de Marketing</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700">Responsable / Destinatario</label>
+                <Input 
+                  value={taskAssignee}
+                  onChange={(e) => handleAssigneeChange(e.target.value)}
+                  placeholder="Nombre del compañero o líder"
+                  className="bg-slate-50 border-slate-200 rounded-xl py-5 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-emerald-700 flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5" /> Número de WhatsApp (Con código de país)
+                </label>
+                <Input 
+                  value={customPhone}
+                  onChange={(e) => setCustomPhone(e.target.value)}
+                  placeholder="Ej: +57 323 5845145"
+                  className="bg-emerald-50/60 border-emerald-200 font-bold text-slate-900 rounded-xl py-5 text-xs"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -487,7 +530,7 @@ export default function TeamTasksManagementPage() {
               <Textarea 
                 value={taskDesc}
                 onChange={(e) => setTaskDesc(e.target.value)}
-                placeholder="Detalla qué debe realizar el responsable y cómo el Agente IA de NeuroLabs puede colaborar..."
+                placeholder="Escribe las instrucciones detalladas que el Agente IA despachará al WhatsApp del responsable..."
                 className="bg-slate-50 border-slate-200 rounded-xl text-xs h-24"
               />
             </div>
@@ -500,9 +543,10 @@ export default function TeamTasksManagementPage() {
             <Button 
               onClick={handleCreateTask}
               disabled={isDispatchingAI}
-              className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-5"
+              className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-5 flex items-center gap-2"
             >
-              {isDispatchingAI ? "Asignando..." : "Crear y Notificar"}
+              <Send className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isDispatchingAI ? "Enviando por WhatsApp..." : "Despachar Tarea por WhatsApp"}</span>
             </Button>
           </div>
         </DialogContent>
