@@ -14,12 +14,15 @@ export default async function LoginPage({
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 px-4 py-12">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8">
-        <div className="text-center space-y-2">
-          <div className="mx-auto w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-emerald-400 shadow-md">
-            <BrainCircuit className="w-8 h-8" />
+        <div className="text-center space-y-3">
+          <div className="mx-auto size-20 bg-white border border-slate-200 rounded-3xl p-2 flex items-center justify-center shadow-lg">
+            <img src="/neurolabs-logo.jpg" alt="NeuroLabs Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold font-serif text-slate-950 tracking-tight">NeuroLabs Tech Solutions</h1>
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Acceso Restringido • Panel Operativo SaaS</p>
+          <div>
+            <h1 className="text-2xl font-bold font-serif text-slate-950 tracking-tight">NeuroLabs Tech Solutions S.A.S.</h1>
+            <p className="text-xs text-emerald-600 font-serif italic mt-0.5">Innovación sin Límites</p>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-1">Acceso Ejecutivo • Panel Central</p>
+          </div>
         </div>
 
         {resolvedSearchParams?.error && (
