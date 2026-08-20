@@ -4,17 +4,18 @@ import React, { useState, useMemo, useEffect } from "react";
 import { 
   MOCK_INTEGRATIONS, 
   Integration, 
-  IntegrationStatus, 
   IntegrationCategory 
 } from "@/lib/mocks";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,13 +24,21 @@ import {
   Sliders, 
   Search, 
   Sparkles, 
-  CreditCard, 
   MessageSquare, 
   QrCode,
   Smartphone,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  Database,
+  Check,
+  Eye,
+  EyeOff,
+  Copy,
+  ExternalLink,
+  Zap,
+  Activity
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>(MOCK_INTEGRATIONS as Integration[]);
@@ -39,8 +48,10 @@ export default function IntegrationsPage() {
   
   // Dialog States
   const [activeIntegration, setActiveIntegration] = useState<Integration | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   // WhatsApp QR Live Bridge States (Connected to Render Microservice)
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
@@ -48,9 +59,6 @@ export default function IntegrationsPage() {
   const [connectionStatus, setConnectionStatus] = useState<string>("SCAN_QR");
   const [connectedNumber, setConnectedNumber] = useState<string | null>(null);
   const [isLoadingQR, setIsLoadingQR] = useState(false);
-
-  // Render Service Endpoint URL
-  const RENDER_SERVICE_URL = "https://ecosystem.onrender.com";
 
   // Poll live QR and status from Render
   useEffect(() => {
@@ -100,13 +108,27 @@ export default function IntegrationsPage() {
   const connectedCount = integrations.filter(i => i.status === "CONNECTED").length;
 
   const handleOpenConfig = (integration: Integration) => {
+    if (integration.id === "whatsapp-baileys-qr") {
+      setIsQRModalOpen(true);
+      return;
+    }
+
     setActiveIntegration(integration);
     const initialValues: Record<string, string> = {};
-    integration.configFields.forEach(field => {
-      initialValues[field.key] = field.value;
+    integration.configFields?.forEach(field => {
+      initialValues[field.key] = field.value || "";
     });
     setFormValues(initialValues);
-    setIsDialogOpen(true);
+    setShowSecrets({});
+    setIsConfigDialogOpen(true);
+  };
+
+  const handleSaveConfig = async () => {
+    setIsSaving(true);
+    await new Promise(r => setTimeout(r, 600));
+    setIsSaving(false);
+    setIsConfigDialogOpen(false);
+    toast.success("Credenciales actualizadas y sincronizadas correctamente.");
   };
 
   return (
@@ -194,7 +216,7 @@ export default function IntegrationsPage() {
             <CardHeader className="p-6 pb-4">
               <div className="flex justify-between items-start">
                 <div className="p-3 bg-slate-100 rounded-2xl border border-slate-200">
-                  {item.type === 'whatsapp' ? <MessageSquare className="w-6 h-6 text-emerald-600" /> : <Sparkles className="w-6 h-6 text-slate-800" />}
+                  {item.category === 'Communication' ? <MessageSquare className="w-6 h-6 text-emerald-600" /> : item.category === 'Data & Storage' ? <Database className="w-6 h-6 text-blue-600" /> : <Sparkles className="w-6 h-6 text-purple-600" />}
                 </div>
                 <Badge variant={item.status === 'CONNECTED' ? 'default' : 'secondary'} className={item.status === 'CONNECTED' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}>
                   {item.status === 'CONNECTED' ? 'Conectado' : 'Disponible'}
@@ -231,7 +253,81 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
-      {/* MODAL: Live WhatsApp QR Code Bridge (Render Microservice) */}
+      {/* MODAL 1: General Integration Config Editor */}
+      <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
+        <DialogContent className="max-w-lg bg-white border-slate-200 rounded-3xl p-6 sm:p-8">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 bg-slate-100 rounded-2xl border border-slate-200 text-slate-900">
+                <Sliders className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold font-serif text-slate-950">
+                  {activeIntegration?.name}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  {activeIntegration?.provider} • Autenticación {activeIntegration?.authType}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {activeIntegration?.configFields?.map((field) => {
+              const isPassword = field.type === "password";
+              const isVisible = showSecrets[field.key];
+
+              return (
+                <div key={field.key} className="space-y-1.5">
+                  <Label className="text-xs font-bold text-slate-700">{field.label}</Label>
+                  <div className="relative">
+                    <Input 
+                      type={isPassword && !isVisible ? "password" : "text"}
+                      value={formValues[field.key] || ""}
+                      onChange={(e) => setFormValues({ ...formValues, [field.key]: e.target.value })}
+                      placeholder={`Ingresa ${field.label}...`}
+                      className="pr-10 bg-slate-50 border-slate-200 rounded-xl text-xs py-5"
+                    />
+                    {isPassword && (
+                      <button 
+                        type="button"
+                        onClick={() => setShowSecrets({ ...showSecrets, [field.key]: !isVisible })}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                      >
+                        {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Conexión activa con el backend central de NeuroLabs.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsConfigDialogOpen(false)}
+              className="rounded-xl text-xs font-semibold"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSaveConfig}
+              disabled={isSaving}
+              className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-5"
+            >
+              {isSaving ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL 2: Live WhatsApp QR Code Bridge (Render Microservice) */}
       <Dialog open={isQRModalOpen} onOpenChange={setIsQRModalOpen}>
         <DialogContent className="max-w-md bg-white border-slate-200 rounded-3xl p-6 sm:p-8">
           <DialogHeader className="text-center space-y-2">
