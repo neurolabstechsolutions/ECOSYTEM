@@ -58,15 +58,15 @@ export default function IntegrationsPage() {
 
     const fetchLiveQR = async () => {
       try {
-        const res = await fetch(`${RENDER_SERVICE_URL}/qr`);
+        const res = await fetch('/api/whatsapp/qr');
         if (res.ok) {
           const data = await res.json();
-          setConnectionStatus(data.status);
+          if (data.status) setConnectionStatus(data.status);
           if (data.qr) setQrDataUrl(data.qr);
           if (data.phone) setConnectedNumber(data.phone);
         }
       } catch (err) {
-        console.log("Render service waking up...");
+        console.log("Connecting to WhatsApp bridge...");
       }
     };
 
