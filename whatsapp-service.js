@@ -253,12 +253,18 @@ async function connectToWhatsApp() {
       const sender = msg.key.remoteJid;
       const cleanPhone = sender.replace(/[^0-9]/g, '');
       let text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
-      const pushName = msg.pushName || `Cliente (+${cleanPhone})`;
+      
+      // Sanitizar pushName para evitar que si WhatsApp trae el nombre de tu propio negocio, no lo salude con su propio nombre
+      let rawName = msg.pushName || '';
+      let pushName = '';
+      if (rawName && !rawName.toLowerCase().includes('neurolabs') && !rawName.toLowerCase().includes('solutions')) {
+        pushName = rawName.split(' ')[0]; // Solo primer nombre
+      }
 
       // Audio Note Handling
       const isAudio = Boolean(msg.message.audioMessage);
       if (isAudio) {
-        console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de ${pushName}...`);
+        console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de cliente (${cleanPhone})...`);
         text = 'Hola, te envié un audio solicitando información sobre sus servicios de desarrollo y software.';
       }
 
@@ -266,7 +272,7 @@ async function connectToWhatsApp() {
 
       const startTime = Date.now();
       console.log(`\n========================================`);
-      console.log(`⚡ [PIPELINE START] Paso #1 Trigger: ${pushName} (${cleanPhone}) -> "${text}"`);
+      console.log(`⚡ [PIPELINE START] Paso #1 Trigger: ${pushName || 'Cliente'} (${cleanPhone}) -> "${text}"`);
 
       // Store in Live Conversation Registry
       if (!liveConversations.has(sender)) {
@@ -274,7 +280,7 @@ async function connectToWhatsApp() {
           id: `conv_${cleanPhone}`,
           contact: {
             id: `usr_${cleanPhone}`,
-            name: pushName,
+            name: pushName || `Cliente (+${cleanPhone})`,
             phone: `+${cleanPhone}`,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanPhone}`,
             tenant: 'NeuroLabs Tech Solutions',
@@ -313,46 +319,50 @@ async function connectToWhatsApp() {
       }
 
       try {
-        // PASO #2: Inferencia Neuronal Llama 120B (Respuestas Claras, Cortas y Conversacionales)
-        console.log(`🤖 [PIPELINE STEP #2] Inferencia Neuronal Llama 120B...`);
+        // Build conversation history memory (Last 6 messages)
+        const recentHistory = conv.messages.slice(-6).map(m => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text
+        }));
+
+        // PASO #2: Inferencia Neuronal Llama 120B con Memoria Conversacional
+        console.log(`🤖 [PIPELINE STEP #2] Inferencia Neuronal Llama 120B con Memoria...`);
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
-          system: `Actúas como el Asesor Comercial Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial y Soluciones Cloud).
+          system: `Eres un asesor humano real, cercano y profesional que atiende por WhatsApp para NeuroLabs Tech Solutions.
 
-REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
-1. RESPUESTAS CORTAS Y NATURALES:
-   - Responde como un humano por chat: máximo 2 o 3 párrafos cortos (menos de 60 palabras).
-   - NUNCA envíes listados gigantes de 6 servicios ni tablas con precios en bloque a menos que el cliente te pregunte por un servicio específico.
-   - NO uses asteriscos excesivos (***) ni encabezados de markdown con símbolos raros (#). Usa saltos de línea limpios y emojis con moderación.
+REGLAS DE ORO CONVERSACIONALES (HUMANIZACIÓN ESTRICTA):
+1. NO TE REPITAS:
+   - Ya sabes en qué empresa trabajas. NO repitas "Soy el asesor comercial de NeuroLabs Tech Solutions SAS" en cada mensaje. Si ya saludaste antes en la conversación, entra directo al grano sin volverte a presentar.
+   - NUNCA digas cosas como "En este chat solo respondo por texto". ¡TÚ PUEDES ENVIAR AUDIOS DE VOZ y PDFs cuando el cliente lo pida!
+   - NUNCA uses nombres de empresas extraños como si fueran el nombre del cliente (ejemplo: NUNCA digas "Hola NeuroLabs Tech Solutions"). Si no sabes el nombre de pila del cliente, di simplemente "¡Hola!", "¿Qué tal?", o "¡Con gusto!".
 
-2. CONVERSACIÓN FLUIDA:
-   - Saluda calurosamente llamando al cliente por su nombre (${pushName}).
-   - Pregúntale amablemente qué tipo de proyecto o necesidad tiene su empresa (por ejemplo: desarrollo de una App/Web, automatizar su WhatsApp con IA, o infraestructura en la nube).
-   - Ofrécele enviarle una cotización formal en PDF o agendar una llamada rápida cuando tenga clara la necesidad.
+2. ESTILO DE CHAT 100% HUMANO:
+   - Mensajes cortos, de 1 o 2 oraciones directas (menos de 35 palabras).
+   - Escribe fluido como una persona normal en WhatsApp. Usa 1 emoji natural máximo.
+   - Cero asteriscos exagerados (***) y cero listados de opciones aburridas.
+   - Si el cliente te pide un audio o que le hables, dile: "¡Claro que sí! Te acabo de mandar una nota de voz aquí mismo para que me escuches. Cuéntame sobre tu proyecto."
 
-3. IDENTIDAD:
-   - Tu empresa es NeuroLabs Tech Solutions S.A.S. (Desarrollo de Software & IA).
-   - NUNCA digas que eres Trinova.`,
-          messages: [{ role: 'user', content: text }],
+3. CONOCIMIENTO DE LA AGENCIA:
+   - Ofreces: Desarrollo de software/apps a la medida, Agentes de IA para WhatsApp y Soluciones Cloud.
+   - Si el cliente quiere cotizar, pregúntale brevemente qué necesita y dile que le puedes enviar el PDF de una vez.`,
+          messages: recentHistory,
         });
 
         // Enviar respuesta de texto al cliente por WhatsApp
         console.log(`📤 [PIPELINE OUTBOUND] Enviando respuesta texto a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
 
-        // PASO #3: Decisión Inteligente para Nota de Voz (Solo cuando es oportuno, NO SIEMPRE)
-        // Solo envía nota de voz si el cliente envió un audio, o si pide audio/llamada explícitamente.
+        // PASO #3: Decisión Inteligente para Nota de Voz
         const shouldSendVoiceNote = isAudio || 
                                     text.toLowerCase().includes('audio') || 
-                                    text.toLowerCase().includes('nota de voz') || 
+                                    text.toLowerCase().includes('escuch') ||
+                                    text.toLowerCase().includes('voz') || 
                                     text.toLowerCase().includes('llamada');
 
         if (shouldSendVoiceNote) {
-          console.log(`🎙️ [ELEVENLABS VOZ] Generando Nota de Voz Contextual y Natural para ${pushName}...`);
-          // Voz natural, variada y conversacional (sin repetir el nombre de la empresa como un robot)
-          const voicePrompt = isAudio 
-            ? `Hola ${pushName}, escuché tu mensaje con atención. Ya te dejé los detalles por aquí en el chat para que los revises con calma. Si quieres podemos cuadrar una llamada y revisamos tu proyecto.`
-            : `Hola ${pushName}, claro que sí. Te dejé la información por texto. Cuéntame qué tipo de desarrollo necesitas y con gusto te preparo la cotización.`;
+          console.log(`🎙️ [ELEVENLABS VOZ] Generando Nota de Voz Contextual Humana...`);
+          const voicePrompt = `¡Hola! Claro que sí, aquí me puedes escuchar. Estamos listos para ayudarte con el desarrollo de tu software o la automatización de tu WhatsApp con inteligencia artificial. Cuéntame qué tienes en mente y lo revisamos de una vez.`;
 
           const voiceBuffer = await generateElevenLabsVoiceNote(voicePrompt);
 
@@ -362,7 +372,7 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
               mimetype: 'audio/mp4',
               ptt: true,
             });
-            console.log(`✅ [ELEVENLABS ENVIADO] Nota de voz natural entregada.`);
+            console.log(`✅ [ELEVENLABS ENVIADO] Nota de voz humana entregada.`);
           }
         }
 
@@ -385,10 +395,10 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
                               text.toLowerCase().includes('propuesta');
 
         if (wantsQuotePDF) {
-          console.log(`📑 [PIPELINE PDF] Generando Cotización Oficial en PDF para ${pushName}...`);
+          console.log(`📑 [PIPELINE PDF] Generando Cotización Oficial en PDF para ${pushName || 'Cliente'}...`);
           try {
             const pdfBytes = await generateInstantPDFQuote(
-              pushName,
+              pushName || 'Cliente',
               'Desarrollo de Software a la Medida & Agente de Inteligencia Artificial',
               '$4,800,000 COP (o $1,200 USD)'
             );
@@ -414,7 +424,7 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
           console.log(`🚨 [PIPELINE STEP #5] Disparando Alerta VIP al WhatsApp del Dueño (+57 323 5845145)...`);
           try {
             const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO POR IA!*
-👤 *Cliente:* ${pushName}
+👤 *Cliente:* ${pushName || 'Contacto Directo'}
 📱 *WhatsApp:* +${cleanPhone}
 🎯 *Mensaje:* "${text}"
 📄 *PDF Generado:* ${wantsQuotePDF ? 'Sí' : 'No'}
@@ -435,14 +445,14 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
           id: `exec_${Date.now()}`,
           workflowId: 'wf-1',
           workflowName: 'Calificación de Clientes por WhatsApp & Alerta de Cierre',
-          triggerEvent: `whatsapp.message (${pushName})`,
+          triggerEvent: `whatsapp.message (${pushName || 'Cliente'})`,
           status: 'success',
           durationMs,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           stepsExecuted: 5,
           totalSteps: 5,
           payloadPreview: {
-            cliente: pushName,
+            cliente: pushName || 'Cliente WhatsApp',
             telefono: `+${cleanPhone}`,
             mensaje: text,
             notaVozEnviada: shouldSendVoiceNote ? 'AUDIO_ENVIADO' : 'NO_REQUERIDO',
@@ -454,11 +464,11 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
 
         if (liveWorkflowLogs.length > 30) liveWorkflowLogs.pop();
 
-        // Temporizador de inactividad de 2 minutos
+        // Temporizador de inactividad de 5 minutos (más amplio y natural)
         const timer = setTimeout(async () => {
           try {
-            console.log(`[Session Timeout] Cerrando chat por inactividad (2 mins) para: ${sender}`);
-            const closingText = '⏱️ *Sesión en pausa por inactividad*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨';
+            console.log(`[Session Timeout] Pausa natural por inactividad para: ${sender}`);
+            const closingText = 'Quedo muy atento por si deseas revisar algún detalle más adelante. ¡Que tengas un excelente día! 👋✨';
             await sock.sendMessage(sender, { text: closingText });
             
             conv.messages.push({
@@ -472,7 +482,7 @@ REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
           } catch (err) {
             console.error('Error al enviar mensaje de cierre por inactividad:', err);
           }
-        }, 2 * 60 * 1000);
+        }, 5 * 60 * 1000);
 
         activeSessions.set(sender, { lastActivity: Date.now(), timer });
 
