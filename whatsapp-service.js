@@ -278,24 +278,32 @@ async function connectToWhatsApp() {
         const participantPhone = (participantJid || '').replace(/[^0-9]/g, '');
         const participantPushName = pushName || 'Socio';
 
-        // Identify partner
+        // Identify partner synchronized with real Supabase team data
         let partnerName = participantPushName;
-        if (participantPhone.includes('3235845145')) partnerName = 'Jafet Cantillo (CEO)';
-        else if (participantPhone.includes('3005765530')) partnerName = 'Richard / Director Comercial';
-        else if (participantPushName.toLowerCase().includes('jafet')) partnerName = 'Jafet Cantillo (CEO)';
-        else if (participantPushName.toLowerCase().includes('richard')) partnerName = 'Richard (Socio Directivo)';
+        let partnerRole = 'SOCIO DIRECTIVO';
 
-        console.log(`👥 [GRUPO NEUROLABS] Respuesta de socio detectada: ${partnerName} (${participantPhone}) -> "${text}"`);
+        if (participantPhone.includes('3005765530') || participantPushName.toLowerCase().includes('jesus') || participantPushName.toLowerCase().includes('cantillo')) {
+          partnerName = 'Jesús David Cantillo Parejo';
+          partnerRole = 'CEO & FUNDADOR';
+        } else if (participantPhone.includes('3206775124') || participantPushName.toLowerCase().includes('richard') || participantPushName.toLowerCase().includes('acosta')) {
+          partnerName = 'Richard Nixon Acosta Almarales';
+          partnerRole = 'DIRECTOR COMERCIAL';
+        } else if (participantPhone.includes('3156025270') || participantPhone.includes('3235845145') || participantPushName.toLowerCase().includes('jafet') || participantPushName.toLowerCase().includes('navarro')) {
+          partnerName = 'Jafet Asaf Navarro';
+          partnerRole = 'DIRECTOR DE MARKETING';
+        }
+
+        console.log(`👥 [GRUPO NEUROLABS] Respuesta de socio detectada: ${partnerName} (${partnerRole} • +${participantPhone}) -> "${text}"`);
 
         // Update live workflow log for the dashboard
         liveWorkflowLogs.unshift({
           id: `log_${Date.now()}`,
-          name: `Confirmación de Tarea por ${partnerName}`,
+          name: `Confirmación de Tarea por ${partnerName} (${partnerRole})`,
           trigger: `WhatsApp Grupo • ${partnerName}`,
           status: 'COMPLETADO',
           timestamp: new Date().toLocaleTimeString(),
           latency: '240ms',
-          details: `El socio ${partnerName} respondió: "${text}". Estado de agenda actualizado.`,
+          details: `El directivo ${partnerName} (${partnerRole}) respondió: "${text}". Cronograma de agenda sincronizado.`,
         });
 
         continue;
