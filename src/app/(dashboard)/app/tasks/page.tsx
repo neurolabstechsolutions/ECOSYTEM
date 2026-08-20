@@ -489,12 +489,12 @@ export default function TeamTasksManagementPage() {
 
               <div className="space-y-1.5">
                 <label className="font-bold text-emerald-700 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5" /> Número de WhatsApp (Con código de país)
+                  <Phone className="w-3.5 h-3.5" /> Teléfonos o Grupo (Separados por coma)
                 </label>
                 <Input 
                   value={customPhone}
                   onChange={(e) => setCustomPhone(e.target.value)}
-                  placeholder="Ej: +57 323 5845145"
+                  placeholder="Ej: +57 323 5845145, +57 300 5765530"
                   className="bg-emerald-50/60 border-emerald-200 font-bold text-slate-900 rounded-xl py-5 text-xs"
                 />
               </div>

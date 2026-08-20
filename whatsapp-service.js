@@ -493,7 +493,7 @@ REGLAS DE ORO CONVERSACIONALES (HUMANIZACIÓN ESTRICTA):
   });
 }
 
-// REST Endpoint to dispatch real WhatsApp task notifications to Team Members
+// REST Endpoint to dispatch real WhatsApp task notifications to Team Members & Groups (Simultaneously)
 app.post('/send-task-alert', async (req, res) => {
   try {
     const { phone, memberName, role, title, description, priority, dueDate } = req.body;
@@ -506,15 +506,12 @@ app.post('/send-task-alert', async (req, res) => {
       return res.status(503).json({ error: 'WhatsApp socket is not connected' });
     }
 
-    const cleanNumber = phone.replace(/[^0-9]/g, '');
-    const jid = `${cleanNumber}@s.whatsapp.net`;
-
     const taskWhatsAppMessage = `📌 *NUEVA TAREA ASIGNADA • NEUROLABS TECH SOLUTIONS*
 ━━━━━━━━━━━━━━━━━━━━
-👤 *Responsable:* ${memberName} (${role})
+👤 *Responsable / Equipo:* ${memberName || 'Todo el Equipo'} (${role || 'Equipo Directivo'})
 🎯 *Tarea:* *${title}*
-🔥 *Prioridad:* ${priority}
-⏰ *Fecha Límite:* ${dueDate}
+🔥 *Prioridad:* ${priority || 'ALTA'}
+⏰ *Fecha Límite:* ${dueDate || 'Hoy'}
 
 📝 *Instrucciones:*
 "${description || 'Sin instrucciones adicionales'}"
@@ -524,10 +521,31 @@ Monitoreo activo de avances y métricas. Para marcarla completada o solicitar as
 ━━━━━━━━━━━━━━━━━━━━
 _NeuroLabs Tech Solutions S.A.S. • Innovación sin Límites_`;
 
-    await sock.sendMessage(jid, { text: taskWhatsAppMessage });
-    console.log(`✅ [TASK DISPATCH] Tarea "${title}" enviada por WhatsApp a ${memberName} (${phone})`);
+    // Split multiple phone numbers / groups by comma or space
+    const targets = phone.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
+    const sentResults = [];
 
-    return res.json({ success: true, message: `Tarea enviada a ${phone}` });
+    for (const target of targets) {
+      try {
+        let jid = '';
+        if (target.includes('@g.us')) {
+          // WhatsApp Group
+          jid = target;
+        } else {
+          // Individual Phone
+          const cleanNumber = target.replace(/[^0-9]/g, '');
+          jid = `${cleanNumber}@s.whatsapp.net`;
+        }
+
+        await sock.sendMessage(jid, { text: taskWhatsAppMessage });
+        console.log(`✅ [TASK DISPATCH] Tarea "${title}" enviada simultáneamente a: ${jid}`);
+        sentResults.push(target);
+      } catch (sendErr) {
+        console.error(`Error enviando a ${target}:`, sendErr.message);
+      }
+    }
+
+    return res.json({ success: true, count: sentResults.length, targets: sentResults });
   } catch (err) {
     console.error('Error enviando tarea por WhatsApp:', err);
     return res.status(500).json({ error: err.message });
