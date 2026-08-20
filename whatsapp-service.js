@@ -21,7 +21,7 @@ let sock = null;
 const OWNER_PHONE = '573235845145@s.whatsapp.net';
 
 // Realtime In-Memory Data Store (Synchronized with NeuroLabs Dashboard)
-const activeSessions = new Map(); // sender -> { lastActivity: number, timer: Timeout }
+const activeSessions = new Map(); // sender -> { lastActivity: number, timer: Timeout, history: [] }
 const liveConversations = new Map(); // sender -> { id, contact, lastMessage, messages: [], handlingStatus, unreadCount }
 const liveWorkflowLogs = []; // Real-time execution logs for /app/automations
 
@@ -31,16 +31,15 @@ const groq = createOpenAI({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ElevenLabs Configuration (High-Definition Executive Voice)
+// ElevenLabs Configuration (High-Definition Natural Voice)
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_11dc8c0036a97d6031431de25ffc336a45b832dc371d6160';
-// Standard Natural Voice ID (Brian / Liam / Paul - warm Latin/Spanish executive tone)
-const ELEVENLABS_VOICE_ID = 'nPczCjzI2devNBz1zQrb'; // Natural Executive Spanish Voice
+const ELEVENLABS_VOICE_ID = 'nPczCjzI2devNBz1zQrb';
 
-// Helper: Generate Ultra-Realistic Human Voice Note with ElevenLabs
+// Helper: Generate Natural Human Voice Note with ElevenLabs
 async function generateElevenLabsVoiceNote(text) {
   try {
-    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 250);
-    console.log(`🎙️ [ELEVENLABS NEURAL] Generando voz humana para: "${cleanText.slice(0, 60)}..."`);
+    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 200);
+    console.log(`🎙️ [ELEVENLABS NEURAL] Generando voz humana contextual: "${cleanText.slice(0, 50)}..."`);
 
     const response = await axios({
       method: 'POST',
@@ -54,8 +53,8 @@ async function generateElevenLabsVoiceNote(text) {
         text: cleanText,
         model_id: 'eleven_multilingual_v2',
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
+          stability: 0.55,
+          similarity_boost: 0.80,
           style: 0.0,
           use_speaker_boost: true,
         },
@@ -71,7 +70,7 @@ async function generateElevenLabsVoiceNote(text) {
   }
 }
 
-// Helper: Generate Instant Corporate PDF Quotation
+// Helper: Generate Clean Instant Corporate PDF Quotation
 async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4 Size
@@ -80,7 +79,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
 
   const { width, height } = page.getSize();
 
-  // Draw Header Banner
+  // Header Banner
   page.drawRectangle({
     x: 0,
     y: height - 100,
@@ -97,7 +96,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(1, 1, 1),
   });
 
-  page.drawText('COTIZACIÓN Y PROPUESTA TÉCNICA OFICIAL', {
+  page.drawText('PROPUESTA TECNICA Y COTIZACION OFICIAL', {
     x: 40,
     y: height - 78,
     size: 11,
@@ -114,7 +113,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.1, 0.1, 0.1),
   });
 
-  page.drawText(`FECHA DE EMISIÓN: ${new Date().toLocaleDateString('es-CO')}`, {
+  page.drawText(`FECHA DE EMISION: ${new Date().toLocaleDateString('es-CO')}`, {
     x: 40,
     y: height - 160,
     size: 10,
@@ -122,7 +121,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.4, 0.4, 0.4),
   });
 
-  page.drawText(`VALIDEZ: 15 DÍAS COMERCIALES`, {
+  page.drawText(`VALIDEZ: 15 DIAS COMERCIALES`, {
     x: 40,
     y: height - 175,
     size: 10,
@@ -141,7 +140,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.98, 0.98, 0.99),
   });
 
-  page.drawText('DESGLOSE DEL SERVICIO / SOLUCIÓN:', {
+  page.drawText('DESGLOSE DE LA SOLUCION:', {
     x: 55,
     y: height - 230,
     size: 12,
@@ -149,7 +148,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.1, 0.1, 0.1),
   });
 
-  page.drawText(`• ${serviceTitle}`, {
+  page.drawText(`* ${serviceTitle}`, {
     x: 55,
     y: height - 255,
     size: 11,
@@ -157,7 +156,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.2, 0.2, 0.2),
   });
 
-  page.drawText('• Arquitectura en la nube, APIs seguras y despliegue continuo.', {
+  page.drawText('* Arquitectura en la nube escalable, APIs seguras y despliegue continuo.', {
     x: 55,
     y: height - 275,
     size: 10,
@@ -165,7 +164,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.3, 0.3, 0.3),
   });
 
-  page.drawText('• Garantía de 3 meses, soporte técnico 24/7 y código fuente.', {
+  page.drawText('* Garantia de 3 meses, soporte tecnico y entrega de codigo fuente.', {
     x: 55,
     y: height - 295,
     size: 10,
@@ -199,7 +198,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  page.drawText('Contacto Directo Gerencia: +57 323 5845145 / +57 300 5765530', {
+  page.drawText('Contacto Comercial: +57 323 5845145 / +57 300 5765530', {
     x: 40,
     y: 35,
     size: 9,
@@ -257,10 +256,10 @@ async function connectToWhatsApp() {
       const pushName = msg.pushName || `Cliente (+${cleanPhone})`;
 
       // Audio Note Handling
-      const isAudio = msg.message.audioMessage;
+      const isAudio = Boolean(msg.message.audioMessage);
       if (isAudio) {
-        console.log(`🎙️ [AUDIO RECIBIDO] Descargando nota de voz de ${pushName}...`);
-        text = 'Hola, te envié un audio solicitando información sobre sus servicios de software y cotizaciones.';
+        console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de ${pushName}...`);
+        text = 'Hola, te envié un audio solicitando información sobre sus servicios de desarrollo y software.';
       }
 
       if (!text.trim() || sender.includes('@g.us')) continue;
@@ -314,27 +313,26 @@ async function connectToWhatsApp() {
       }
 
       try {
-        // PASO #2: Inferencia Neuronal Llama 120B
+        // PASO #2: Inferencia Neuronal Llama 120B (Respuestas Claras, Cortas y Conversacionales)
         console.log(`🤖 [PIPELINE STEP #2] Inferencia Neuronal Llama 120B...`);
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
-          system: `Actúas como el Asesor Comercial y Consultor Tecnológico Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial, Automatizaciones y Soluciones Cloud).
+          system: `Actúas como el Asesor Comercial Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial y Soluciones Cloud).
 
-IDENTIDAD Y PROTOCOLO:
-1. IDENTIDAD:
-   - Representas EXCLUSIVAMENTE a NeuroLabs Tech Solutions S.A.S.
-   - NUNCA digas que eres Trinova. Trinova Motors es solo uno de los clientes y casos de éxito de la agencia.
-   - Tu misión es presentar los servicios de desarrollo tecnológico y cotizaciones de NeuroLabs.
+REGLAS DE COMUNICACIÓN POR WHATSAPP (MUY IMPORTANTE):
+1. RESPUESTAS CORTAS Y NATURALES:
+   - Responde como un humano por chat: máximo 2 o 3 párrafos cortos (menos de 60 palabras).
+   - NUNCA envíes listados gigantes de 6 servicios ni tablas con precios en bloque a menos que el cliente te pregunte por un servicio específico.
+   - NO uses asteriscos excesivos (***) ni encabezados de markdown con símbolos raros (#). Usa saltos de línea limpios y emojis con moderación.
 
-2. PORTAFOLIO DE SERVICIOS:
-   - 💻 Desarrollo de Software a la Medida, Web Apps & SaaS escalables ($2,500 - $12,000 USD / $9.5M - $48M COP).
-   - 🤖 Agentes de Inteligencia Artificial 24/7 y Automatización por WhatsApp ($800 - $3,500 USD / $3M - $14M COP).
-   - ☁️ Arquitectura Cloud, APIs, Integraciones ERP y Ciberseguridad.
-   - 📊 Ecosistemas de Comercio Electrónico y Portales Multi-Tenant.
+2. CONVERSACIÓN FLUIDA:
+   - Saluda calurosamente llamando al cliente por su nombre (${pushName}).
+   - Pregúntale amablemente qué tipo de proyecto o necesidad tiene su empresa (por ejemplo: desarrollo de una App/Web, automatizar su WhatsApp con IA, o infraestructura en la nube).
+   - Ofrécele enviarle una cotización formal en PDF o agendar una llamada rápida cuando tenga clara la necesidad.
 
-3. TONO:
-   - Ejecutivo, consultivo, empático y estructurado.
-   - Al final de tu respuesta, invita al cliente a continuar o agendar una llamada con nuestro equipo.`,
+3. IDENTIDAD:
+   - Tu empresa es NeuroLabs Tech Solutions S.A.S. (Desarrollo de Software & IA).
+   - NUNCA digas que eres Trinova.`,
           messages: [{ role: 'user', content: text }],
         });
 
@@ -342,18 +340,30 @@ IDENTIDAD Y PROTOCOLO:
         console.log(`📤 [PIPELINE OUTBOUND] Enviando respuesta texto a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
 
-        // Enviar Nota de Voz Humana con ElevenLabs (Multilingual v2)
-        console.log(`🎙️ [ELEVENLABS VOZ] Generando Nota de Voz Humana para ${pushName}...`);
-        const voiceText = `Hola ${pushName}. Un gusto saludarte de parte de NeuroLabs Tech Solutions. Te acabo de compartir toda la propuesta y cotización por escrito. Quedo muy atento para cualquier inquietud o para agendar una reunión.`;
-        const voiceBuffer = await generateElevenLabsVoiceNote(voiceText);
+        // PASO #3: Decisión Inteligente para Nota de Voz (Solo cuando es oportuno, NO SIEMPRE)
+        // Solo envía nota de voz si el cliente envió un audio, o si pide audio/llamada explícitamente.
+        const shouldSendVoiceNote = isAudio || 
+                                    text.toLowerCase().includes('audio') || 
+                                    text.toLowerCase().includes('nota de voz') || 
+                                    text.toLowerCase().includes('llamada');
 
-        if (voiceBuffer) {
-          await sock.sendMessage(sender, {
-            audio: voiceBuffer,
-            mimetype: 'audio/mp4',
-            ptt: true, // Sends as genuine WhatsApp green microphone voice note
-          });
-          console.log(`✅ [ELEVENLABS ENVIADO] Nota de voz humana entregada con éxito.`);
+        if (shouldSendVoiceNote) {
+          console.log(`🎙️ [ELEVENLABS VOZ] Generando Nota de Voz Contextual y Natural para ${pushName}...`);
+          // Voz natural, variada y conversacional (sin repetir el nombre de la empresa como un robot)
+          const voicePrompt = isAudio 
+            ? `Hola ${pushName}, escuché tu mensaje con atención. Ya te dejé los detalles por aquí en el chat para que los revises con calma. Si quieres podemos cuadrar una llamada y revisamos tu proyecto.`
+            : `Hola ${pushName}, claro que sí. Te dejé la información por texto. Cuéntame qué tipo de desarrollo necesitas y con gusto te preparo la cotización.`;
+
+          const voiceBuffer = await generateElevenLabsVoiceNote(voicePrompt);
+
+          if (voiceBuffer) {
+            await sock.sendMessage(sender, {
+              audio: voiceBuffer,
+              mimetype: 'audio/mp4',
+              ptt: true,
+            });
+            console.log(`✅ [ELEVENLABS ENVIADO] Nota de voz natural entregada.`);
+          }
         }
 
         conv.messages.push({
@@ -369,27 +379,25 @@ IDENTIDAD Y PROTOCOLO:
           timestamp: new Date().toISOString(),
         };
 
-        // PASO #3 & #4: Detección de Solicitud de PDF
+        // PASO #4: Detección de Solicitud de PDF
         const wantsQuotePDF = text.toLowerCase().includes('cotiz') || 
                               text.toLowerCase().includes('pdf') || 
-                              text.toLowerCase().includes('precio') || 
-                              text.toLowerCase().includes('propuesta') || 
-                              text.toLowerCase().includes('1');
+                              text.toLowerCase().includes('propuesta');
 
         if (wantsQuotePDF) {
           console.log(`📑 [PIPELINE PDF] Generando Cotización Oficial en PDF para ${pushName}...`);
           try {
             const pdfBytes = await generateInstantPDFQuote(
               pushName,
-              'Desarrollo de Plataforma SaaS / Agente IA WhatsApp 24/7',
+              'Desarrollo de Software a la Medida & Agente de Inteligencia Artificial',
               '$4,800,000 COP (o $1,200 USD)'
             );
 
             await sock.sendMessage(sender, {
               document: Buffer.from(pdfBytes),
               mimetype: 'application/pdf',
-              fileName: `Cotizacion_Oficial_NeuroLabs_${cleanPhone}.pdf`,
-              caption: '📄 *Aquí tienes tu Cotización Oficial y Ficha Técnica en PDF de NeuroLabs Tech Solutions S.A.S.*'
+              fileName: `Cotizacion_NeuroLabs_${cleanPhone}.pdf`,
+              caption: '📄 *Aquí tienes la propuesta técnica y cotización oficial de NeuroLabs Tech Solutions S.A.S.*'
             });
 
             console.log(`✅ [PDF ENVIADO] Documento entregado exitosamente.`);
@@ -398,21 +406,20 @@ IDENTIDAD Y PROTOCOLO:
           }
         }
 
-        // PASO #5: Si el Lead es de Alto Valor, Disparar Alerta al Dueño
+        // PASO #5: Alerta VIP al WhatsApp del Dueño
         const isHighIntent = wantsQuotePDF || text.toLowerCase().includes('agendar') || text.toLowerCase().includes('reunion') || text.toLowerCase().includes('comprar');
         const calculatedScore = isHighIntent ? 95 : 68;
 
         if (isHighIntent) {
           console.log(`🚨 [PIPELINE STEP #5] Disparando Alerta VIP al WhatsApp del Dueño (+57 323 5845145)...`);
           try {
-            const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO CON ELEVENLABS VOZ & PDF!*
+            const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO POR IA!*
 👤 *Cliente:* ${pushName}
 📱 *WhatsApp:* +${cleanPhone}
-🎯 *Interés:* "${text}"
-🎙️ *Nota de Voz:* ElevenLabs Multilingual v2
+🎯 *Mensaje:* "${text}"
 📄 *PDF Generado:* ${wantsQuotePDF ? 'Sí' : 'No'}
 🔥 *Score de Cierre:* ${calculatedScore}%
-⚡ *Atendido por:* Asesor IA NeuroLabs (Llama 120B)`;
+⚡ *Atendido por:* Asesor IA NeuroLabs`;
             
             await sock.sendMessage(OWNER_PHONE, { text: ownerAlert });
             console.log(`✅ [PIPELINE COMPLETE] Alerta entregada al dueño.`);
@@ -423,7 +430,7 @@ IDENTIDAD Y PROTOCOLO:
 
         const durationMs = Date.now() - startTime;
 
-        // Registrar en Execution Logs en vivo para el Dashboard
+        // Registrar en Execution Logs
         liveWorkflowLogs.unshift({
           id: `exec_${Date.now()}`,
           workflowId: 'wf-1',
@@ -438,7 +445,7 @@ IDENTIDAD Y PROTOCOLO:
             cliente: pushName,
             telefono: `+${cleanPhone}`,
             mensaje: text,
-            vozElevenLabs: 'AUDIO_HUMANO_OK',
+            notaVozEnviada: shouldSendVoiceNote ? 'AUDIO_ENVIADO' : 'NO_REQUERIDO',
             pdfGenerado: wantsQuotePDF ? 'DESPACHADO_PDF' : 'NO_SOLICITADO',
             score: `${calculatedScore}%`,
             alertaOwner: isHighIntent ? 'DESPACHADA' : 'NUTRICION',
@@ -451,7 +458,7 @@ IDENTIDAD Y PROTOCOLO:
         const timer = setTimeout(async () => {
           try {
             console.log(`[Session Timeout] Cerrando chat por inactividad (2 mins) para: ${sender}`);
-            const closingText = '⏱️ *Sesión en pausa por inactividad (2 minutos)*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨';
+            const closingText = '⏱️ *Sesión en pausa por inactividad*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨';
             await sock.sendMessage(sender, { text: closingText });
             
             conv.messages.push({
