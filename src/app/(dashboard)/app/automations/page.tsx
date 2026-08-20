@@ -704,6 +704,8 @@ export default function AutomationsPage() {
     const interval = setInterval(syncRealLogs, 3500);
     return () => clearInterval(interval);
   }, []);
+
+  const [searchBlockQuery, setSearchBlockQuery] = useState<string>("");
   const [selectedBlockCategory, setSelectedBlockCategory] = useState<string>("All");
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [searchWorkflowQuery, setSearchWorkflowQuery] = useState<string>("");
