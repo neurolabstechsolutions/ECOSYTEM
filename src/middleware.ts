@@ -13,27 +13,23 @@ export function middleware(request: NextRequest) {
   // Definir dominios administrativos (NeuroLabs God Mode / Panel Interno)
   const isAdminDomain = hostname.startsWith('admin.') || hostname === 'motor.neurolabs.tech' || hostname === 'admin.localhost' || hostname === 'admin.neurolabs.tech'
 
-  // Si estamos en un dominio administrativo
-  if (isAdminDomain) {
+  // Si estamos en un dominio administrativo o la URL solicita /app explícitamente
+  if (isAdminDomain || url.pathname.startsWith('/app')) {
     // Si la ruta no empieza con /app, reescribirla a /app internamente
     if (!url.pathname.startsWith('/app')) {
       return NextResponse.rewrite(new URL(`/app${url.pathname}`, request.url))
     }
+    return NextResponse.next()
   } 
-  // Si NO es un dominio administrativo, asumimos que es el Marketplace B2C (Ej: jjtrinova.neurolabs.tech)
+  // Si NO es un dominio administrativo, es el Marketplace B2C & Portales de Negocio
   else {
-    // Evitar que accedan al dashboard administrativo desde el dominio del marketplace
-    if (url.pathname.startsWith('/app')) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-    
-    // Extraer el nombre del inquilino (tenant) del subdominio o usar localhost
-    let tenant = hostname.split('.')[0]
-    if (hostname.includes('localhost')) {
-      tenant = hostname.split('.')[0] !== 'localhost' ? hostname.split('.')[0] : 'jjtrinova' // fallback para dev
+    // Si la ruta es para la administradora (/admin) o proveedores (/proveedores)
+    let tenant = 'jjtrinova'
+    if (hostname.includes('.') && !hostname.includes('vercel.app') && !hostname.includes('localhost')) {
+      tenant = hostname.split('.')[0]
     }
 
-    // Reescribir tráfico de la raíz al Route Group del Marketplace
+    // Reescribir tráfico al Route Group del Marketplace
     return NextResponse.rewrite(new URL(`/${tenant}${url.pathname}`, request.url))
   }
 }
