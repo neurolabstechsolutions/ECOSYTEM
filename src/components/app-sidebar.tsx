@@ -44,7 +44,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {MOCK_SIDEBAR_LINKS.map((item) => {
                 const IconComponent = Icons[item.icon as keyof typeof Icons] as any
-                const isActive = pathname === item.path || pathname === `/app${item.path}` || pathname.startsWith(`/app${item.path}/`) || pathname.startsWith(item.path + '/')
+                const targetHref = item.path === '/' ? '/app' : `/app${item.path}`
+                const isActive = pathname === targetHref || pathname === item.path || pathname.startsWith(targetHref + '/')
                 
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -52,7 +53,7 @@ export function AppSidebar() {
                       isActive={isActive} 
                       tooltip={item.name}
                       render={
-                        <Link href={item.path} className={cn(
+                        <Link href={targetHref} className={cn(
                           "flex items-center gap-4 transition-colors font-medium rounded-lg text-base py-2.5 px-3",
                           isActive ? "text-slate-900 bg-slate-100 shadow-sm" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                         )} />
