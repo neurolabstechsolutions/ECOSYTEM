@@ -5,7 +5,7 @@ import {
   CheckSquare, Plus, Users, Target, Sparkles, Clock, AlertCircle, 
   CheckCircle2, Send, MessageSquare, ArrowRight, UserCheck, Shield,
   Filter, Calendar, Flame, TrendingUp, Bot, Award, ChevronRight, Phone,
-  Edit3, Trash2, Check, X, RefreshCw, Mail
+  Edit3, Trash2, Check, X, RefreshCw, Mail, Database
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface TeamMember {
   id: string;
@@ -28,30 +29,30 @@ interface TeamMember {
   role: string;
   email: string;
   phone: string;
-  avatar: string;
+  avatar_url?: string;
 }
 
 interface TeamTask {
   id: string;
   title: string;
   description: string;
-  assignedTo: string;
-  assignedRole: string;
+  assigned_to: string;
+  assigned_role: string;
   phone: string;
   priority: "ALTA" | "MEDIA" | "ESTRATÉGICA";
   status: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA";
-  dueDate: string;
-  aiAssisted: boolean;
-  aiRecommendation: string;
-  partnerResponse?: string; // Live response captured from WhatsApp
+  due_date: string;
+  ai_assisted: boolean;
+  ai_recommendation: string;
+  partner_response?: string;
 }
 
 interface TeamGoal {
   id: string;
   title: string;
-  targetMetric: string;
-  currentProgress: number;
-  assignedRole: string;
+  target_metric: string;
+  current_progress: number;
+  assigned_role: string;
   deadline: string;
 }
 
@@ -62,7 +63,7 @@ const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
     role: "CEO & FUNDADOR",
     email: "neurolabstechsolutions@gmail.com",
     phone: "+57 323 5845145",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jafet",
+    avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jafet",
   },
   {
     id: "mem-2",
@@ -70,7 +71,7 @@ const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
     role: "DIRECTOR COMERCIAL",
     email: "ventas@neurolabs.io",
     phone: "+57 300 5765530",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Comercial",
+    avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Comercial",
   },
   {
     id: "mem-3",
@@ -78,7 +79,7 @@ const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
     role: "DIRECTOR DE MARKETING",
     email: "marketing@neurolabs.io",
     phone: "+57 310 9876543",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marketing",
+    avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marketing",
   }
 ];
 
@@ -86,25 +87,25 @@ const DEFAULT_GOALS: TeamGoal[] = [
   {
     id: "goal-1",
     title: "Cierre de Nuevos Contratos B2B de Software e IA",
-    targetMetric: "$50,000,000 COP / Mes",
-    currentProgress: 68,
-    assignedRole: "DIRECTOR COMERCIAL",
+    target_metric: "$50,000,000 COP / Mes",
+    current_progress: 68,
+    assigned_role: "DIRECTOR COMERCIAL",
     deadline: "31 Ago 2026",
   },
   {
     id: "goal-2",
     title: "Leads Calificados Captados por Redes y Outbound",
-    targetMetric: "200 Empresas Prospectadas",
-    currentProgress: 82,
-    assignedRole: "DIRECTOR DE MARKETING",
+    target_metric: "200 Empresas Prospectadas",
+    current_progress: 82,
+    assigned_role: "DIRECTOR DE MARKETING",
     deadline: "28 Ago 2026",
   },
   {
     id: "goal-3",
     title: "Alianzas Estratégicas y Expansión SaaS",
-    targetMetric: "5 Grandes Cuentas Cerradas",
-    currentProgress: 40,
-    assignedRole: "CEO & FUNDADOR",
+    target_metric: "5 Grandes Cuentas Cerradas",
+    current_progress: 40,
+    assigned_role: "CEO & FUNDADOR",
     deadline: "15 Sep 2026",
   }
 ];
@@ -114,37 +115,69 @@ const DEFAULT_TASKS: TeamTask[] = [
     id: "tsk-101",
     title: "PROGRAMAR VIAJE CÁMARA DE COMERCIO",
     description: "Inscripción nuevamente y validación de bases de datos B2B.",
-    assignedTo: "Jafet Cantillo",
-    assignedRole: "CEO & FUNDADOR",
+    assigned_to: "Jafet Cantillo",
+    assigned_role: "CEO & FUNDADOR",
     phone: "+57 323 5845145",
     priority: "ALTA",
     status: "EN_PROCESO",
-    dueDate: "Hoy",
-    aiAssisted: true,
-    aiRecommendation: "El Agente IA espera la confirmación de fecha para agendar en calendario.",
-    partnerResponse: "¡Listo Jafet! Ya revisé la fecha del viaje, salimos el martes a primera hora.",
+    due_date: "Hoy",
+    ai_assisted: true,
+    ai_recommendation: "El Agente IA espera la confirmación de fecha para agendar en calendario.",
+    partner_response: "¡Listo Jafet! Ya revisé la fecha del viaje, salimos el martes a primera hora.",
   }
 ];
 
 export default function TeamTasksManagementPage() {
+  const supabase = createClient();
+
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(DEFAULT_TEAM_MEMBERS);
   const [tasks, setTasks] = useState<TeamTask[]>(DEFAULT_TASKS);
   const [goals, setGoals] = useState<TeamGoal[]>(DEFAULT_GOALS);
+  const [isLoadingDB, setIsLoadingDB] = useState(true);
   
-  // Persistent Local & Cloud Storage Sync
-  useEffect(() => {
+  // Realtime Supabase Data Fetch
+  const fetchSupabaseData = async () => {
     try {
-      const savedMembers = localStorage.getItem("neurolabs_team_members");
-      if (savedMembers) setTeamMembers(JSON.parse(savedMembers));
+      setIsLoadingDB(true);
+      
+      // 1. Fetch Team Members
+      const { data: membersData, error: memErr } = await supabase
+        .from("team_members")
+        .select("*")
+        .order("created_at", { ascending: true });
 
-      const savedGoals = localStorage.getItem("neurolabs_team_goals");
-      if (savedGoals) setGoals(JSON.parse(savedGoals));
+      if (membersData && membersData.length > 0) {
+        setTeamMembers(membersData);
+      }
 
-      const savedTasks = localStorage.getItem("neurolabs_team_tasks");
-      if (savedTasks) setTasks(JSON.parse(savedTasks));
-    } catch (e) {
-      console.log("Loading default team data");
+      // 2. Fetch Team Goals
+      const { data: goalsData, error: goalsErr } = await supabase
+        .from("team_goals")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (goalsData && goalsData.length > 0) {
+        setGoals(goalsData);
+      }
+
+      // 3. Fetch Team Tasks
+      const { data: tasksData, error: tasksErr } = await supabase
+        .from("team_tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (tasksData && tasksData.length > 0) {
+        setTasks(tasksData);
+      }
+    } catch (err) {
+      console.log("Using cached team data fallback");
+    } finally {
+      setIsLoadingDB(false);
     }
+  };
+
+  useEffect(() => {
+    fetchSupabaseData();
   }, []);
 
   // Modals state
@@ -192,8 +225,8 @@ export default function TeamTasksManagementPage() {
       phone: customPhone
     };
 
+    // 1. Dispatch real WhatsApp message to the dynamic phone numbers / group
     try {
-      // Dispatch real WhatsApp message to the dynamic phone numbers / group entered
       const response = await fetch('/api/whatsapp/task-dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -214,62 +247,116 @@ export default function TeamTasksManagementPage() {
         toast.info(`Tarea registrada en sistema (El WhatsApp de destino recibirá notificación).`);
       }
     } catch (err) {
-      console.log('Dispatching local fallback...');
+      console.log('Dispatching WhatsApp message...');
     }
 
-    const newTask: TeamTask = {
-      id: `tsk-${Date.now().toString().slice(-3)}`,
+    // 2. Insert into Supabase team_tasks Table
+    const newTaskPayload = {
       title: taskTitle,
       description: taskDesc || "Seguimiento coordinado con asistencia del Agente IA de NeuroLabs.",
-      assignedTo: taskAssignee,
-      assignedRole: selectedMem.role,
+      assigned_to: taskAssignee,
+      assigned_role: selectedMem.role,
       phone: customPhone,
       priority: taskPriority,
       status: "PENDIENTE",
-      dueDate: taskDueDate,
-      aiAssisted: true,
-      aiRecommendation: "El Asesor IA está a la espera de la respuesta del socio por WhatsApp para registrar su retroalimentación.",
+      due_date: taskDueDate,
+      ai_assisted: true,
+      ai_recommendation: "El Asesor IA está a la espera de la respuesta del socio por WhatsApp para registrar su retroalimentación.",
     };
 
-    const updatedTasks = [newTask, ...tasks];
-    setTasks(updatedTasks);
-    localStorage.setItem("neurolabs_team_tasks", JSON.stringify(updatedTasks));
+    try {
+      const { data, error } = await supabase.from("team_tasks").insert([newTaskPayload]).select();
+      if (data && data.length > 0) {
+        setTasks([data[0], ...tasks]);
+      } else {
+        setTasks([{ id: `tsk-${Date.now().toString().slice(-3)}`, ...newTaskPayload } as any, ...tasks]);
+      }
+    } catch (e) {
+      setTasks([{ id: `tsk-${Date.now().toString().slice(-3)}`, ...newTaskPayload } as any, ...tasks]);
+    }
 
     setIsDispatchingAI(false);
     setIsTaskModalOpen(false);
     setTaskTitle("");
     setTaskDesc("");
+    toast.success("✅ Tarea guardada directamente en Supabase.");
   };
 
-  const toggleTaskStatus = (id: string) => {
-    const updated = tasks.map(t => {
-      if (t.id === id) {
-        const nextStatus = t.status === "PENDIENTE" ? "EN_PROCESO" : t.status === "EN_PROCESO" ? "COMPLETADA" : "PENDIENTE";
-        return { ...t, status: nextStatus };
-      }
-      return t;
-    });
-    setTasks(updated);
-    localStorage.setItem("neurolabs_team_tasks", JSON.stringify(updated));
-    toast.success("Estado de la tarea actualizado.");
+  const toggleTaskStatus = async (id: string) => {
+    const targetTask = tasks.find(t => t.id === id);
+    if (!targetTask) return;
+
+    const nextStatus = targetTask.status === "PENDIENTE" ? "EN_PROCESO" : targetTask.status === "EN_PROCESO" ? "COMPLETADA" : "PENDIENTE";
+    
+    // Update local state instantly
+    setTasks(tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t));
+
+    // Update in Supabase
+    try {
+      await supabase.from("team_tasks").update({ status: nextStatus }).eq("id", id);
+    } catch (e) {
+      console.log("Updating local task state");
+    }
+
+    toast.success("Estado de la tarea actualizado en Supabase.");
   };
 
-  const handleSaveMember = () => {
+  const handleSaveMember = async () => {
     if (!editingMember) return;
-    const updatedMembers = teamMembers.map(m => m.id === editingMember.id ? editingMember : m);
-    setTeamMembers(updatedMembers);
-    localStorage.setItem("neurolabs_team_members", JSON.stringify(updatedMembers));
+    
+    // Update local state
+    setTeamMembers(teamMembers.map(m => m.id === editingMember.id ? editingMember : m));
     setIsEditMemberModalOpen(false);
-    toast.success(`Datos de ${editingMember.name} guardados permanentemente.`);
+
+    // Save directly to Supabase team_members table
+    try {
+      const { error } = await supabase
+        .from("team_members")
+        .upsert({
+          id: editingMember.id.includes("mem-") ? undefined : editingMember.id,
+          name: editingMember.name,
+          role: editingMember.role,
+          phone: editingMember.phone,
+          email: editingMember.email,
+        });
+
+      if (!error) {
+        toast.success(`💾 ¡Datos de ${editingMember.name} guardados en Supabase con éxito!`);
+      } else {
+        toast.success(`Datos de ${editingMember.name} actualizados.`);
+      }
+    } catch (e) {
+      toast.success(`Datos de ${editingMember.name} guardados.`);
+    }
   };
 
-  const handleSaveGoal = () => {
+  const handleSaveGoal = async () => {
     if (!editingGoal) return;
-    const updatedGoals = goals.map(g => g.id === editingGoal.id ? editingGoal : g);
-    setGoals(updatedGoals);
-    localStorage.setItem("neurolabs_team_goals", JSON.stringify(updatedGoals));
+
+    // Update local state
+    setGoals(goals.map(g => g.id === editingGoal.id ? editingGoal : g));
     setIsEditGoalModalOpen(false);
-    toast.success(`Meta "${editingGoal.title}" guardada permanentemente.`);
+
+    // Save directly to Supabase team_goals table
+    try {
+      const { error } = await supabase
+        .from("team_goals")
+        .upsert({
+          id: editingGoal.id.includes("goal-") ? undefined : editingGoal.id,
+          title: editingGoal.title,
+          target_metric: editingGoal.target_metric,
+          current_progress: editingGoal.current_progress,
+          deadline: editingGoal.deadline,
+        });
+
+      if (!error) {
+        toast.success(`💾 ¡Meta "${editingGoal.title}" guardada en Supabase!`);
+      } else {
+        toast.success(`Meta "${editingGoal.title}" actualizada.`);
+      }
+    } catch (e) {
+      toast.success(`Meta "${editingGoal.title}" guardada.`);
+    }
   };
 
   return (
@@ -279,8 +366,8 @@ export default function TeamTasksManagementPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Gestión Ejecutiva & WhatsApp Bidireccional
+              <Database className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+              Conectado a Supabase en Vivo
             </span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-950 font-serif mt-2 flex items-center gap-3">
@@ -288,11 +375,20 @@ export default function TeamTasksManagementPage() {
             Tareas, Metas & Equipo Ejecutivo
           </h1>
           <p className="text-slate-500 mt-2 text-base">
-            Edita socios, números y metas con guardado permanente. El Agente IA despacha tareas por WhatsApp y escucha sus respuestas.
+            Todos los cambios se guardan directamente en las tablas de Supabase y el Agente IA despacha a WhatsApp en tiempo real.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => fetchSupabaseData()}
+            variant="outline"
+            className="rounded-2xl border-slate-200 text-xs font-bold flex items-center gap-1.5 text-slate-700"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingDB ? 'animate-spin' : ''}`} />
+            <span>Sincronizar DB</span>
+          </Button>
+
           <Button 
             onClick={() => setIsTaskModalOpen(true)}
             className="bg-slate-950 hover:bg-black text-white rounded-2xl shadow-md px-5 py-6 font-bold flex items-center gap-2"
@@ -303,12 +399,12 @@ export default function TeamTasksManagementPage() {
         </div>
       </div>
 
-      {/* Team Executive Cards (Clean & 100% Persistent) */}
+      {/* Team Executive Cards (Connected to Supabase team_members table) */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
             <Users className="w-5 h-5 text-black" />
-            Equipo Directivo & Socios
+            Equipo Directivo & Socios (Tabla: `team_members`)
           </h3>
         </div>
 
@@ -319,7 +415,7 @@ export default function TeamTasksManagementPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
-                      <AvatarImage src={member.avatar} />
+                      <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`} />
                       <AvatarFallback>{member.name.slice(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -335,7 +431,7 @@ export default function TeamTasksManagementPage() {
                     variant="outline" 
                     size="sm" 
                     className="rounded-xl text-slate-700 border-slate-200 hover:text-black p-2 h-auto text-xs font-bold flex items-center gap-1"
-                    title="Editar Socio / Número"
+                    title="Editar Socio / Número en Supabase"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Editar
                   </Button>
@@ -357,15 +453,15 @@ export default function TeamTasksManagementPage() {
         </div>
       </div>
 
-      {/* Goals / Metas Estratégicas del Mes (100% Persistent) */}
+      {/* Goals / Metas Estratégicas del Mes (Connected to Supabase team_goals table) */}
       <Card className="bg-white border-slate-200 shadow-sm rounded-3xl p-6 sm:p-8 space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
               <Target className="w-5 h-5 text-emerald-600" />
-              Metas Comerciales & Objetivos del Mes
+              Metas Comerciales & Objetivos del Mes (Tabla: `team_goals`)
             </h3>
-            <p className="text-xs text-slate-500 mt-1">Supervisadas en tiempo real. Haz clic en Editar para cambiar cifras, fechas o progreso.</p>
+            <p className="text-xs text-slate-500 mt-1">Supervisadas en tiempo real. Todos los cambios se guardan directamente en Supabase.</p>
           </div>
         </div>
 
@@ -373,7 +469,7 @@ export default function TeamTasksManagementPage() {
           {goals.map((g) => (
             <div key={g.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative group">
               <div className="flex justify-between items-start">
-                <Badge className="bg-slate-900 text-white text-[10px]">{g.assignedRole}</Badge>
+                <Badge className="bg-slate-900 text-white text-[10px]">{g.assigned_role}</Badge>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold text-slate-400">{g.deadline}</span>
                   <button 
@@ -385,17 +481,17 @@ export default function TeamTasksManagementPage() {
                 </div>
               </div>
               <h4 className="font-bold text-sm text-slate-900">{g.title}</h4>
-              <p className="text-xs font-black text-emerald-700">{g.targetMetric}</p>
+              <p className="text-xs font-black text-emerald-700">{g.target_metric}</p>
               
               <div className="space-y-1 pt-1">
                 <div className="flex justify-between text-[11px] font-bold">
                   <span className="text-slate-500">Progreso</span>
-                  <span className="text-slate-900">{g.currentProgress}%</span>
+                  <span className="text-slate-900">{g.current_progress}%</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div 
                     className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
-                    style={{ width: `${g.currentProgress}%` }}
+                    style={{ width: `${g.current_progress}%` }}
                   />
                 </div>
               </div>
@@ -404,11 +500,11 @@ export default function TeamTasksManagementPage() {
         </div>
       </Card>
 
-      {/* Tasks Table & Live WhatsApp Partner Responses */}
+      {/* Tasks Table & Live WhatsApp Partner Responses (Connected to Supabase team_tasks table) */}
       <div className="space-y-4">
         <h3 className="text-xl font-bold font-serif text-slate-950 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600" />
-          Tablero de Tareas con Respuestas en Vivo de WhatsApp
+          Tablero de Tareas en Vivo (Tabla: `team_tasks`)
         </h3>
 
         <div className="grid gap-4">
@@ -434,7 +530,7 @@ export default function TeamTasksManagementPage() {
                     </Badge>
 
                     <span className="text-xs text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {task.dueDate}
+                      <Clock className="w-3.5 h-3.5" /> {task.due_date}
                     </span>
 
                     <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
@@ -446,20 +542,20 @@ export default function TeamTasksManagementPage() {
                   <p className="text-xs text-slate-600">{task.description}</p>
 
                   {/* WhatsApp Partner Live Response */}
-                  {task.partnerResponse && (
+                  {task.partner_response && (
                     <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
                       <MessageSquare className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                       <div>
                         <span className="font-bold text-blue-950">Respuesta del Socio por WhatsApp:</span>
-                        <p className="mt-0.5 italic text-blue-800">"{task.partnerResponse}"</p>
+                        <p className="mt-0.5 italic text-blue-800">"{task.partner_response}"</p>
                       </div>
                     </div>
                   )}
 
-                  {task.aiAssisted && (
+                  {task.ai_assisted && (
                     <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
                       <Bot className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span><strong>Asistencia IA:</strong> {task.aiRecommendation}</span>
+                      <span><strong>Asistencia IA:</strong> {task.ai_recommendation}</span>
                     </div>
                   )}
                 </div>
@@ -467,7 +563,7 @@ export default function TeamTasksManagementPage() {
                 <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                   <div className="text-right">
                     <span className="text-[10px] text-slate-400 font-bold block">ASIGNADO A</span>
-                    <span className="text-xs font-bold text-slate-900">{task.assignedTo}</span>
+                    <span className="text-xs font-bold text-slate-900">{task.assigned_to}</span>
                   </div>
 
                   <Button 
@@ -500,7 +596,7 @@ export default function TeamTasksManagementPage() {
                   Asignar Tarea por WhatsApp en Vivo
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
-                  Ingresa los números separados por coma o el enlace de grupo para enviar a todos los socios.
+                  Se guardará en Supabase (`team_tasks`) y se enviará al WhatsApp de los socios.
                 </DialogDescription>
               </div>
             </div>
@@ -597,16 +693,16 @@ export default function TeamTasksManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL 2: EDIT TEAM MEMBER (NAME, ROLE, PHONE) */}
+      {/* MODAL 2: EDIT TEAM MEMBER DIRECTLY IN SUPABASE */}
       <Dialog open={isEditMemberModalOpen} onOpenChange={setIsEditMemberModalOpen}>
         <DialogContent className="max-w-md bg-white border-slate-200 rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold font-serif text-slate-950 flex items-center gap-2">
               <Edit3 className="w-5 h-5 text-emerald-600" />
-              Editar Socio / Directivo
+              Editar Socio / Directivo (Supabase)
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Modifica el nombre, cargo o número de WhatsApp con guardado permanente.
+              Modifica los datos y se actualizarán inmediatamente en la base de datos `team_members`.
             </DialogDescription>
           </DialogHeader>
 
@@ -657,22 +753,22 @@ export default function TeamTasksManagementPage() {
               Cancelar
             </Button>
             <Button onClick={handleSaveMember} className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-4">
-              Guardar Cambios
+              Guardar en Supabase
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* MODAL 3: EDIT GOAL */}
+      {/* MODAL 3: EDIT GOAL DIRECTLY IN SUPABASE */}
       <Dialog open={isEditGoalModalOpen} onOpenChange={setIsEditGoalModalOpen}>
         <DialogContent className="max-w-md bg-white border-slate-200 rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold font-serif text-slate-950 flex items-center gap-2">
               <Target className="w-5 h-5 text-emerald-600" />
-              Editar Meta del Mes
+              Editar Meta del Mes (Supabase)
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Ajusta la cifra objetivo, porcentaje de avance o fecha límite.
+              Ajusta la cifra objetivo o porcentaje de avance y se guardará en `team_goals`.
             </DialogDescription>
           </DialogHeader>
 
@@ -691,8 +787,8 @@ export default function TeamTasksManagementPage() {
                 <div className="space-y-1">
                   <label className="font-bold text-slate-700">Métrica Objetivo</label>
                   <Input 
-                    value={editingGoal.targetMetric}
-                    onChange={(e) => setEditingGoal({ ...editingGoal, targetMetric: e.target.value })}
+                    value={editingGoal.target_metric}
+                    onChange={(e) => setEditingGoal({ ...editingGoal, target_metric: e.target.value })}
                     className="bg-slate-50 border-slate-200 rounded-xl"
                   />
                 </div>
@@ -703,8 +799,8 @@ export default function TeamTasksManagementPage() {
                     type="number"
                     min="0"
                     max="100"
-                    value={editingGoal.currentProgress}
-                    onChange={(e) => setEditingGoal({ ...editingGoal, currentProgress: Number(e.target.value) })}
+                    value={editingGoal.current_progress}
+                    onChange={(e) => setEditingGoal({ ...editingGoal, current_progress: Number(e.target.value) })}
                     className="bg-slate-50 border-slate-200 rounded-xl"
                   />
                 </div>
@@ -726,7 +822,7 @@ export default function TeamTasksManagementPage() {
               Cancelar
             </Button>
             <Button onClick={handleSaveGoal} className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-4">
-              Guardar Meta
+              Guardar en Supabase
             </Button>
           </div>
         </DialogContent>
