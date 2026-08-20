@@ -4,7 +4,7 @@ services:
     runtime: node
     buildCommand: npm install
     startCommand: node whatsapp-service.js
-    plan: free
+    plan: starter
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
