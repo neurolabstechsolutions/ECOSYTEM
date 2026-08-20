@@ -15,6 +15,9 @@ let connectionStatus = 'DISCONNECTED';
 let connectedNumber = null;
 let sock = null;
 
+// Track user session activity and timers (2 minutes timeout auto-close)
+const activeSessions = new Map(); // sender -> { lastActivity: number, timer: Timeout }
+
 // Initialize Groq AI Client
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
@@ -69,30 +72,53 @@ async function connectToWhatsApp() {
 
       console.log(`[Baileys Inbound] De: ${sender} -> "${text}"`);
 
+      // Clear existing inactivity timer for this user
+      if (activeSessions.has(sender)) {
+        const session = activeSessions.get(sender);
+        if (session.timer) clearTimeout(session.timer);
+      }
+
+      try {
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
           system: `Actúas como el Asesor Comercial y Consultor Tecnológico Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial, Automatizaciones y Soluciones Cloud).
 
 IDENTIDAD Y PROTOCOLO:
 1. IDENTIDAD:
-   - Representas exclusivamente a NeuroLabs Tech Solutions S.A.S.
-   - Brindas servicios a empresas y clientes de diversas industrias (como JY Trinova S.A.S. en el sector automotriz, clínicas, inmobiliarias y e-commerce).
-   - NUNCA te presentes como Trinova; Trinova es uno de los clientes y casos de éxito de la agencia.
+   - Representas EXCLUSIVAMENTE a NeuroLabs Tech Solutions S.A.S.
+   - NUNCA digas que eres Trinova. Trinova Motors es solo uno de los clientes y casos de éxito de la agencia.
+   - Tu misión es presentar los servicios de desarrollo tecnológico y cotizaciones de NeuroLabs.
 
 2. PORTAFOLIO DE SERVICIOS DE NEUROLABS:
-   - 💻 Desarrollo de Software a la Medida, Web Apps y Plataformas SaaS escalables.
+   - 💻 Desarrollo de Software a la Medida, Web Apps & SaaS escalables.
    - 🤖 Agentes de Inteligencia Artificial 24/7 y Automatización de Ventas por WhatsApp.
    - ☁️ Arquitectura Cloud, APIs, Integraciones ERP y Ciberseguridad.
    - 📊 Ecosistemas de Comercio Electrónico y Portales Multi-Tenant (como el desarrollado para Trinova).
 
-3. TONO Y ESTILO:
-   - Ejecutivo, consultivo, estructurado y altamente persuasivo.
-   - Usa viñetas limpias, emojis moderados y ofrece agendar reuniones comerciales o cotizaciones a la medida.`,
+3. TONO:
+   - Ejecutivo, consultivo, empático y estructurado.
+   - Al final de tu respuesta, invita al cliente a continuar o agendar una llamada con nuestro equipo.`,
           messages: [{ role: 'user', content: text }],
         });
 
         console.log(`[Baileys Outbound] Respondiendo a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
+
+        // Set 2-minute inactivity auto-closing timer
+        const timer = setTimeout(async () => {
+          try {
+            console.log(`[Session Timeout] Cerrando chat por inactividad (2 mins) para: ${sender}`);
+            await sock.sendMessage(sender, {
+              text: '⏱️ *Sesión en pausa por inactividad (2 minutos)*\n\nHa sido un placer atenderte. Para retomar la conversación o solicitar una nueva cotización con *NeuroLabs Tech Solutions S.A.S.*, simplemente escribe *Hola* en cualquier momento.\n\n¡Que tengas un excelente día! 👋✨'
+            });
+            activeSessions.delete(sender);
+          } catch (err) {
+            console.error('Error al enviar mensaje de cierre por inactividad:', err);
+          }
+        }, 2 * 60 * 1000); // 2 minutes (120,000 ms)
+
+        activeSessions.set(sender, { lastActivity: Date.now(), timer });
+
       } catch (err) {
         console.error('Error al generar respuesta IA:', err);
       }
