@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const res = await fetch('https://ecosystem.onrender.com/qr', {
+    const res = await fetch('https://ecosytem.onrender.com/qr', {
       cache: 'no-store',
       headers: {
         'Accept': 'application/json',
