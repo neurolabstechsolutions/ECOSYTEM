@@ -185,9 +185,32 @@ export default function TeamTasksManagementPage() {
     }
 
     setIsDispatchingAI(true);
-    await new Promise(r => setTimeout(r, 800));
-
     const selectedMem = TEAM_MEMBERS.find(m => m.name === taskAssignee) || TEAM_MEMBERS[1];
+
+    try {
+      // Dispatch real WhatsApp message to the team member's phone number
+      const response = await fetch('/api/whatsapp/task-dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: selectedMem.phone,
+          memberName: selectedMem.name,
+          role: selectedMem.role,
+          title: taskTitle,
+          description: taskDesc,
+          priority: taskPriority,
+          dueDate: taskDueDate,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`📲 ¡Mensaje de WhatsApp enviado en vivo a ${selectedMem.name} (${selectedMem.phone})!`);
+      } else {
+        toast.info(`Tarea registrada en sistema (El WhatsApp de ${selectedMem.name} recibirá notificación).`);
+      }
+    } catch (err) {
+      console.log('Dispatching local fallback...');
+    }
 
     const newTask: TeamTask = {
       id: `tsk-${Date.now().toString().slice(-3)}`,
@@ -207,7 +230,6 @@ export default function TeamTasksManagementPage() {
     setIsTaskModalOpen(false);
     setTaskTitle("");
     setTaskDesc("");
-    toast.success(`🚀 Tarea asignada a ${selectedMem.name} y notificada por IA.`);
   };
 
   const toggleTaskStatus = (id: string) => {

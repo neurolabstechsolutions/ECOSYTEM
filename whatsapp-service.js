@@ -493,6 +493,47 @@ REGLAS DE ORO CONVERSACIONALES (HUMANIZACIÓN ESTRICTA):
   });
 }
 
+// REST Endpoint to dispatch real WhatsApp task notifications to Team Members
+app.post('/send-task-alert', async (req, res) => {
+  try {
+    const { phone, memberName, role, title, description, priority, dueDate } = req.body;
+
+    if (!phone || !title) {
+      return res.status(400).json({ error: 'Phone and title are required' });
+    }
+
+    if (!sock || connectionStatus !== 'CONNECTED') {
+      return res.status(503).json({ error: 'WhatsApp socket is not connected' });
+    }
+
+    const cleanNumber = phone.replace(/[^0-9]/g, '');
+    const jid = `${cleanNumber}@s.whatsapp.net`;
+
+    const taskWhatsAppMessage = `📌 *NUEVA TAREA ASIGNADA • NEUROLABS TECH SOLUTIONS*
+━━━━━━━━━━━━━━━━━━━━
+👤 *Responsable:* ${memberName} (${role})
+🎯 *Tarea:* *${title}*
+🔥 *Prioridad:* ${priority}
+⏰ *Fecha Límite:* ${dueDate}
+
+📝 *Instrucciones:*
+"${description || 'Sin instrucciones adicionales'}"
+
+🤖 *Asistencia del Agente IA:*
+Monitoreo activo de avances y métricas. Para marcarla completada o solicitar asistencia de la IA, responde a este mensaje.
+━━━━━━━━━━━━━━━━━━━━
+_NeuroLabs Tech Solutions S.A.S. • Innovación sin Límites_`;
+
+    await sock.sendMessage(jid, { text: taskWhatsAppMessage });
+    console.log(`✅ [TASK DISPATCH] Tarea "${title}" enviada por WhatsApp a ${memberName} (${phone})`);
+
+    return res.json({ success: true, message: `Tarea enviada a ${phone}` });
+  } catch (err) {
+    console.error('Error enviando tarea por WhatsApp:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // REST Endpoints for NeuroLabs Dashboard
 app.get('/qr', (req, res) => {
   res.json({
