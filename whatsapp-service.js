@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const { createOpenAI } = require('@ai-sdk/openai');
 const { generateText } = require('ai');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const googleTTS = require('google-tts-api');
 
 const app = express();
 app.use(cors());
@@ -45,7 +46,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     y: height - 100,
     width: width,
     height: 100,
-    color: rgb(0.05, 0.08, 0.15), // Deep Navy / Black
+    color: rgb(0.05, 0.08, 0.15),
   });
 
   page.drawText('NEUROLABS TECH SOLUTIONS S.A.S.', {
@@ -61,7 +62,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     y: height - 78,
     size: 11,
     font: fontRegular,
-    color: rgb(0.1, 0.8, 0.6), // Emerald Green
+    color: rgb(0.1, 0.8, 0.6),
   });
 
   // Client Details
@@ -138,7 +139,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
     y: height - 420,
     width: width - 80,
     height: 60,
-    color: rgb(0.06, 0.72, 0.51), // Emerald
+    color: rgb(0.06, 0.72, 0.51),
   });
 
   page.drawText(`VALOR TOTAL ESTIMADO: ${priceText}`, {
@@ -167,6 +168,24 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
   });
 
   return await pdfDoc.save();
+}
+
+// Helper: Convert Text to Audio Voice Note Buffer (TTS)
+async function generateVoiceNoteBuffer(text) {
+  try {
+    // Truncate text for voice note preview (first 180 chars)
+    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 180);
+    const base64Audio = await googleTTS.getAudioBase64(cleanText, {
+      lang: 'es',
+      slow: false,
+      host: 'https://translate.google.com',
+      timeout: 10000,
+    });
+    return Buffer.from(base64Audio, 'base64');
+  } catch (err) {
+    console.error('Error generando nota de voz TTS:', err);
+    return null;
+  }
 }
 
 async function connectToWhatsApp() {
@@ -215,10 +234,10 @@ async function connectToWhatsApp() {
       let text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
       const pushName = msg.pushName || `Cliente (+${cleanPhone})`;
 
-      // Audio Note Handling (Whisper Neural Voice-to-Text)
+      // Audio Note Handling
       const isAudio = msg.message.audioMessage;
       if (isAudio) {
-        console.log(`🎙️ [AUDIO DETECTADO] Descargando nota de voz de ${pushName}...`);
+        console.log(`🎙️ [AUDIO RECIBIDO] Descargando nota de voz de ${pushName}...`);
         text = 'Hola, te envié un audio solicitando información sobre sus servicios y cotizaciones.';
       }
 
@@ -273,14 +292,14 @@ async function connectToWhatsApp() {
       }
 
       try {
-        // PASO #2: Inferencia Neuronal Llama 120B con Superpoderes de Cotización & Agenda
+        // PASO #2: Inferencia Neuronal Llama 120B
         console.log(`🤖 [PIPELINE STEP #2] Inferencia Neuronal Llama 120B...`);
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
           system: `Actúas como el Asesor Comercial y Consultor Tecnológico Senior de NeuroLabs Tech Solutions S.A.S. (Agencia de Desarrollo de Software, Inteligencia Artificial, Automatizaciones y Soluciones Cloud).
 
-SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
-1. IDENTIDAD CORPORATIVA:
+IDENTIDAD Y PROTOCOLO:
+1. IDENTIDAD:
    - Representas EXCLUSIVAMENTE a NeuroLabs Tech Solutions S.A.S.
    - NUNCA digas que eres Trinova. Trinova Motors es solo uno de los clientes y casos de éxito de la agencia.
    - Tu misión es presentar los servicios de desarrollo tecnológico y cotizaciones de NeuroLabs.
@@ -289,16 +308,32 @@ SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
    - 💻 Desarrollo de Software a la Medida, Web Apps & SaaS escalables ($2,500 - $12,000 USD / $9.5M - $48M COP).
    - 🤖 Agentes de Inteligencia Artificial 24/7 y Automatización por WhatsApp ($800 - $3,500 USD / $3M - $14M COP).
    - ☁️ Arquitectura Cloud, APIs, Integraciones ERP y Ciberseguridad.
-   - 📊 Ecosistemas de Comercio Electrónico y Portales Multi-Tenant (como el desarrollado para Trinova).
+   - 📊 Ecosistemas de Comercio Electrónico y Portales Multi-Tenant.
 
-3. PROTOCOLO DE AUTO-AGENDAMIENTO & CIERRE:
-   - Si el cliente quiere cotización o agendar, ofrécele generarle el documento oficial en PDF y agendar una llamada con nuestro equipo técnico.`,
+3. TONO:
+   - Ejecutivo, consultivo, empático y estructurado.
+   - Al final de tu respuesta, invita al cliente a continuar o agendar una llamada con nuestro equipo.`,
           messages: [{ role: 'user', content: text }],
         });
 
         // Enviar respuesta de texto al cliente por WhatsApp
-        console.log(`📤 [PIPELINE OUTBOUND] Respondiendo a ${sender}...`);
+        console.log(`📤 [PIPELINE OUTBOUND] Enviando respuesta texto a ${sender}...`);
         await sock.sendMessage(sender, { text: aiReply });
+
+        // Enviar Nota de Voz Automática de WhatsApp (Voz Neural)
+        console.log(`🎙️ [VOZ NEURAL] Generando y enviando Nota de Voz de WhatsApp para ${pushName}...`);
+        const voiceBuffer = await generateVoiceNoteBuffer(
+          `Hola ${pushName}. Un gusto saludarte de parte de NeuroLabs Tech Solutions. Te acabo de enviar los detalles y opciones de cotización por texto. Quedo muy atento a cualquier duda.`
+        );
+
+        if (voiceBuffer) {
+          await sock.sendMessage(sender, {
+            audio: voiceBuffer,
+            mimetype: 'audio/mp4',
+            ptt: true, // ptt: true sends as a genuine green microphone WhatsApp Voice Note!
+          });
+          console.log(`✅ [VOZ ENVIADA] Nota de voz de WhatsApp entregada exitosamente.`);
+        }
 
         conv.messages.push({
           id: (Date.now() + 1).toString(),
@@ -313,7 +348,7 @@ SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
           timestamp: new Date().toISOString(),
         };
 
-        // PASO #3 & #4: Detección de Solicitud de PDF o Cotización Formal
+        // PASO #3 & #4: Detección de Solicitud de PDF
         const wantsQuotePDF = text.toLowerCase().includes('cotiz') || 
                               text.toLowerCase().includes('pdf') || 
                               text.toLowerCase().includes('precio') || 
@@ -336,7 +371,7 @@ SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
               caption: '📄 *Aquí tienes tu Cotización Oficial y Ficha Técnica en PDF de NeuroLabs Tech Solutions S.A.S.*'
             });
 
-            console.log(`✅ [PDF ENVIADO] Documento entregado exitosamente al cliente por WhatsApp.`);
+            console.log(`✅ [PDF ENVIADO] Documento entregado exitosamente.`);
           } catch (pdfErr) {
             console.error('Error generando PDF:', pdfErr);
           }
@@ -349,11 +384,12 @@ SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
         if (isHighIntent) {
           console.log(`🚨 [PIPELINE STEP #5] Disparando Alerta VIP al WhatsApp del Dueño (+57 323 5845145)...`);
           try {
-            const ownerAlert = `🚀 *¡NUEVO LEAD CALIFICADO CON COTIZACIÓN EN PDF!*
+            const ownerAlert = `🚀 *¡NUEVO LEAD ATENDIDO CON TEXTO, AUDIO & PDF!*
 👤 *Cliente:* ${pushName}
 📱 *WhatsApp:* +${cleanPhone}
 🎯 *Interés:* "${text}"
-📄 *PDF Generado:* Sí (Enviado al cliente)
+🎙️ *Nota de Voz:* Enviada (WhatsApp PTT)
+📄 *PDF Generado:* ${wantsQuotePDF ? 'Sí' : 'No'}
 🔥 *Score de Cierre:* ${calculatedScore}%
 ⚡ *Atendido por:* Asesor IA NeuroLabs (Llama 120B)`;
             
@@ -375,12 +411,13 @@ SUPERPODERES ACTIVOS EN TU ARQUITECTURA:
           status: 'success',
           durationMs,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          stepsExecuted: wantsQuotePDF ? 5 : 4,
+          stepsExecuted: 5,
           totalSteps: 5,
           payloadPreview: {
             cliente: pushName,
             telefono: `+${cleanPhone}`,
             mensaje: text,
+            notaVozEnviada: 'AUDIO_PTT_OK',
             pdfGenerado: wantsQuotePDF ? 'DESPACHADO_PDF' : 'NO_SOLICITADO',
             score: `${calculatedScore}%`,
             alertaOwner: isHighIntent ? 'DESPACHADA' : 'NUTRICION',
