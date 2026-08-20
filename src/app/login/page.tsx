@@ -2,6 +2,7 @@ import { login } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BrainCircuit, ShieldCheck, Lock, Mail } from 'lucide-react'
 
 export default async function LoginPage({
   searchParams,
@@ -11,48 +12,72 @@ export default async function LoginPage({
   const resolvedSearchParams = await searchParams;
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-zinc-950">
-      <div className="w-full max-w-sm rounded-xl bg-zinc-900 p-8 shadow-2xl border border-zinc-800">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-50">NeuroLabs</h1>
-          <p className="text-zinc-400 mt-2">Inicia sesión en tu cuenta SaaS</p>
+    <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 px-4 py-12">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8">
+        <div className="text-center space-y-2">
+          <div className="mx-auto w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-emerald-400 shadow-md">
+            <BrainCircuit className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold font-serif text-slate-950 tracking-tight">NeuroLabs Tech Solutions</h1>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Acceso Restringido • Panel Operativo SaaS</p>
         </div>
 
         {resolvedSearchParams?.error && (
-          <div className="mb-4 rounded bg-red-900/50 p-3 text-sm text-red-400 border border-red-800">
-            {resolvedSearchParams.error}
+          <div className="rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-700 border border-red-200 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-red-500 shrink-0" />
+            <span>{resolvedSearchParams.error}</span>
           </div>
         )}
 
         <form action={login} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">Correo Electrónico</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="admin@automotriz.com"
-              required
-              className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
-            />
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Correo Corporativo
+            </Label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="neurolabstechsolutions@gmail.com"
+                defaultValue="neurolabstechsolutions@gmail.com"
+                required
+                className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl text-slate-900 text-sm focus:ring-1 focus:ring-slate-900"
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">Contraseña</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
-            />
+            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Contraseña
+            </Label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                placeholder="••••••••"
+                className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl text-slate-900 text-sm focus:ring-1 focus:ring-slate-900"
+              />
+            </div>
           </div>
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium">
-            Entrar
+
+          <Button type="submit" className="w-full h-11 bg-slate-950 hover:bg-black text-white font-bold rounded-xl text-sm transition-all shadow-md">
+            Iniciar Sesión
           </Button>
         </form>
-        <div className="mt-6 text-center text-xs text-zinc-500">
-          Usa superadmin@neurolabs.ai o admin@automotriz.com (pwd: password123)
+
+        <div className="pt-4 border-t border-slate-100 text-center space-y-2">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Autenticación Cifrada con Sesión Activa</span>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            Credenciales de acceso: <strong>neurolabstechsolutions@gmail.com</strong> (Pass: <strong>admin2026</strong>)
+          </p>
         </div>
       </div>
     </div>
