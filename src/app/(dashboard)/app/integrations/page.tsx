@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   MOCK_INTEGRATIONS, 
   Integration, 
@@ -11,45 +11,24 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
   Plug, 
-  CheckCircle2, 
-  XCircle, 
-  RefreshCw, 
   Sliders, 
   Search, 
-  ExternalLink, 
-  Copy, 
-  Check, 
-  Eye, 
-  EyeOff, 
   Sparkles, 
   CreditCard, 
   MessageSquare, 
-  Database, 
-  GitBranch, 
-  Radio, 
-  Activity, 
-  ShieldCheck, 
-  Zap, 
-  ArrowUpRight,
-  Clock,
-  Layers,
   QrCode,
   Smartphone,
   CheckCircle,
-  AlertTriangle,
-  Bot
+  RefreshCw
 } from "lucide-react";
 
 export default function IntegrationsPage() {
@@ -62,16 +41,45 @@ export default function IntegrationsPage() {
   const [activeIntegration, setActiveIntegration] = useState<Integration | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [isSyncingAll, setIsSyncingAll] = useState(false);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // WhatsApp QR Direct Bridge States
+  // WhatsApp QR Live Bridge States (Connected to Render Microservice)
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [qrStep, setQrStep] = useState<"READY" | "SCANNING" | "PAIRED">("READY");
-  const [pairingPhone, setPairingPhone] = useState("+57 300 5765530");
-  const [batteryLevel, setBatteryLevel] = useState(94);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<string>("SCAN_QR");
+  const [connectedNumber, setConnectedNumber] = useState<string | null>(null);
+  const [isLoadingQR, setIsLoadingQR] = useState(false);
+
+  // Render Service Endpoint URL
+  const RENDER_SERVICE_URL = "https://ecosystem.onrender.com";
+
+  // Poll live QR and status from Render
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    const fetchLiveQR = async () => {
+      try {
+        const res = await fetch(`${RENDER_SERVICE_URL}/qr`);
+        if (res.ok) {
+          const data = await res.json();
+          setConnectionStatus(data.status);
+          if (data.qr) setQrDataUrl(data.qr);
+          if (data.phone) setConnectedNumber(data.phone);
+        }
+      } catch (err) {
+        console.log("Render service waking up...");
+      }
+    };
+
+    if (isQRModalOpen) {
+      setIsLoadingQR(true);
+      fetchLiveQR().finally(() => setIsLoadingQR(false));
+      interval = setInterval(fetchLiveQR, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isQRModalOpen]);
 
   // Filtered Integrations
   const filteredIntegrations = useMemo(() => {
@@ -88,7 +96,6 @@ export default function IntegrationsPage() {
     });
   }, [integrations, searchQuery, selectedCategory, selectedStatus]);
 
-  // Statistics
   const totalIntegrations = integrations.length;
   const connectedCount = integrations.filter(i => i.status === "CONNECTED").length;
 
@@ -99,14 +106,7 @@ export default function IntegrationsPage() {
       initialValues[field.key] = field.value;
     });
     setFormValues(initialValues);
-    setShowSecrets({});
     setIsDialogOpen(true);
-  };
-
-  const handleSimulatePairing = async () => {
-    setQrStep("SCANNING");
-    await new Promise(r => setTimeout(r, 2200));
-    setQrStep("PAIRED");
   };
 
   return (
@@ -141,15 +141,15 @@ export default function IntegrationsPage() {
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Nuevo: Conexión Instantánea sin Meta
+                Microservicio en Vivo (Render Baileys Engine)
               </span>
               <Badge variant="outline" className="text-xs text-slate-300 border-slate-700">Multi-Empresa</Badge>
             </div>
             <h2 className="text-2xl lg:text-3xl font-bold font-serif">
-              WhatsApp Web Direct Bridge (Socket Socket-Baileys)
+              WhatsApp Web Direct Bridge
             </h2>
             <p className="text-slate-300 text-sm leading-relaxed">
-              Vincula cualquier número de WhatsApp escaneando un código QR con tu celular. El Asesor IA responderá tus chats automáticamente sin necesidad de Meta for Developers, tokens temporales ni costos por conversación.
+              Escanea el código QR oficial generado por tu microservicio en Render. El Asesor IA responderá de inmediato todos los chats de tu empresa 24/7 sin Meta ni costos adicionales.
             </p>
           </div>
 
@@ -159,7 +159,7 @@ export default function IntegrationsPage() {
               className="w-full sm:w-auto bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-2xl px-6 py-6 shadow-md transition-all flex items-center gap-2"
             >
               <Smartphone className="w-5 h-5 text-emerald-600" />
-              {qrStep === "PAIRED" ? "Ver Dispositivo Vinculado" : "Escanear Código QR"}
+              {connectionStatus === "CONNECTED" ? "Ver Dispositivo Vinculado" : "Escanear Código QR Real"}
             </Button>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
-      {/* MODAL: WhatsApp Direct QR Code Bridge */}
+      {/* MODAL: Live WhatsApp QR Code Bridge (Render Microservice) */}
       <Dialog open={isQRModalOpen} onOpenChange={setIsQRModalOpen}>
         <DialogContent className="max-w-md bg-white border-slate-200 rounded-3xl p-6 sm:p-8">
           <DialogHeader className="text-center space-y-2">
@@ -239,64 +239,47 @@ export default function IntegrationsPage() {
               <QrCode className="w-6 h-6" />
             </div>
             <DialogTitle className="text-xl font-bold font-serif text-slate-950">
-              Vincular WhatsApp Directo
+              Vincular WhatsApp en Vivo
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Conexión directa vía WhatsApp Web sin intermediarios de Meta.
+              Conexión directa vía Render Baileys Socket.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-6 flex flex-col items-center justify-center space-y-6">
-            {qrStep === "READY" && (
-              <div className="space-y-4 text-center">
-                <div className="relative p-4 bg-white border-2 border-dashed border-emerald-500 rounded-3xl shadow-lg inline-block">
-                  {/* Simulated Dynamic High-Contrast QR Code */}
-                  <div className="w-52 h-52 bg-slate-950 p-3 rounded-2xl flex flex-col items-center justify-between">
-                    <div className="grid grid-cols-6 gap-1 w-full h-full p-2 bg-white rounded-xl">
-                      {Array.from({ length: 36 }).map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`rounded-xs ${
-                            (i % 2 === 0 || i % 5 === 0 || i === 0 || i === 5 || i === 30 || i === 35) 
-                              ? 'bg-slate-950' 
-                              : 'bg-transparent'
-                          }`}
-                        />
-                      ))}
+          <div className="py-4 flex flex-col items-center justify-center space-y-6">
+            {connectionStatus !== "CONNECTED" ? (
+              <div className="space-y-4 text-center w-full">
+                <div className="relative p-3 bg-white border-2 border-emerald-500 rounded-3xl shadow-lg inline-block">
+                  {qrDataUrl ? (
+                    <img 
+                      src={qrDataUrl} 
+                      alt="WhatsApp Web QR Code" 
+                      className="w-56 h-56 rounded-2xl mx-auto shadow-inner"
+                    />
+                  ) : (
+                    <div className="w-56 h-56 bg-slate-100 rounded-2xl flex flex-col items-center justify-center space-y-3">
+                      <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
+                      <p className="text-xs text-slate-500 font-medium">Generando QR en Render...</p>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="space-y-2 text-left bg-slate-50 p-4 rounded-2xl text-xs text-slate-600">
-                  <p className="font-bold text-slate-900">Instrucciones:</p>
+                <div className="space-y-2 text-left bg-slate-50 p-4 rounded-2xl text-xs text-slate-600 border border-slate-200">
+                  <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    Pasos para Escanear:
+                  </p>
                   <ol className="list-decimal pl-4 space-y-1 text-slate-500">
                     <li>Abre WhatsApp en tu teléfono celular.</li>
                     <li>Toca <strong>Menú (⋮)</strong> o <strong>Configuración ⚙️</strong>.</li>
-                    <li>Selecciona <strong>Dispositivos vinculados</strong> y luego <strong>Vincular un dispositivo</strong>.</li>
-                    <li>Apunta tu cámara a este código.</li>
+                    <li>Selecciona <strong>Dispositivos vinculados</strong>.</li>
+                    <li>Toca <strong>Vincular un dispositivo</strong> y apunta al QR.</li>
                   </ol>
                 </div>
-
-                <Button 
-                  onClick={handleSimulatePairing}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl py-6"
-                >
-                  Simular Escaneo & Conexión
-                </Button>
               </div>
-            )}
-
-            {qrStep === "SCANNING" && (
-              <div className="py-12 flex flex-col items-center space-y-4 text-center">
-                <RefreshCw className="w-10 h-10 animate-spin text-emerald-600" />
-                <p className="font-bold text-slate-800 text-sm">Estableciendo Handshake de Socket Seguro...</p>
-                <p className="text-xs text-slate-400">Descargando claves de sesión criptográfica</p>
-              </div>
-            )}
-
-            {qrStep === "PAIRED" && (
+            ) : (
               <div className="w-full space-y-5 text-center">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
                   <CheckCircle className="w-8 h-8" />
                 </div>
 
@@ -308,35 +291,26 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-50 p-4 rounded-2xl text-left text-xs space-y-2 border border-slate-200">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Número Conectado:</span>
-                    <span className="font-bold text-slate-900">{pairingPhone}</span>
+                    <span className="font-bold text-slate-900">+{connectedNumber}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Estado de la Sesión:</span>
+                    <span className="text-slate-500">Estado del Socket:</span>
                     <span className="text-emerald-600 font-bold flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Online (Socket Activo)
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online 24/7
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Batería del Teléfono:</span>
-                    <span className="font-bold text-slate-700">{batteryLevel}% 🔋</span>
+                    <span className="text-slate-500">Servicio Render:</span>
+                    <span className="font-semibold text-slate-700">ecosystem.onrender.com</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => setQrStep("READY")} 
-                    variant="outline" 
-                    className="w-1/2 rounded-xl text-xs text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    Desvincular
-                  </Button>
-                  <Button 
-                    onClick={() => setIsQRModalOpen(false)} 
-                    className="w-1/2 bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold"
-                  >
-                    Aceptar
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => setIsQRModalOpen(false)} 
+                  className="w-full bg-slate-950 hover:bg-black text-white rounded-2xl py-6 text-xs font-bold"
+                >
+                  Cerrar
+                </Button>
               </div>
             )}
           </div>
