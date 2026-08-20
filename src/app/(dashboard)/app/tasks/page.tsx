@@ -198,9 +198,13 @@ export default function TeamTasksManagementPage() {
   const [taskDueDate, setTaskDueDate] = useState("Hoy");
   const [isDispatchingAI, setIsDispatchingAI] = useState(false);
 
-  // Update phone automatically when selecting a preset member
+  // Update phone automatically when selecting a preset member or group
   const handleAssigneeChange = (name: string) => {
     setTaskAssignee(name);
+    if (name === "Todo el Equipo Directivo" || name.includes("Grupo")) {
+      setCustomPhone("https://chat.whatsapp.com/FjdEH69MXub9ZhlZXaXD6j");
+      return;
+    }
     const found = teamMembers.find(m => m.name === name);
     if (found) {
       setCustomPhone(found.phone);
