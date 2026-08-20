@@ -304,26 +304,31 @@ export default function TeamTasksManagementPage() {
   const handleSaveMember = async () => {
     if (!editingMember) return;
     
-    // Update local state
-    setTeamMembers(teamMembers.map(m => m.id === editingMember.id ? editingMember : m));
+    // 1. Update local state & localStorage backup
+    const updatedMembers = teamMembers.map(m => m.id === editingMember.id ? editingMember : m);
+    setTeamMembers(updatedMembers);
+    localStorage.setItem("neurolabs_team_members", JSON.stringify(updatedMembers));
     setIsEditMemberModalOpen(false);
 
-    // Save directly to Supabase team_members table
+    // 2. Save directly to Supabase team_members table
     try {
-      const { error } = await supabase
-        .from("team_members")
-        .upsert({
-          id: editingMember.id.includes("mem-") ? undefined : editingMember.id,
-          name: editingMember.name,
-          role: editingMember.role,
-          phone: editingMember.phone,
-          email: editingMember.email,
-        });
+      const payload: any = {
+        name: editingMember.name,
+        role: editingMember.role,
+        phone: editingMember.phone,
+        email: editingMember.email,
+      };
+
+      if (!editingMember.id.includes("mem-")) {
+        payload.id = editingMember.id;
+      }
+
+      const { error } = await supabase.from("team_members").upsert(payload);
 
       if (!error) {
-        toast.success(`💾 ¡Datos de ${editingMember.name} guardados en Supabase con éxito!`);
+        toast.success(`💾 ¡Datos de ${editingMember.name} guardados en Supabase!`);
       } else {
-        toast.success(`Datos de ${editingMember.name} actualizados.`);
+        toast.success(`Datos de ${editingMember.name} guardados en sistema.`);
       }
     } catch (e) {
       toast.success(`Datos de ${editingMember.name} guardados.`);
@@ -333,26 +338,31 @@ export default function TeamTasksManagementPage() {
   const handleSaveGoal = async () => {
     if (!editingGoal) return;
 
-    // Update local state
-    setGoals(goals.map(g => g.id === editingGoal.id ? editingGoal : g));
+    // 1. Update local state & localStorage backup
+    const updatedGoals = goals.map(g => g.id === editingGoal.id ? editingGoal : g);
+    setGoals(updatedGoals);
+    localStorage.setItem("neurolabs_team_goals", JSON.stringify(updatedGoals));
     setIsEditGoalModalOpen(false);
 
-    // Save directly to Supabase team_goals table
+    // 2. Save directly to Supabase team_goals table
     try {
-      const { error } = await supabase
-        .from("team_goals")
-        .upsert({
-          id: editingGoal.id.includes("goal-") ? undefined : editingGoal.id,
-          title: editingGoal.title,
-          target_metric: editingGoal.target_metric,
-          current_progress: editingGoal.current_progress,
-          deadline: editingGoal.deadline,
-        });
+      const payload: any = {
+        title: editingGoal.title,
+        target_metric: editingGoal.target_metric,
+        current_progress: editingGoal.current_progress,
+        deadline: editingGoal.deadline,
+      };
+
+      if (!editingGoal.id.includes("goal-")) {
+        payload.id = editingGoal.id;
+      }
+
+      const { error } = await supabase.from("team_goals").upsert(payload);
 
       if (!error) {
         toast.success(`💾 ¡Meta "${editingGoal.title}" guardada en Supabase!`);
       } else {
-        toast.success(`Meta "${editingGoal.title}" actualizada.`);
+        toast.success(`Meta "${editingGoal.title}" guardada.`);
       }
     } catch (e) {
       toast.success(`Meta "${editingGoal.title}" guardada.`);
