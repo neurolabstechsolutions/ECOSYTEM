@@ -70,141 +70,271 @@ async function generateElevenLabsVoiceNote(text) {
   }
 }
 
-// Helper: Generate Clean Instant Corporate PDF Quotation
-async function generateInstantPDFQuote(clientName, serviceTitle, priceText) {
+// Helper: Generate Real Database-Connected High-End Corporate PDF Quotation
+async function generateInstantPDFQuote(clientName, serviceTitle, priceText, clientPhone) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4 Size
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   const { width, height } = page.getSize();
+  const quoteNumber = `NL-COT-${Date.now().toString().slice(-6)}`;
+  const emissionDate = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+  const validUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // Header Banner
+  // 1. Header Banner (Dark Navy Executive Gradient)
   page.drawRectangle({
     x: 0,
-    y: height - 100,
+    y: height - 110,
     width: width,
-    height: 100,
-    color: rgb(0.05, 0.08, 0.15),
+    height: 110,
+    color: rgb(0.04, 0.07, 0.12),
   });
 
   page.drawText('NEUROLABS TECH SOLUTIONS S.A.S.', {
     x: 40,
-    y: height - 55,
+    y: height - 50,
     size: 18,
     font: fontBold,
     color: rgb(1, 1, 1),
   });
 
-  page.drawText('PROPUESTA TECNICA Y COTIZACION OFICIAL', {
+  page.drawText('NIT: 901.482.119-4  |  INNOVACION SIN LIMITES', {
     x: 40,
-    y: height - 78,
-    size: 11,
+    y: height - 70,
+    size: 9,
     font: fontRegular,
     color: rgb(0.1, 0.8, 0.6),
   });
 
-  // Client Details
-  page.drawText(`CLIENTE: ${clientName.toUpperCase()}`, {
+  page.drawText(`COTIZACION OFICIAL: ${quoteNumber}`, {
     x: 40,
-    y: height - 140,
-    size: 12,
-    font: fontBold,
-    color: rgb(0.1, 0.1, 0.1),
-  });
-
-  page.drawText(`FECHA DE EMISION: ${new Date().toLocaleDateString('es-CO')}`, {
-    x: 40,
-    y: height - 160,
-    size: 10,
-    font: fontRegular,
-    color: rgb(0.4, 0.4, 0.4),
-  });
-
-  page.drawText(`VALIDEZ: 15 DIAS COMERCIALES`, {
-    x: 40,
-    y: height - 175,
-    size: 10,
-    font: fontRegular,
-    color: rgb(0.4, 0.4, 0.4),
-  });
-
-  // Service Description Box
-  page.drawRectangle({
-    x: 40,
-    y: height - 340,
-    width: width - 80,
-    height: 140,
-    borderColor: rgb(0.85, 0.85, 0.85),
-    borderWidth: 1,
-    color: rgb(0.98, 0.98, 0.99),
-  });
-
-  page.drawText('DESGLOSE DE LA SOLUCION:', {
-    x: 55,
-    y: height - 230,
-    size: 12,
-    font: fontBold,
-    color: rgb(0.1, 0.1, 0.1),
-  });
-
-  page.drawText(`* ${serviceTitle}`, {
-    x: 55,
-    y: height - 255,
+    y: height - 90,
     size: 11,
-    font: fontRegular,
-    color: rgb(0.2, 0.2, 0.2),
+    font: fontBold,
+    color: rgb(0.9, 0.9, 0.9),
   });
 
-  page.drawText('* Arquitectura en la nube escalable, APIs seguras y despliegue continuo.', {
-    x: 55,
-    y: height - 275,
-    size: 10,
-    font: fontRegular,
-    color: rgb(0.3, 0.3, 0.3),
-  });
-
-  page.drawText('* Garantia de 3 meses, soporte tecnico y entrega de codigo fuente.', {
-    x: 55,
-    y: height - 295,
-    size: 10,
-    font: fontRegular,
-    color: rgb(0.3, 0.3, 0.3),
-  });
-
-  // Price Total Box
+  // 2. Client & Executive Metadata Box
   page.drawRectangle({
     x: 40,
-    y: height - 420,
+    y: height - 205,
     width: width - 80,
-    height: 60,
+    height: 80,
+    borderColor: rgb(0.85, 0.88, 0.92),
+    borderWidth: 1,
+    color: rgb(0.97, 0.98, 1.0),
+  });
+
+  page.drawText(`CLIENTE: ${clientName.toUpperCase()}`, {
+    x: 55,
+    y: height - 145,
+    size: 11,
+    font: fontBold,
+    color: rgb(0.1, 0.15, 0.25),
+  });
+
+  page.drawText(`CANAL DE ATENCION: WhatsApp Corporativo (${clientPhone || '+57 300 5765530'})`, {
+    x: 55,
+    y: height - 165,
+    size: 9,
+    font: fontRegular,
+    color: rgb(0.4, 0.45, 0.55),
+  });
+
+  page.drawText(`FECHA DE EMISION: ${emissionDate}   |   VIGENCIA: Hasta ${validUntil}`, {
+    x: 55,
+    y: height - 185,
+    size: 9,
+    font: fontRegular,
+    color: rgb(0.4, 0.45, 0.55),
+  });
+
+  // 3. Service Scope & Real Deliverables Table
+  page.drawRectangle({
+    x: 40,
+    y: height - 440,
+    width: width - 80,
+    height: 220,
+    borderColor: rgb(0.85, 0.88, 0.92),
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
+  });
+
+  // Table Header
+  page.drawRectangle({
+    x: 40,
+    y: height - 260,
+    width: width - 80,
+    height: 40,
+    color: rgb(0.08, 0.12, 0.2),
+  });
+
+  page.drawText('DESCRIPCION DE LA SOLUCION TECNOLOGICA', {
+    x: 55,
+    y: height - 243,
+    size: 10,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  page.drawText('INVERSION ESTIMADA', {
+    x: width - 200,
+    y: height - 243,
+    size: 10,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  // Table Row
+  page.drawText(`${serviceTitle.toUpperCase()}`, {
+    x: 55,
+    y: height - 285,
+    size: 11,
+    font: fontBold,
+    color: rgb(0.1, 0.15, 0.2),
+  });
+
+  page.drawText(`${priceText}`, {
+    x: width - 200,
+    y: height - 285,
+    size: 11,
+    font: fontBold,
+    color: rgb(0.04, 0.65, 0.45),
+  });
+
+  const deliverables = [
+    '• Implementacion y configuracion del Agente IA 24/7 con conexion a WhatsApp.',
+    '• Modulo de Memoria Conversacional, respuestas humanizadas y voz neural ElevenLabs.',
+    '• Panel Administrativo SaaS para monitoreo de leads, metricas y agenda de citas.',
+    '• Despliegue en la nube con alta disponibilidad, garantia y soporte tecnico continuo.'
+  ];
+
+  let currentY = height - 315;
+  for (const d of deliverables) {
+    page.drawText(d, {
+      x: 55,
+      y: currentY,
+      size: 9,
+      font: fontRegular,
+      color: rgb(0.3, 0.35, 0.45),
+    });
+    currentY -= 22;
+  }
+
+  // 4. Total Investment Highlight Box
+  page.drawRectangle({
+    x: 40,
+    y: height - 520,
+    width: width - 80,
+    height: 65,
     color: rgb(0.06, 0.72, 0.51),
   });
 
-  page.drawText(`VALOR TOTAL ESTIMADO: ${priceText}`, {
+  page.drawText(`VALOR TOTAL DE LA PROPUESTA: ${priceText}`, {
     x: 55,
-    y: height - 385,
+    y: height - 480,
     size: 14,
     font: fontBold,
     color: rgb(1, 1, 1),
   });
 
-  // Footer & Signature
-  page.drawText('NeuroLabs Tech Solutions S.A.S. | NIT 901.482.119-4', {
-    x: 40,
-    y: 50,
+  page.drawText('Forma de Pago: 50% Anticipo de Inicio / 50% Contra Entrega Operativa', {
+    x: 55,
+    y: height - 502,
     size: 9,
     font: fontRegular,
-    color: rgb(0.5, 0.5, 0.5),
+    color: rgb(0.95, 1, 0.98),
   });
 
-  page.drawText('Contacto Comercial: +57 323 5845145 / +57 300 5765530', {
+  // 5. Legal Terms & Warranty
+  page.drawText('CONDICIONES COMERCIALES Y LEGALES:', {
+    x: 40,
+    y: height - 550,
+    size: 10,
+    font: fontBold,
+    color: rgb(0.15, 0.2, 0.3),
+  });
+
+  const legalNotes = [
+    '1. Incluye entrega de accesos y capacitacion completa al equipo comercial.',
+    '2. Los datos y conversaciones son 100% privados y propiedad exclusiva del cliente.',
+    '3. Soporte tecnico prioritario y garantia de estabilidad de infraestructura 24/7.'
+  ];
+
+  let legalY = height - 570;
+  for (const note of legalNotes) {
+    page.drawText(note, {
+      x: 40,
+      y: legalY,
+      size: 8.5,
+      font: fontRegular,
+      color: rgb(0.4, 0.45, 0.5),
+    });
+    legalY -= 16;
+  }
+
+  // 6. Footer & Official Signatures
+  page.drawRectangle({
+    x: 40,
+    y: 110,
+    width: width - 80,
+    height: 1,
+    color: rgb(0.85, 0.88, 0.92),
+  });
+
+  page.drawText('JESUS DAVID CANTILLO PAREJO', {
+    x: 40,
+    y: 90,
+    size: 9,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+  page.drawText('CEO & Fundador | NeuroLabs Tech Solutions', {
+    x: 40,
+    y: 78,
+    size: 8,
+    font: fontRegular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  page.drawText('RICHARD NIXON ACOSTA ALMARALES', {
+    x: width - 240,
+    y: 90,
+    size: 9,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+  page.drawText('Director Comercial & Alianzas B2B', {
+    x: width - 240,
+    y: 78,
+    size: 8,
+    font: fontRegular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  page.drawText('NeuroLabs Tech Solutions S.A.S. • NIT 901.482.119-4 • contacto@neurolabs.io • +57 300 5765530', {
     x: 40,
     y: 35,
-    size: 9,
+    size: 8,
     font: fontRegular,
-    color: rgb(0.5, 0.5, 0.5),
+    color: rgb(0.55, 0.6, 0.65),
   });
+
+  // Also store this official quote into Supabase team_tasks / contracts registry if possible
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fqxqeqdsqdampuzeiomx.supabase.co";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxeHFlcWRzcWRhbXB1emVpb214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODIyODEsImV4cCI6MjEwMjM1ODI4MX0.6sDR-bNOmYXsW9BfuG1NUY0SMUmEC4TIys4RwucRm6U";
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    supabase.from('contracts').insert([{
+      title: `Cotización ${quoteNumber} - ${clientName}`,
+      client_name: clientName,
+      status: 'COTIZADO',
+      value: priceText,
+    }]).then(() => {}).catch(() => {});
+  } catch (e) {}
 
   return await pdfDoc.save();
 }
