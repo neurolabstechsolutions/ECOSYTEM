@@ -274,7 +274,7 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText, clie
     legalY -= 16;
   }
 
-  // 6. Footer & Official Signatures
+  // 6. Footer & Official Departmental Signatures (Área Comercial & Marketing)
   page.drawRectangle({
     x: 40,
     y: 110,
@@ -283,34 +283,48 @@ async function generateInstantPDFQuote(clientName, serviceTitle, priceText, clie
     color: rgb(0.85, 0.88, 0.92),
   });
 
-  page.drawText('JESUS DAVID CANTILLO PAREJO', {
-    x: 40,
-    y: 90,
-    size: 9,
-    font: fontBold,
-    color: rgb(0.1, 0.1, 0.1),
-  });
-  page.drawText('CEO & Fundador | NeuroLabs Tech Solutions', {
-    x: 40,
-    y: 78,
-    size: 8,
-    font: fontRegular,
-    color: rgb(0.4, 0.4, 0.4),
-  });
-
   page.drawText('RICHARD NIXON ACOSTA ALMARALES', {
-    x: width - 240,
+    x: 40,
     y: 90,
     size: 9,
     font: fontBold,
     color: rgb(0.1, 0.1, 0.1),
   });
   page.drawText('Director Comercial & Alianzas B2B', {
+    x: 40,
+    y: 78,
+    size: 8,
+    font: fontRegular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText('Division Comercial | NeuroLabs Tech Solutions', {
+    x: 40,
+    y: 67,
+    size: 7.5,
+    font: fontRegular,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  page.drawText('JAFET ASAF NAVARRO', {
+    x: width - 240,
+    y: 90,
+    size: 9,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+  page.drawText('Director de Marketing & Estrategia Digital', {
     x: width - 240,
     y: 78,
     size: 8,
     font: fontRegular,
     color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText('Division de Crecimiento & Marca', {
+    x: width - 240,
+    y: 67,
+    size: 7.5,
+    font: fontRegular,
+    color: rgb(0.5, 0.5, 0.5),
   });
 
   page.drawText('NeuroLabs Tech Solutions S.A.S. • NIT 901.482.119-4 • contacto@neurolabs.io • +57 300 5765530', {
