@@ -1116,14 +1116,14 @@ Estoy interesado en el siguiente vehículo:
                   return (
                     <Card
                       key={car.id}
-                      className={`group overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300 flex flex-col justify-between ${
+                      className={`group overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300 flex flex-col justify-between !p-0 !pt-0 gap-0 ${
                         isList ? "sm:flex-row sm:items-stretch" : ""
                       }`}
                     >
                       {/* Photo Gallery Container */}
                       <div
                         className={`relative overflow-hidden bg-slate-900 ${
-                          isList ? "sm:w-80 shrink-0 h-56 sm:h-auto" : "h-52 w-full"
+                          isList ? "sm:w-80 shrink-0 h-56 sm:h-auto sm:rounded-l-2xl" : "h-56 w-full rounded-t-2xl"
                         }`}
                       >
                         <img

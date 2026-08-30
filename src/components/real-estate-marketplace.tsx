@@ -787,10 +787,10 @@ Estoy interesado en la siguiente propiedad:
                     <Card
                       key={prop.id}
                       onClick={() => setSelectedPropertyForModal(prop)}
-                      className="group bg-white border-slate-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:border-slate-400 flex flex-col cursor-pointer"
+                      className="group bg-white border-slate-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:border-slate-400 flex flex-col cursor-pointer !p-0 !pt-0 gap-0"
                     >
                       {/* Image Slider Container */}
-                      <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden">
+                      <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden rounded-t-3xl">
                         <img
                           src={prop.images[currentImgIndex]}
                           alt={prop.title}
