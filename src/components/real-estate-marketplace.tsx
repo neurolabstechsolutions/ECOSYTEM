@@ -60,7 +60,6 @@ import {
   MessageCircle,
   ShieldCheck,
   Award,
-  Sparkles,
   Search,
   SlidersHorizontal,
   Heart,
@@ -327,7 +326,7 @@ Estoy interesado en la siguiente propiedad:
           {/* Left Column: Heading & Information */}
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-400 backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              <Building2 className="h-3.5 w-3.5 text-emerald-400" />
               <span>División de Bienes Raíces & Inmuebles Prime &bull; Colombia</span>
             </div>
 
@@ -461,8 +460,8 @@ Estoy interesado en la siguiente propiedad:
                     <MessageCircle className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Asesoría Inmobiliaria VIP 24/7</p>
-                    <p className="text-slate-400 text-[11px]">Agente IA + Asesor Humano para visitas privadas</p>
+                    <p className="font-bold text-white">Asesoría Inmobiliaria VIP</p>
+                    <p className="text-slate-400 text-[11px]">Atención inmediata & asesores directos para visitas privadas</p>
                   </div>
                 </li>
               </ul>
