@@ -416,9 +416,10 @@ Estoy interesado en la siguiente propiedad:
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                    Broker Inmobiliario Oficial
+                    Broker Inmobiliario Oficial &bull; {agency.taxId ? `NIT ${agency.taxId}` : "NIT 902.095.222-8"}
                   </span>
-                  <h3 className="text-lg font-bold font-heading text-white mt-0.5">{agency.name}</h3>
+                  <h3 className="text-lg font-bold font-heading text-white mt-0.5">{agency.legalName || "YJD TRINOVA S.A.S."}</h3>
+                  <p className="text-[11px] text-slate-400 font-medium">{agency.name}</p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 border border-slate-700">
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />

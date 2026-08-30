@@ -74,6 +74,8 @@ export interface PropertySpec {
 
 export interface RealEstateAgencyInfo {
   name: string;
+  legalName?: string;
+  taxId?: string; // NIT
   developer?: string;
   phone: string;
   whatsappPhone: string;
@@ -174,13 +176,15 @@ export const FUEL_TYPES = [
 ];
 
 export const DEFAULT_AGENCY: RealEstateAgencyInfo = {
-  name: "NeuroLabs Real Estate Prime",
-  developer: "Grupo Inmobiliario & Constructora NeuroLabs",
-  phone: "+57 (300) 576-5530",
+  name: "YJD Trinova Real Estate & Inversiones",
+  legalName: "YJD TRINOVA S.A.S.",
+  taxId: "902.095.222-8",
+  developer: "YJD TRINOVA S.A.S. - Inversiones & Desarrollo",
+  phone: "+57 (605) 322-5918",
   whatsappPhone: "573005765530",
-  address: "Calle 93B # 13-45 Luxury Tower",
-  city: "Bogotá D.C., Colombia",
-  rating: 4.97,
+  address: "Calle 82 # 21 Sur 06 Esquina",
+  city: "Barranquilla (Atlántico), Colombia",
+  rating: 4.98,
   verified: true,
 };
 

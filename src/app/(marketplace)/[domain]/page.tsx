@@ -368,20 +368,20 @@ Estoy interesado en el siguiente vehículo:
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-base sm:text-lg font-bold tracking-tight text-slate-950 font-heading">
-                  {activeMarketplaceTab === "real_estate" ? "NeuroLabs Real Estate" : dealer.name}
+                  {dealer.legalName || "YJD TRINOVA S.A.S."}
                 </span>
                 <Badge
                   variant="outline"
-                  className="hidden items-center gap-1 border-slate-300 bg-slate-100 px-1.5 py-0 text-[10px] font-semibold text-slate-700 sm:inline-flex"
+                  className="hidden items-center gap-1 border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-800 sm:inline-flex shadow-xs"
                 >
                   <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                  Verificado
+                  NIT {dealer.taxId || "902.095.222-8"}
                 </Badge>
               </div>
-              <p className="hidden text-xs text-slate-500 md:block">
+              <p className="hidden text-xs text-slate-500 md:block font-medium">
                 {activeMarketplaceTab === "real_estate"
-                  ? "Portafolio Inmobiliario & Proyectos Prime en Colombia"
-                  : dealer.tagline}
+                  ? "División de Bienes Raíces Prime & Inversiones • Barranquilla, Atlántico"
+                  : "Marketplace Oficial & Corretaje Vehicular Certificado • Barranquilla, Atlántico"}
               </p>
             </div>
           </div>
