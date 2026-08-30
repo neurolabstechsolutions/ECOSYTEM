@@ -9,7 +9,9 @@ import {
   BODY_TYPES,
   FUEL_TYPES,
   Vehicle,
+  DEFAULT_AGENCY,
 } from "@/lib/marketplace-mocks";
+import { RealEstateMarketplace } from "@/components/real-estate-marketplace";
 import {
   Card,
   CardContent,
@@ -107,7 +109,10 @@ export default function MarketplacePage(props: MarketplacePageProps) {
   // Currency configuration (Forced to COP for Colombia)
   const USD_TO_COP_RATE = 3900;
 
-  // Search and filter states
+  // Active Category Switcher: Real Estate vs Vehicles
+  const [activeMarketplaceTab, setActiveMarketplaceTab] = useState<"real_estate" | "vehicles">("real_estate");
+
+  // Search and filter states (Vehicles)
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("Todas las Regiones");
   const [selectedBrand, setSelectedBrand] = useState("Todas las Marcas");
@@ -353,13 +358,17 @@ Estoy interesado en el siguiente vehículo:
         <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand & Dealership Identity */}
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-950 text-white shadow-sm ring-1 ring-slate-900/10">
-              <CarIcon className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm ring-1 ring-slate-900/10">
+              {activeMarketplaceTab === "real_estate" ? (
+                <Building2 className="h-5 w-5 text-emerald-400" />
+              ) : (
+                <CarIcon className="h-5 w-5 text-white" />
+              )}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold tracking-tight text-slate-950">
-                  {dealer.name}
+                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-950 font-heading">
+                  {activeMarketplaceTab === "real_estate" ? "NeuroLabs Real Estate" : dealer.name}
                 </span>
                 <Badge
                   variant="outline"
@@ -369,8 +378,41 @@ Estoy interesado en el siguiente vehículo:
                   Verificado
                 </Badge>
               </div>
-              <p className="hidden text-xs text-slate-500 md:block">{dealer.tagline}</p>
+              <p className="hidden text-xs text-slate-500 md:block">
+                {activeMarketplaceTab === "real_estate"
+                  ? "Portafolio Inmobiliario & Proyectos Prime en Colombia"
+                  : dealer.tagline}
+              </p>
             </div>
+          </div>
+
+          {/* Central Category Switcher Tabs */}
+          <div className="flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200 shadow-inner">
+            <button
+              onClick={() => setActiveMarketplaceTab("real_estate")}
+              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                activeMarketplaceTab === "real_estate"
+                  ? "bg-slate-950 text-white shadow-md"
+                  : "text-slate-600 hover:text-slate-950 hover:bg-slate-200/60"
+              }`}
+            >
+              <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Bienes Raíces</span>
+              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full bg-emerald-600 text-[9px] text-white font-extrabold ml-0.5 animate-pulse">
+                NUEVO
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveMarketplaceTab("vehicles")}
+              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                activeMarketplaceTab === "vehicles"
+                  ? "bg-slate-950 text-white shadow-md"
+                  : "text-slate-600 hover:text-slate-950 hover:bg-slate-200/60"
+              }`}
+            >
+              <CarIcon className="h-3.5 w-3.5" />
+              <span>Vehículos</span>
+            </button>
           </div>
 
           {/* Quick Actions */}
@@ -388,12 +430,16 @@ Estoy interesado en el siguiente vehículo:
 
             {/* Direct WhatsApp Callout in Header */}
             <a
-              href={`https://wa.me/${dealer.whatsappPhone}?text=${encodeURIComponent(
-                `Hola ${dealer.name}, me gustaría recibir información sobre su catálogo de vehículos disponibles.`
+              href={`https://wa.me/${
+                activeMarketplaceTab === "real_estate" ? DEFAULT_AGENCY.whatsappPhone : dealer.whatsappPhone
+              }?text=${encodeURIComponent(
+                activeMarketplaceTab === "real_estate"
+                  ? `Hola ${DEFAULT_AGENCY.name}, me gustaría recibir información sobre su catálogo de inmuebles y proyectos disponibles.`
+                  : `Hola ${dealer.name}, me gustaría recibir información sobre su catálogo de vehículos disponibles.`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
             >
               <MessageCircle className="h-4 w-4 fill-white text-emerald-600" />
               <span className="hidden sm:inline">WhatsApp Directo</span>
@@ -404,9 +450,18 @@ Estoy interesado en el siguiente vehículo:
       </header>
 
       {/* ────────────────────────────────────────────────────── */}
-      {/* HERO SECTION */}
+      {/* CONDITIONAL CONTENT: REAL ESTATE VS VEHICLES */}
       {/* ────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/40 py-12 lg:py-16">
+      {activeMarketplaceTab === "real_estate" ? (
+        <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+          <RealEstateMarketplace agency={DEFAULT_AGENCY} />
+        </main>
+      ) : (
+        <>
+          {/* ────────────────────────────────────────────────────── */}
+          {/* VEHICLES HERO SECTION */}
+          {/* ────────────────────────────────────────────────────── */}
+          <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/40 py-12 lg:py-16">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 h-96 w-96 rounded-full bg-slate-100/80 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 -mb-12 h-64 w-64 rounded-full bg-slate-200/40 blur-3xl pointer-events-none" />
 
@@ -613,7 +668,7 @@ Estoy interesado en el siguiente vehículo:
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Región / Ciudad
                     </Label>
-                    <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                    <Select value={selectedRegion} onValueChange={(val) => val && setSelectedRegion(val)}>
                       <SelectTrigger className="mt-1.5 h-10 bg-slate-50 border-slate-200">
                         <SelectValue placeholder="Selecciona región" />
                       </SelectTrigger>
@@ -632,7 +687,7 @@ Estoy interesado en el siguiente vehículo:
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Marca
                     </Label>
-                    <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                    <Select value={selectedBrand} onValueChange={(val) => val && setSelectedBrand(val)}>
                       <SelectTrigger className="mt-1.5 h-10 bg-slate-50 border-slate-200">
                         <SelectValue placeholder="Selecciona marca" />
                       </SelectTrigger>
@@ -661,7 +716,10 @@ Estoy interesado en el siguiente vehículo:
                       min={30000}
                       max={160000}
                       step={5000}
-                      onValueChange={(val) => setPriceRange([0, val[0]])}
+                      onValueChange={(val) => {
+                        const num = Array.isArray(val) ? val[0] : Number(val);
+                        if (!isNaN(num)) setPriceRange([0, num]);
+                      }}
                       className="mt-3"
                     />
                   </div>
@@ -693,7 +751,7 @@ Estoy interesado en el siguiente vehículo:
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Combustible
                     </Label>
-                    <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
+                    <Select value={selectedFuelType} onValueChange={(val) => val && setSelectedFuelType(val as any)}>
                       <SelectTrigger className="mt-1.5 h-10 bg-slate-50 border-slate-200">
                         <SelectValue placeholder="Selecciona combustible" />
                       </SelectTrigger>
@@ -738,7 +796,7 @@ Estoy interesado en el siguiente vehículo:
               <Label htmlFor="sort-select" className="text-xs font-medium text-slate-500 hidden sm:block">
                 Ordenar por:
               </Label>
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={(val) => val && setSortBy(val)}>
                 <SelectTrigger id="sort-select" className="h-9 w-[180px] bg-white border-slate-200 text-xs font-medium">
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
@@ -806,7 +864,7 @@ Estoy interesado en el siguiente vehículo:
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Región / Ciudad
                 </Label>
-                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <Select value={selectedRegion} onValueChange={(val) => val && setSelectedRegion(val)}>
                   <SelectTrigger className="mt-1.5 h-9 bg-slate-50 border-slate-200 text-xs">
                     <SelectValue placeholder="Seleccionar región" />
                   </SelectTrigger>
@@ -881,7 +939,10 @@ Estoy interesado en el siguiente vehículo:
                   min={30000}
                   max={160000}
                   step={5000}
-                  onValueChange={(val) => setPriceRange([0, val[0]])}
+                  onValueChange={(val) => {
+                    const num = Array.isArray(val) ? val[0] : Number(val);
+                    if (!isNaN(num)) setPriceRange([0, num]);
+                  }}
                   className="mt-3"
                 />
                 <div className="mt-2 flex justify-between text-[10px] text-slate-400">
@@ -918,7 +979,7 @@ Estoy interesado en el siguiente vehículo:
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Combustible
                 </Label>
-                <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
+                <Select value={selectedFuelType} onValueChange={(val) => val && setSelectedFuelType(val as any)}>
                   <SelectTrigger className="mt-1.5 h-9 bg-slate-50 border-slate-200 text-xs">
                     <SelectValue placeholder="Tipo de combustible" />
                   </SelectTrigger>
@@ -1345,8 +1406,8 @@ Estoy interesado en el siguiente vehículo:
                           <span className="font-bold text-slate-900 text-right">{selectedVehicleForModal.mileage.toLocaleString()} km</span>
                         </div>
                         <div className="flex justify-between items-center py-3.5 hover:bg-slate-50 px-2 transition-colors">
-                          <span className="text-slate-500 font-medium">Categoría</span>
-                          <span className="font-bold text-slate-900 text-right">{selectedVehicleForModal.category}</span>
+                          <span className="text-slate-500 font-medium">Carrocería</span>
+                          <span className="font-bold text-slate-900 text-right">{selectedVehicleForModal.bodyType}</span>
                         </div>
                       </div>
                     </TabsContent>
@@ -1376,7 +1437,10 @@ Estoy interesado en el siguiente vehículo:
                               min={10}
                               max={60}
                               step={5}
-                              onValueChange={(val) => setDownPaymentPercent(val[0])}
+                              onValueChange={(val) => {
+                                const num = Array.isArray(val) ? val[0] : Number(val);
+                                if (!isNaN(num)) setDownPaymentPercent(num);
+                              }}
                               className="[&_[role=slider]]:bg-slate-900 [&_[role=slider]]:border-slate-900"
                             />
                           </div>
@@ -1430,6 +1494,8 @@ Estoy interesado en el siguiente vehículo:
           )}
         </DialogContent>
       </Dialog>
+        </>
+      )}
 
       {/* ────────────────────────────────────────────────────── */}
       {/* CORPORATE TRUST FOOTER */}
@@ -1439,67 +1505,101 @@ Estoy interesado en el siguiente vehículo:
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-950 text-white">
-                  <CarIcon className="h-4 w-4" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-white">
+                  {activeMarketplaceTab === "real_estate" ? (
+                    <Building2 className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <CarIcon className="h-4 w-4" />
+                  )}
                 </div>
-                <span className="text-base font-bold text-slate-950">{dealer.name}</span>
+                <span className="text-base font-bold text-slate-950 font-heading">
+                  {activeMarketplaceTab === "real_estate" ? "NeuroLabs Real Estate" : dealer.name}
+                </span>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Plataforma corporativa de compra, venta y retoma de vehículos seminuevos certificados
-                con altos estándares de calidad e inspección rigurosa.
+                {activeMarketplaceTab === "real_estate"
+                  ? "Plataforma de curaduría de bienes raíces premium, proyectos sobre planos, penthouses y residencias campestres en las principales ciudades de Colombia."
+                  : "Plataforma corporativa de compra, venta y retoma de vehículos seminuevos certificados con altos estándares de calidad e inspección rigurosa."}
               </p>
             </div>
 
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">
-                Garantías & Servicios
+                {activeMarketplaceTab === "real_estate" ? "Garantías & Respaldo" : "Garantías & Servicios"}
               </h4>
               <ul className="space-y-2 text-xs text-slate-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  Inspección Técnica 150 Puntos
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  Garantía Mecánica 12 Meses
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  Financiación con 6 Bancos Aliados
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  Retoma de Tu Vehículo Usado
-                </li>
+                {activeMarketplaceTab === "real_estate" ? (
+                  <>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Estudio de Títulos Jurídico 100%
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Fideicomisos & Fiducias Certificadas
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Simulación Hipotecaria en Tiempo Real
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Dossier y Planos en PDF al Instante
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Inspección Técnica 150 Puntos
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Garantía Mecánica 12 Meses
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Financiación con 6 Bancos Aliados
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Retoma de Tu Vehículo Usado
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">
-                Sedes & Cobertura
+                Ciudades & Cobertura
               </h4>
               <ul className="space-y-1.5 text-xs text-slate-600">
-                <li>• Bogotá D.C. (Zona Norte & Calle 100)</li>
-                <li>• Medellín (El Poblado & Llanogrande)</li>
-                <li>• Cali (Ciudad Jardín)</li>
-                <li>• Barranquilla & Eje Cafetero</li>
+                <li>• Bogotá D.C. (Chicó, Rosales, Santa Bárbara)</li>
+                <li>• Medellín (El Poblado, Las Palmas, Laureles)</li>
+                <li>• Cartagena (Castillogrande, Bocagrande, Barú)</li>
+                <li>• Llanogrande / Rionegro & Cali (Ciudad Jardín)</li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">
-                Contacto Inmediato
+                Atención Inmediata
               </h4>
               <p className="text-xs text-slate-600 mb-3">
-                Atención personalizada de asesores certificados de lunes a domingo.
+                Asesoría personalizada con IA y asesores especializados en WhatsApp.
               </p>
               <a
-                href={`https://wa.me/${dealer.whatsappPhone}?text=${encodeURIComponent(
-                  `Hola, deseo recibir asesoría para comprar un vehículo en ${dealer.name}.`
+                href={`https://wa.me/${
+                  activeMarketplaceTab === "real_estate" ? DEFAULT_AGENCY.whatsappPhone : dealer.whatsappPhone
+                }?text=${encodeURIComponent(
+                  activeMarketplaceTab === "real_estate"
+                    ? `Hola ${DEFAULT_AGENCY.name}, deseo recibir asesoría para compra de finca raíz.`
+                    : `Hola, deseo recibir asesoría para comprar un vehículo en ${dealer.name}.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
               >
                 <MessageCircle className="h-4 w-4 fill-white text-emerald-600" />
                 Contactar por WhatsApp
@@ -1508,16 +1608,20 @@ Estoy interesado en el siguiente vehículo:
           </div>
 
           <div className="mt-8 border-t border-slate-100 pt-6 text-center text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} {dealer.name} &bull; Todos los derechos reservados &bull;
-            Vehículos sujetos a disponibilidad previa venta.
+            &copy; {new Date().getFullYear()}{" "}
+            {activeMarketplaceTab === "real_estate" ? "NeuroLabs Real Estate Prime" : dealer.name} &bull; Todos los derechos reservados &bull; Inmuebles y vehículos sujetos a disponibilidad previa.
           </div>
         </div>
       </footer>
 
       {/* Floating Sticky WhatsApp Button */}
       <a
-        href={`https://wa.me/${dealer.whatsappPhone}?text=${encodeURIComponent(
-          `Hola ${dealer.name}, estoy navegando en su catálogo y me gustaría hacer una consulta.`
+        href={`https://wa.me/${
+          activeMarketplaceTab === "real_estate" ? DEFAULT_AGENCY.whatsappPhone : dealer.whatsappPhone
+        }?text=${encodeURIComponent(
+          activeMarketplaceTab === "real_estate"
+            ? `Hola ${DEFAULT_AGENCY.name}, estoy viendo las propiedades en el marketplace y deseo solicitar información.`
+            : `Hola ${dealer.name}, estoy navegando en su catálogo y me gustaría hacer una consulta.`
         )}`}
         target="_blank"
         rel="noopener noreferrer"

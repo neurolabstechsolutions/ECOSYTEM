@@ -303,7 +303,7 @@ export default function AnalyticsDashboardPage() {
           {/* Quick Action Toolbar */}
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Timeframe Select */}
-            <Select value={timeRange} onValueChange={setTimeRange}>
+            <Select value={timeRange} onValueChange={(val) => val && setTimeRange(val)}>
               <SelectTrigger className="w-[140px] bg-slate-50 border-slate-700/70 text-slate-800 backdrop-blur-md text-xs h-9">
                 <Calendar className="mr-1.5 h-3.5 w-3.5 text-cyan-400" />
                 <SelectValue placeholder="Select Range" />
@@ -317,7 +317,7 @@ export default function AnalyticsDashboardPage() {
             </Select>
 
             {/* Channel Filter */}
-            <Select value={activeChannel} onValueChange={setActiveChannel}>
+            <Select value={activeChannel} onValueChange={(val) => val && setActiveChannel(val)}>
               <SelectTrigger className="w-[170px] bg-slate-50 border-slate-700/70 text-slate-800 backdrop-blur-md text-xs h-9">
                 <Filter className="mr-1.5 h-3.5 w-3.5 text-violet-400" />
                 <SelectValue placeholder="All Channels" />

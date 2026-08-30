@@ -405,7 +405,7 @@ export default function UsagePage() {
 
           {/* Header Action Controls */}
           <div className="flex flex-wrap items-center gap-3">
-            <Select value={selectedKey} onValueChange={setSelectedKey}>
+            <Select value={selectedKey} onValueChange={(val) => val && setSelectedKey(val)}>
               <SelectTrigger className="w-[190px] bg-slate-50 border-slate-200 text-xs text-slate-800 hover:bg-slate-100 focus:ring-indigo-500">
                 <Key className="mr-2 h-3.5 w-3.5 text-slate-500" />
                 <SelectValue placeholder="Select API Key" />
@@ -419,7 +419,7 @@ export default function UsagePage() {
               </SelectContent>
             </Select>
 
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <Select value={selectedPeriod} onValueChange={(val) => val && setSelectedPeriod(val)}>
               <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 text-xs text-slate-800 hover:bg-slate-100 focus:ring-indigo-500">
                 <Calendar className="mr-2 h-3.5 w-3.5 text-slate-500" />
                 <SelectValue placeholder="Billing Cycle" />
@@ -1331,7 +1331,7 @@ export default function UsagePage() {
                       />
                     </div>
 
-                    <Select value={modelFilter} onValueChange={setModelFilter}>
+                    <Select value={modelFilter} onValueChange={(val) => val && setModelFilter(val)}>
                       <SelectTrigger className="w-[140px] bg-slate-50 border-slate-200 text-xs text-slate-800 h-9">
                         <SelectValue placeholder="All Models" />
                       </SelectTrigger>

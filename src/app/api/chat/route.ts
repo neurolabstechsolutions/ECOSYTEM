@@ -68,7 +68,7 @@ PAUTAS DE RESPUESTA:
               { name: 'Infraestructura Cloud & APIs Seguras', rango: '$1,500 - $8,000 USD', stack: 'Supabase, PostgreSQL, Docker, Microservicios' }
             ];
           }
-        }),
+        } as any),
         createLead: tool({
           description: 'Registra un cliente interesado en las soluciones de NeuroLabs en el CRM.',
           parameters: z.object({
@@ -100,7 +100,7 @@ PAUTAS DE RESPUESTA:
               return { success: true, message: `Lead de ${name} procesado exitosamente.` };
             }
           }
-        })
+        } as any)
       }
     });
 

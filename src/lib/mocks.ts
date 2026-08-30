@@ -130,11 +130,11 @@ export interface Integration {
   id: string;
   name: string;
   provider: string;
-  category: "AI & ML" | "Communication" | "Payments" | "Infrastructure";
+  category: "AI & ML" | "Communication" | "Payments" | "Infrastructure" | "Data & Storage";
   description: string;
   status: IntegrationStatus;
   lastSync: string;
-  iconType: "whatsapp" | "openai" | "stripe" | "slack" | "supabase" | "github";
+  iconType: "whatsapp" | "openai" | "stripe" | "slack" | "supabase" | "github" | "database";
   colorScheme: {
     bg: string;
     border: string;
@@ -147,7 +147,7 @@ export interface Integration {
     uptime?: string;
     eventsProcessed?: number;
   };
-  authType: "API Key" | "OAuth 2.0" | "Webhook Secret";
+  authType: "API Key" | "OAuth 2.0" | "Webhook Secret" | "QR Code Scan" | "JWT & Anon Key" | "OAuth 2.0 / Bearer";
   webhookUrl?: string;
   docsUrl?: string;
   configFields: IntegrationConfigField[];

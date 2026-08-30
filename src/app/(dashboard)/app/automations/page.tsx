@@ -1845,7 +1845,7 @@ export default function AutomationsPage() {
                             onValueChange={(val) =>
                               setSelectedNode({
                                 ...selectedNode,
-                                config: { ...selectedNode.config, model: val },
+                                config: { ...selectedNode.config, model: val || undefined },
                               })
                             }
                           >

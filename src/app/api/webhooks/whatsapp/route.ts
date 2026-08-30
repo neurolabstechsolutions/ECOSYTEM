@@ -135,7 +135,7 @@ REGLAS PARA WHATSAPP:
                     category: z.string().optional().describe('Categoría (ej: SUV, Sedán, Pickup)'),
                     maxPrice: z.number().optional().describe('Presupuesto máximo')
                   }),
-                  execute: async ({ category, maxPrice }) => {
+                  execute: async ({ category, maxPrice }: { category?: string; maxPrice?: number }) => {
                     const supabase = await createClient();
                     let query = supabase.from('inventory_items').select('*').eq('status', 'AVAILABLE');
                     if (category) query = query.ilike('category', `%${category}%`);
@@ -151,7 +151,7 @@ REGLAS PARA WHATSAPP:
                     }
                     return results.map(v => ({ sku: v.sku, name: v.name, price: v.price, stock: v.stock }));
                   }
-                }),
+                } as any),
                 createLead: tool({
                   description: 'Registra un cliente interesado en el CRM para cierre por parte de Trinova.',
                   parameters: z.object({
@@ -159,7 +159,7 @@ REGLAS PARA WHATSAPP:
                     phone: z.string().describe('Teléfono de contacto'),
                     productInterest: z.string().describe('Vehículo de interés')
                   }),
-                  execute: async ({ name, phone, productInterest }) => {
+                  execute: async ({ name, phone, productInterest }: { name: string; phone: string; productInterest: string }) => {
                     const supabase = await createClient();
                     let { data: contact } = await supabase.from('contacts').select('id').eq('phone', phone || senderPhone).single();
                     if (!contact) {
@@ -180,9 +180,9 @@ REGLAS PARA WHATSAPP:
                         intent_level: 'Alta'
                       });
                     }
-                    return { success: true, message: `Lead registrado en el CRM de JY Trinova S.A.S.` };
+                    return { success: true, message: 'Prospecto registrado exitosamente en CRM.' };
                   }
-                })
+                } as any)
               }
             });
 

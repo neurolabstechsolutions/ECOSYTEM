@@ -233,7 +233,7 @@ export default function ProviderRegistrationPage({
         setResolvedDomain((params as any).domain);
       }
     } else if (routerParams.domain) {
-      setResolvedDomain(routerParams.domain);
+      setResolvedDomain(Array.isArray(routerParams.domain) ? routerParams.domain[0] : (routerParams.domain || "prestige"));
     }
   }, [params, routerParams]);
 
@@ -919,7 +919,7 @@ export default function ProviderRegistrationPage({
                     </Label>
                     <Select
                       value={companyData.taxIdType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, taxIdType: val })}
+                      onValueChange={(val) => setCompanyData({ ...companyData, taxIdType: (val as any) || "NIT" })}
                     >
                       <SelectTrigger id="taxIdType" className="border-zinc-200 text-sm">
                         <SelectValue placeholder="Selecciona tipo" />
@@ -954,7 +954,7 @@ export default function ProviderRegistrationPage({
                     </Label>
                     <Select
                       value={companyData.companyType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, companyType: val })}
+                      onValueChange={(val) => setCompanyData({ ...companyData, companyType: val || "" })}
                     >
                       <SelectTrigger id="companyType" className="border-zinc-200 text-sm">
                         <SelectValue placeholder="Selecciona categoría" />
@@ -1152,7 +1152,7 @@ export default function ProviderRegistrationPage({
                     </Label>
                     <Select
                       value={companyData.legalRepDocType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, legalRepDocType: val })}
+                      onValueChange={(val) => setCompanyData({ ...companyData, legalRepDocType: val || "" })}
                     >
                       <SelectTrigger id="legalRepDocType" className="border-zinc-200 text-sm">
                         <SelectValue placeholder="Selecciona tipo de documento" />
@@ -1499,7 +1499,7 @@ export default function ProviderRegistrationPage({
                           </Label>
                           <Select
                             value={currentVehicle.brand}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, brand: val })}
+                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, brand: val || "" })}
                           >
                             <SelectTrigger id="vBrand" className="border-zinc-200 text-sm">
                               <SelectValue placeholder="Selecciona marca" />
@@ -1533,7 +1533,7 @@ export default function ProviderRegistrationPage({
                           </Label>
                           <Select
                             value={currentVehicle.year.toString()}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, year: parseInt(val) })}
+                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, year: parseInt(val || "2024") || 2024 })}
                           >
                             <SelectTrigger id="vYear" className="border-zinc-200 text-sm">
                               <SelectValue placeholder="Año" />
@@ -1570,7 +1570,7 @@ export default function ProviderRegistrationPage({
                           </Label>
                           <Select
                             value={currentVehicle.bodyType}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, bodyType: val })}
+                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, bodyType: val || "" })}
                           >
                             <SelectTrigger id="vBodyType" className="border-zinc-200 text-sm">
                               <SelectValue placeholder="Tipo" />
@@ -1606,7 +1606,7 @@ export default function ProviderRegistrationPage({
                           </Label>
                           <Select
                             value={currentVehicle.transmission}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, transmission: val })}
+                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, transmission: val || "" })}
                           >
                             <SelectTrigger id="vTransmission" className="border-zinc-200 text-sm">
                               <SelectValue placeholder="Transmisión" />
@@ -1627,7 +1627,7 @@ export default function ProviderRegistrationPage({
                           </Label>
                           <Select
                             value={currentVehicle.fuelType}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, fuelType: val })}
+                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, fuelType: val || "" })}
                           >
                             <SelectTrigger id="vFuelType" className="border-zinc-200 text-sm">
                               <SelectValue placeholder="Combustible" />
@@ -1879,7 +1879,7 @@ export default function ProviderRegistrationPage({
                           <div className="flex items-center gap-2 w-full sm:w-auto">
                             <Select
                               value={selectedImageTag}
-                              onValueChange={(val) => setSelectedImageTag(val)}
+                              onValueChange={(val) => setSelectedImageTag(val || "Frontal Principal")}
                             >
                               <SelectTrigger className="w-36 border-zinc-200 text-xs h-8 bg-white">
                                 <SelectValue placeholder="Etiqueta" />

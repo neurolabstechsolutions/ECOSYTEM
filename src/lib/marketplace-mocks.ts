@@ -56,6 +56,79 @@ export interface Vehicle {
   dealer: DealershipInfo;
 }
 
+export interface PropertySpec {
+  areaM2: number;
+  lotAreaM2?: number;
+  bedrooms: number;
+  bathrooms: number;
+  parkingSpots: number;
+  stratum: number; // Estrato 4, 5, 6
+  builtYear: number;
+  adminFeeCop?: number;
+  floorNumber?: number;
+  totalFloors?: number;
+}
+
+export interface RealEstateAgencyInfo {
+  name: string;
+  developer?: string;
+  phone: string;
+  whatsappPhone: string;
+  rating: number;
+  verified: boolean;
+  address: string;
+  city: string;
+}
+
+export interface Property {
+  id: string;
+  title: string;
+  propertyType: "Apartamento" | "Casa de Lujo" | "Penthouse" | "Casa Campestre" | "Oficina / Local" | "Lote / Terreno";
+  operationType: "Venta" | "Arriendo" | "Preventa / Sobre Planos";
+  priceCop: number;
+  originalPriceCop?: number;
+  monthlyEstimateCop?: number;
+  region: string;
+  city: string;
+  neighborhood: string;
+  addressBrief: string;
+  badge?: "Entrega Inmediata" | "Sobre Planos" | "Exclusivo" | "Vista Panorámica" | "Oportunidad" | "Negociable";
+  featured?: boolean;
+  code: string;
+  images: string[];
+  specs: PropertySpec;
+  amenities: string[];
+  description: string;
+  agency: RealEstateAgencyInfo;
+}
+
+export const REAL_ESTATE_REGIONS = [
+  "Todas las Regiones",
+  "Bogotá D.C.",
+  "Medellín (Antioquia)",
+  "Cartagena (Bolívar)",
+  "Barranquilla (Atlántico)",
+  "Cali (Valle)",
+  "Llanogrande / Rionegro",
+  "Santa Marta (Magdalena)",
+];
+
+export const PROPERTY_TYPES = [
+  "Todos",
+  "Apartamento",
+  "Casa de Lujo",
+  "Penthouse",
+  "Casa Campestre",
+  "Oficina / Local",
+];
+
+export const OPERATION_TYPES = [
+  "Todos",
+  "Venta",
+  "Arriendo",
+  "Preventa / Sobre Planos",
+];
+
 export const REGIONS_LIST = [
   "Todas las Regiones",
   "Bogotá D.C.",
@@ -96,6 +169,17 @@ export const FUEL_TYPES = [
   "Eléctrico",
   "Diésel",
 ];
+
+export const DEFAULT_AGENCY: RealEstateAgencyInfo = {
+  name: "NeuroLabs Real Estate Prime",
+  developer: "Grupo Inmobiliario & Constructora NeuroLabs",
+  phone: "+57 (300) 576-5530",
+  whatsappPhone: "573005765530",
+  address: "Calle 93B # 13-45 Luxury Tower",
+  city: "Bogotá D.C., Colombia",
+  rating: 4.97,
+  verified: true,
+};
 
 export const DEFAULT_DEALER: DealershipInfo = {
   name: "Trinova Motors",
@@ -700,6 +784,348 @@ export const MOCK_INVENTORY: Vehicle[] = [
     ],
     inspectionScore: 99,
     dealer: DEFAULT_DEALER,
+  }
+];
+
+export const MOCK_REAL_ESTATE_PROPERTIES: Property[] = [
+  {
+    id: "prop-001",
+    title: "Penthouse Dúplex con Terraza 360° & Vista a los Cerros",
+    propertyType: "Penthouse",
+    operationType: "Venta",
+    priceCop: 2850000000, // $2.850.000.000 COP
+    originalPriceCop: 3100000000,
+    monthlyEstimateCop: 24500000,
+    region: "Bogotá D.C.",
+    city: "Bogotá D.C.",
+    neighborhood: "Chicó Reservado",
+    addressBrief: "Calle 94 con Carrera 7ma",
+    badge: "Vista Panorámica",
+    featured: true,
+    code: "NL-RE-101",
+    images: [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 340,
+      bedrooms: 4,
+      bathrooms: 5,
+      parkingSpots: 4,
+      stratum: 6,
+      builtYear: 2023,
+      adminFeeCop: 1650000,
+      floorNumber: 12,
+      totalFloors: 12,
+    },
+    amenities: [
+      "Ascensor Privado Directo al Piso",
+      "Terraza Privada de 70m² con Jacuzzi & BBQ",
+      "Domótica Integral Lutron (Luces, Clima y Sonido)",
+      "Chimenea a Gas Automatizada",
+      "Cocina Italiana con Electrodomésticos Sub-Zero",
+      "Edificio con Club House, Piscina Climatizada & Spa",
+      "Cuarto y Baño de Servicio",
+      "Seguridad Blindada 24/7 y CCTV",
+    ],
+    description: "Espectacular Penthouse Dúplex de autor con acabados importados en mármol de Carrara y maderas nobles. Techos de doble altura, ventanales piso a techo con aislamiento termoacústico y vista ininterrumpida a los Cerros Orientales.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-002",
+    title: "Mansión de Lujo en El Poblado con Piscina Infinita",
+    propertyType: "Casa de Lujo",
+    operationType: "Venta",
+    priceCop: 4600000000, // $4.600.000.000 COP
+    originalPriceCop: 4950000000,
+    monthlyEstimateCop: 38900000,
+    region: "Medellín (Antioquia)",
+    city: "Medellín",
+    neighborhood: "El Poblado - Las Palmas",
+    addressBrief: "Alto de Las Palmas, Sector Exclusivo",
+    badge: "Exclusivo",
+    featured: true,
+    code: "NL-RE-202",
+    images: [
+      "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 580,
+      lotAreaM2: 1850,
+      bedrooms: 5,
+      bathrooms: 6,
+      parkingSpots: 6,
+      stratum: 6,
+      builtYear: 2024,
+      adminFeeCop: 1420000,
+      totalFloors: 2,
+    },
+    amenities: [
+      "Piscina Infinita Climatizada con Vista a la Ciudad",
+      "Cava de Vinos Subterránea con Control de Humedad",
+      "Sala de Cine / Home Theater con Sonido Dolby Atmos",
+      "Gimnasio Privado Equipado",
+      "Zona Húmeda: Sauna y Turco",
+      "Sistema de Paneles Solares & Baterías Tesla",
+      "Sendero Ecológico y Jardines Zen Paisajísticos",
+      "Portería con Doble Anillo de Seguridad",
+    ],
+    description: "Obra maestra de arquitectura contemporánea en el sector más codiciado de Medellín. Espacios abiertos, integración total con la naturaleza, clima perfecto y privacidad absoluta rodeada de bosque nativo.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-003",
+    title: "Apartamento Frente al Mar con Acceso a Muelle Privado",
+    propertyType: "Apartamento",
+    operationType: "Venta",
+    priceCop: 1950000000, // $1.950.000.000 COP
+    monthlyEstimateCop: 16800000,
+    region: "Cartagena (Bolívar)",
+    city: "Cartagena de Indias",
+    neighborhood: "Castillogrande",
+    addressBrief: "Paseo Peatonal de Castillogrande",
+    badge: "Entrega Inmediata",
+    featured: true,
+    code: "NL-RE-303",
+    images: [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 215,
+      bedrooms: 3,
+      bathrooms: 4,
+      parkingSpots: 2,
+      stratum: 6,
+      builtYear: 2023,
+      adminFeeCop: 1250000,
+      floorNumber: 18,
+      totalFloors: 25,
+    },
+    amenities: [
+      "Vista Frontal Directa a la Bahía de Cartagena",
+      "Balcón Terraza con Cortinas de Cristal Plegables",
+      "Piscina con Horizonte Infinito y Deck Solarium",
+      "Muelle Privado para Yates y Embarcaciones",
+      "Zona de Coworking VIP con Salas de Juntas",
+      "Planta Eléctrica de Cobertura Total",
+      "Salida Directa a la Playa",
+    ],
+    description: "Apartamento de alta gama en primera línea de mar en Castillogrande. Diseñado para maximizar la brisa y las puestas de sol caribeñas, con amenidades de resort 5 estrellas.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-004",
+    title: "Casa Campestre de Ensueño con Helipuerto & Bosque Nativo",
+    propertyType: "Casa Campestre",
+    operationType: "Venta",
+    priceCop: 3750000000, // $3.750.000.000 COP
+    originalPriceCop: 3950000000,
+    monthlyEstimateCop: 31800000,
+    region: "Llanogrande / Rionegro",
+    city: "Rionegro - Llanogrande",
+    neighborhood: "Llanogrande Alto",
+    addressBrief: "Km 7 Vía Don Diego - Llanogrande",
+    badge: "Oportunidad",
+    featured: false,
+    code: "NL-RE-404",
+    images: [
+      "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 450,
+      lotAreaM2: 3200,
+      bedrooms: 4,
+      bathrooms: 5,
+      parkingSpots: 8,
+      stratum: 5,
+      builtYear: 2022,
+      adminFeeCop: 890000,
+      totalFloors: 1,
+    },
+    amenities: [
+      "Helipuerto Autorizado en el Lote",
+      "Kiosco Gourmet con Horno de Leña y Parrilla Vasca",
+      "Lago Privado con Deck de Pesca y Relajación",
+      "Picadero para Caballos y 2 Caballerizas",
+      "Calefacción por Suelo Radiante",
+      "Sistema de Recolección de Aguas Lluvias & Riego",
+      "A solo 15 minutos del Aeropuerto JMC",
+    ],
+    description: "Espectacular finca campestre en un solo nivel con diseño bioclimático, techos altos en madera laminada y amplios ventanales. La combinación perfecta de tranquilidad campestre y conectividad internacional.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-005",
+    title: "Penthouse de Autor con Terraza Jardín en Alto Prado",
+    propertyType: "Penthouse",
+    operationType: "Venta",
+    priceCop: 1680000000, // $1.680.000.000 COP
+    monthlyEstimateCop: 14500000,
+    region: "Barranquilla (Atlántico)",
+    city: "Barranquilla",
+    neighborhood: "Alto Prado",
+    addressBrief: "Carrera 58 con Calle 82",
+    badge: "Entrega Inmediata",
+    featured: true,
+    code: "NL-RE-505",
+    images: [
+      "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 290,
+      bedrooms: 3,
+      bathrooms: 4,
+      parkingSpots: 3,
+      stratum: 6,
+      builtYear: 2024,
+      adminFeeCop: 1100000,
+      floorNumber: 15,
+      totalFloors: 15,
+    },
+    amenities: [
+      "Terraza Jardín de 55m² con Vista al Río Magdalena",
+      "Aire Acondicionado Central VRF de Alta Eficiencia",
+      "Acabados en Mármol Royal Grey y Cuarzo",
+      "Piscina Tipo Lounge en Rooftop del Edificio",
+      "Salón Social Climatizado & Gimnasio Spinning",
+      "Cámaras de Vigilancia con IA Perimetral",
+    ],
+    description: "Ubicado en el corazón de Alto Prado, este Penthouse combina elegancia clásica y tecnología de vanguardia. Techos de 3.20m de altura y excelente ventilación natural cruzada.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-006",
+    title: "Casa de Lujo en Condominio Cerrado - Ciudad Jardín",
+    propertyType: "Casa de Lujo",
+    operationType: "Venta",
+    priceCop: 2200000000, // $2.200.000.000 COP
+    monthlyEstimateCop: 18900000,
+    region: "Cali (Valle)",
+    city: "Cali",
+    neighborhood: "Ciudad Jardín",
+    addressBrief: "Avenida San Joaquín",
+    badge: "Negociable",
+    featured: false,
+    code: "NL-RE-606",
+    images: [
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 420,
+      lotAreaM2: 750,
+      bedrooms: 4,
+      bathrooms: 5,
+      parkingSpots: 4,
+      stratum: 6,
+      builtYear: 2023,
+      adminFeeCop: 950000,
+      totalFloors: 2,
+    },
+    amenities: [
+      "Piscina Privada con Cascada & Zona Húmeda",
+      "Estudio / Oficina Ejecutiva Independiente",
+      "Habitación Principal con Walk-in Closet Doble",
+      "Condominio con Cancha de Tenis & Sendero Verde",
+      "Parqueadero para Visitantes Interno",
+      "Seguridad Armada 24 Horas",
+    ],
+    description: "Hermosa residencia familiar en el sector más exclusivo del sur de Cali. Iluminación natural abundante, amplios corredores y jardines tropicales privados.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-007",
+    title: "Apartamento de Vanguardia sobre Planos en Rosales",
+    propertyType: "Apartamento",
+    operationType: "Preventa / Sobre Planos",
+    priceCop: 1450000000, // $1.450.000.000 COP
+    monthlyEstimateCop: 12500000,
+    region: "Bogotá D.C.",
+    city: "Bogotá D.C.",
+    neighborhood: "Rosales",
+    addressBrief: "Transversal 3ra con Calle 72",
+    badge: "Sobre Planos",
+    featured: true,
+    code: "NL-RE-707",
+    images: [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 175,
+      bedrooms: 3,
+      bathrooms: 3,
+      parkingSpots: 2,
+      stratum: 6,
+      builtYear: 2026,
+      adminFeeCop: 850000,
+      floorNumber: 6,
+      totalFloors: 10,
+    },
+    amenities: [
+      "Proyecto Sostenible Certificación LEED Oro",
+      "Planes de Pago Flexibles con Fiduciaria",
+      "Rooftop con Lounge Firepit & Zona Yoga",
+      "Teatro Privado y Cuarto de Juegos",
+      "Parqueaderos con Cargadores Eléctricos",
+      "Pet Spa y Estación de Lavado",
+    ],
+    description: "Oportunidad de inversión sobre planos en Rosales. Proyecto boutique de solo 18 unidades con arquitectura de firma internacional y acabados de lujo personalizables.",
+    agency: DEFAULT_AGENCY,
+  },
+  {
+    id: "prop-008",
+    title: "Piso Corporativo Inteligente & Oficinas Prime",
+    propertyType: "Oficina / Local",
+    operationType: "Venta",
+    priceCop: 3200000000, // $3.200.000.000 COP
+    monthlyEstimateCop: 27500000,
+    region: "Bogotá D.C.",
+    city: "Bogotá D.C.",
+    neighborhood: "Santa Bárbara / Calle 116",
+    addressBrief: "Avenida Calle 116 con Carrera 9na",
+    badge: "Exclusivo",
+    featured: false,
+    code: "NL-RE-808",
+    images: [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
+    ],
+    specs: {
+      areaM2: 410,
+      bedrooms: 0,
+      bathrooms: 6,
+      parkingSpots: 10,
+      stratum: 6,
+      builtYear: 2023,
+      adminFeeCop: 2800000,
+      floorNumber: 8,
+      totalFloors: 14,
+    },
+    amenities: [
+      "Piso Completo con Control de Acceso Biométrico",
+      "Auditorio Corporativo para 80 Personas en Edificio",
+      "6 Salas de Juntas Climatizadas y Equipadas",
+      "Cableado Estructurado Categoría 6A & Fibra Óptica",
+      "Baterías de Baños Privadas para Hombres y Mujeres",
+      "10 Parqueaderos Privados en Sótano",
+    ],
+    description: "Piso de oficinas AAA en edificio corporativo de última generación. Ideal para multinacionales, firmas de tecnología, fondos de inversión y consultoras de primer nivel.",
+    agency: DEFAULT_AGENCY,
   }
 ];
 
