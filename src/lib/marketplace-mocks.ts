@@ -10,6 +10,8 @@ export interface VehicleSpec {
 
 export interface DealershipInfo {
   name: string;
+  legalName?: string;
+  taxId?: string; // NIT
   domain: string;
   tagline: string;
   phone: string;
@@ -17,6 +19,7 @@ export interface DealershipInfo {
   whatsappMessageTemplate?: string;
   address: string;
   city: string;
+  email?: string;
   rating: number;
   reviewsCount: number;
   verified: boolean;
@@ -182,18 +185,21 @@ export const DEFAULT_AGENCY: RealEstateAgencyInfo = {
 };
 
 export const DEFAULT_DEALER: DealershipInfo = {
-  name: "Trinova Motors",
+  name: "YJD Trinova S.A.S.",
+  legalName: "YJD TRINOVA S.A.S.",
+  taxId: "902.095.222-8",
   domain: "jjtrinova",
-  tagline: "Inventario Exclusivo de Vehículos Premium & Seminuevos Certificados",
-  phone: "+57 (300) 576-5530",
+  tagline: "Marketplace Oficial & Corretaje Vehicular Certificado",
+  phone: "+57 (605) 322-5918",
   whatsappPhone: "573005765530",
-  address: "Av. Principal Luxury Corridor #104-20",
-  city: "Bogotá D.C. & Concesionarios Aliados",
-  rating: 4.9,
-  reviewsCount: 384,
+  address: "Calle 82 # 21 Sur 06 Esquina",
+  city: "Barranquilla, Atlántico, Colombia",
+  email: "dondeblanca15@gmail.com",
+  rating: 4.98,
+  reviewsCount: 412,
   verified: true,
   businessHours: "Lun - Sáb: 8:00 AM - 7:00 PM | Dom: 10:00 AM - 4:00 PM",
-  badges: ["Inspección 150 Puntos", "Garantía Mecánica", "Aprobación de Crédito 24h", "Retoma de Usados"],
+  badges: ["NIT 902.095.222-8", "Inspección 150 Puntos", "Garantía Mecánica", "Barranquilla - Atlántico"],
 };
 
 export const MOCK_INVENTORY: Vehicle[] = [
@@ -1139,14 +1145,46 @@ export function getDealershipByDomain(domain: string): DealershipInfo {
   // Pre-configured custom domains
   const presets: Record<string, Partial<DealershipInfo>> = {
     "jjtrinova": {
-      name: "Trinova Motors",
+      name: "YJD Trinova S.A.S.",
+      legalName: "YJD TRINOVA S.A.S.",
+      taxId: "902.095.222-8",
       tagline: "Marketplace Oficial & Corretaje Vehicular Certificado",
-      phone: "+57 (300) 576-5530",
+      phone: "+57 (605) 322-5918",
       whatsappPhone: "573005765530",
-      city: "Bogotá D.C. & Concesionarios Aliados",
+      address: "Calle 82 # 21 Sur 06 Esquina",
+      city: "Barranquilla, Atlántico, Colombia",
+      email: "dondeblanca15@gmail.com",
       rating: 4.98,
       reviewsCount: 412,
-      badges: ["Mandato Certificado", "Inspección Pericial 360°", "Firma Digital Segura"],
+      badges: ["NIT 902.095.222-8", "Mandato Certificado", "Inspección Pericial 360°", "Barranquilla - Atlántico"],
+    },
+    "yjdtrinova": {
+      name: "YJD Trinova S.A.S.",
+      legalName: "YJD TRINOVA S.A.S.",
+      taxId: "902.095.222-8",
+      tagline: "Marketplace Oficial & Corretaje Vehicular Certificado",
+      phone: "+57 (605) 322-5918",
+      whatsappPhone: "573005765530",
+      address: "Calle 82 # 21 Sur 06 Esquina",
+      city: "Barranquilla, Atlántico, Colombia",
+      email: "dondeblanca15@gmail.com",
+      rating: 4.98,
+      reviewsCount: 412,
+      badges: ["NIT 902.095.222-8", "Mandato Certificado", "Inspección Pericial 360°", "Barranquilla - Atlántico"],
+    },
+    "trinova": {
+      name: "YJD Trinova S.A.S.",
+      legalName: "YJD TRINOVA S.A.S.",
+      taxId: "902.095.222-8",
+      tagline: "Marketplace Oficial & Corretaje Vehicular Certificado",
+      phone: "+57 (605) 322-5918",
+      whatsappPhone: "573005765530",
+      address: "Calle 82 # 21 Sur 06 Esquina",
+      city: "Barranquilla, Atlántico, Colombia",
+      email: "dondeblanca15@gmail.com",
+      rating: 4.98,
+      reviewsCount: 412,
+      badges: ["NIT 902.095.222-8", "Mandato Certificado", "Inspección Pericial 360°", "Barranquilla - Atlántico"],
     },
     "autohaus": {
       name: "Autohaus German Motors",

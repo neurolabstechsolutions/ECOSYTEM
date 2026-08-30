@@ -560,9 +560,12 @@ Estoy interesado en el siguiente vehículo:
                 <div className="flex items-center justify-between border-b border-slate-100 pb-5 mb-6">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                      Concesionario Oficial
+                      Concesionario Oficial &bull; {dealer.taxId ? `NIT ${dealer.taxId}` : "Verificado"}
                     </span>
                     <h3 className="text-xl font-heading font-extrabold text-slate-900 mt-1">{dealer.name}</h3>
+                    {dealer.legalName && (
+                      <p className="text-[11px] text-slate-500 font-medium">{dealer.legalName}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 border border-slate-200">
                     <Star className="h-3.5 w-3.5 fill-slate-900 text-slate-900" />

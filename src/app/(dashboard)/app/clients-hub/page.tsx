@@ -23,6 +23,7 @@ import { toast } from "sonner";
 interface ClientTenant {
   id: string;
   companyName: string;
+  taxId?: string;
   industry: "INMOBILIARIA" | "CONCESIONARIO" | "SALUD_CLINICA" | "ECOMMERCE" | "SERVICIOS_B2B";
   contactPerson: string;
   phone: string;
@@ -38,8 +39,31 @@ interface ClientTenant {
 
 const INITIAL_CLIENTS: ClientTenant[] = [
   {
+    id: "cl-trinova",
+    companyName: "YJD TRINOVA S.A.S.",
+    taxId: "902.095.222-8",
+    industry: "CONCESIONARIO",
+    contactPerson: "Gerencia Comercial YJD",
+    phone: "+57 (605) 322-5918 / +57 300 5765530",
+    email: "dondeblanca15@gmail.com",
+    city: "Barranquilla (Atlántico)",
+    planTier: "IMPERIO_ENTERPRISE",
+    monthlyFeeCop: "$1.800.000 COP / mes",
+    whatsappStatus: "ONLINE_24_7",
+    totalConversations: 1940,
+    pdfQuotesGenerated: 382,
+    features: [
+      "Agente IA WhatsApp 24/7",
+      "Cotización en PDF Instantánea",
+      "Corretaje & Mandatos Certificados",
+      "Inspección Técnica 150 Puntos",
+      "Subdominio Oficial: jjtrinova"
+    ],
+  },
+  {
     id: "cl-1",
     companyName: "Inmobiliaria & Constructora del Norte",
+    taxId: "901.782.441-2",
     industry: "INMOBILIARIA",
     contactPerson: "Carlos Mendoza (Gerente Comercial)",
     phone: "+57 310 4567890",
