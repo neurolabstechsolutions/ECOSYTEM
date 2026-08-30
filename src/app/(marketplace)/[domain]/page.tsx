@@ -354,30 +354,30 @@ Estoy interesado en el siguiente vehículo:
       {/* TOP CORPORATE TRUST BAR */}
       {/* ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
           {/* Brand & Dealership Identity */}
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm ring-1 ring-slate-900/10">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm ring-1 ring-slate-900/10">
               {activeMarketplaceTab === "real_estate" ? (
-                <Building2 className="h-5 w-5 text-emerald-400" />
+                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
               ) : (
-                <CarIcon className="h-5 w-5 text-white" />
+                <CarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               )}
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-950 font-heading">
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="text-sm sm:text-base lg:text-lg font-bold tracking-tight text-slate-950 font-heading truncate">
                   {dealer.legalName || "YJD TRINOVA S.A.S."}
                 </span>
                 <Badge
                   variant="outline"
-                  className="hidden items-center gap-1 border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-800 sm:inline-flex shadow-xs"
+                  className="hidden items-center gap-1 border-slate-300 bg-slate-100 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-slate-800 md:inline-flex shadow-xs shrink-0"
                 >
                   <ShieldCheck className="h-3 w-3 text-emerald-600" />
                   NIT {dealer.taxId || "902.095.222-8"}
                 </Badge>
               </div>
-              <p className="hidden text-xs text-slate-500 md:block font-medium">
+              <p className="hidden text-[11px] sm:text-xs text-slate-500 md:block font-medium truncate">
                 {activeMarketplaceTab === "real_estate"
                   ? "División de Bienes Raíces Prime & Inversiones • Barranquilla, Atlántico"
                   : "Marketplace Oficial & Corretaje Vehicular Certificado • Barranquilla, Atlántico"}
@@ -386,41 +386,41 @@ Estoy interesado en el siguiente vehículo:
           </div>
 
           {/* Central Category Switcher Tabs */}
-          <div className="flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200 shadow-inner">
+          <div className="flex items-center rounded-xl sm:rounded-2xl bg-slate-100 p-0.5 sm:p-1 border border-slate-200 shadow-inner shrink-0">
             <button
               onClick={() => setActiveMarketplaceTab("real_estate")}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
                 activeMarketplaceTab === "real_estate"
                   ? "bg-slate-950 text-white shadow-md"
                   : "text-slate-600 hover:text-slate-950 hover:bg-slate-200/60"
               }`}
             >
-              <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+              <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />
               <span>Bienes Raíces</span>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full bg-emerald-600 text-[9px] text-white font-extrabold ml-0.5 animate-pulse">
+              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded-full bg-emerald-600 text-[8px] sm:text-[9px] text-white font-extrabold ml-0.5 animate-pulse">
                 NUEVO
               </span>
             </button>
             <button
               onClick={() => setActiveMarketplaceTab("vehicles")}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
                 activeMarketplaceTab === "vehicles"
                   ? "bg-slate-950 text-white shadow-md"
                   : "text-slate-600 hover:text-slate-950 hover:bg-slate-200/60"
               }`}
             >
-              <CarIcon className="h-3.5 w-3.5" />
+              <CarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>Vehículos</span>
             </button>
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
             {/* Saved Favorites Pill */}
             {favorites.length > 0 && (
               <Badge
                 variant="secondary"
-                className="hidden items-center gap-1 bg-red-50 text-red-700 border-red-200 px-2.5 py-1 text-xs font-medium sm:inline-flex"
+                className="hidden items-center gap-1 bg-red-50 text-red-700 border-red-200 px-2.5 py-1 text-xs font-medium lg:inline-flex"
               >
                 <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
                 <span>{favorites.length} Guardados</span>
@@ -438,11 +438,11 @@ Estoy interesado en el siguiente vehículo:
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
             >
-              <MessageCircle className="h-4 w-4 fill-white text-emerald-600" />
+              <MessageCircle className="h-3.5 w-3.5 fill-white text-emerald-600" />
               <span className="hidden sm:inline">WhatsApp Directo</span>
-              <span className="sm:hidden">Chat</span>
+              <span className="sm:hidden">WhatsApp</span>
             </a>
           </div>
         </div>
@@ -460,20 +460,20 @@ Estoy interesado en el siguiente vehículo:
           {/* ────────────────────────────────────────────────────── */}
           {/* VEHICLES HERO SECTION */}
           {/* ────────────────────────────────────────────────────── */}
-          <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/40 py-12 lg:py-16">
+          <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/40 py-8 sm:py-12 lg:py-16">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 h-96 w-96 rounded-full bg-slate-100/80 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 -mb-12 h-64 w-64 rounded-full bg-slate-200/40 blur-3xl pointer-events-none" />
 
-        <div className="relative mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-[1600px] px-3 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
             {/* Left Column: Heading & Information */}
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/90 px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/90 px-3 py-1 text-[11px] sm:text-xs font-semibold text-slate-800 shadow-sm mb-3 sm:mb-4">
                 <ShieldCheck className="h-3.5 w-3.5 text-slate-900" />
                 <span>Marketplace Oficial &bull; Garantía 100% Certificada</span>
               </div>
 
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-950 font-heading leading-tight">
                 Encuentra tu próximo vehículo con{" "}
                 <span className="underline decoration-slate-400 decoration-2 underline-offset-4">
                   confianza total
@@ -481,13 +481,13 @@ Estoy interesado en el siguiente vehículo:
                 .
               </h1>
 
-              <p className="mt-4 text-base text-slate-600 sm:text-lg max-w-2xl leading-relaxed">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 sm:text-lg max-w-2xl leading-relaxed">
                 Inspección pericial de 150 puntos, historial de mantenimientos garantizado,
                 financiación pre-aprobada en minutos y entrega inmediata en todo el país.
               </p>
 
               {/* Live Search Input Bar */}
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center max-w-xl">
+              <div className="mt-5 sm:mt-6 flex flex-col gap-2 sm:flex-row sm:items-center max-w-xl">
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -495,7 +495,7 @@ Estoy interesado en el siguiente vehículo:
                     placeholder="Buscar por marca, modelo, línea o año..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-12 pl-10 pr-4 text-sm bg-slate-50/90 border-slate-300 rounded-lg shadow-inner focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                    className="h-11 sm:h-12 pl-10 pr-4 text-xs sm:text-sm bg-slate-50/90 border-slate-300 rounded-xl shadow-inner focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                   />
                   {searchQuery && (
                     <button
@@ -511,42 +511,42 @@ Estoy interesado en el siguiente vehículo:
                     const gridElement = document.getElementById("inventory-grid");
                     gridElement?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="h-12 bg-slate-950 hover:bg-slate-800 text-white font-semibold px-6 shadow-md rounded-lg"
+                  className="h-11 sm:h-12 bg-slate-950 hover:bg-slate-800 text-white font-semibold px-5 sm:px-6 shadow-md rounded-xl text-xs sm:text-sm cursor-pointer"
                 >
                   Explorar ({filteredVehicles.length})
                 </Button>
               </div>
 
-              {/* Quick Tags / Fast Filters */}
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                <span className="font-semibold text-slate-700">Filtros rápidos:</span>
+              {/* Quick Tags / Fast Filters with horizontal scroll on touch */}
+              <div className="mt-3.5 sm:mt-4 flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-500 overflow-x-auto pb-1.5 -mx-1 px-1 no-scrollbar sm:flex-wrap">
+                <span className="font-semibold text-slate-700 shrink-0">Filtros rápidos:</span>
                 <button
                   onClick={() => applyQuickFilter("porsche")}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shrink-0 whitespace-nowrap"
                 >
                   Porsche ({brandCounts["Porsche"] || 0})
                 </button>
                 <button
                   onClick={() => applyQuickFilter("bmw")}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shrink-0 whitespace-nowrap"
                 >
                   BMW ({brandCounts["BMW"] || 0})
                 </button>
                 <button
                   onClick={() => applyQuickFilter("hybrid")}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shrink-0 whitespace-nowrap"
                 >
                   <Zap className="h-3 w-3" /> Híbridos & Eléctricos
                 </button>
                 <button
                   onClick={() => applyQuickFilter("suv")}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shrink-0 whitespace-nowrap"
                 >
                   SUVs
                 </button>
                 <button
                   onClick={() => applyQuickFilter("under60k")}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shrink-0 whitespace-nowrap"
                 >
                   Menos de $60K
                 </button>
@@ -1307,12 +1307,12 @@ Estoy interesado en el siguiente vehículo:
         open={Boolean(selectedVehicleForModal)}
         onOpenChange={(open) => !open && setSelectedVehicleForModal(null)}
       >
-        <DialogContent className="!max-w-[1200px] !w-[95vw] h-[90vh] lg:h-[85vh] overflow-hidden bg-white p-0 sm:rounded-none lg:rounded-xl border-0 shadow-2xl">
+        <DialogContent className="!max-w-[1200px] !w-[96vw] sm:!w-[92vw] h-[92vh] lg:h-[85vh] overflow-y-auto lg:overflow-hidden bg-white p-0 rounded-2xl sm:rounded-3xl border-0 shadow-2xl">
           {selectedVehicleForModal && (
             <div className="flex flex-col lg:flex-row h-full w-full">
               
               {/* Left Column: Full height image */}
-              <div className="relative w-full lg:w-[55%] h-64 lg:h-full bg-slate-100 flex-shrink-0">
+              <div className="relative w-full lg:w-[55%] h-56 sm:h-72 lg:h-full bg-slate-100 flex-shrink-0">
                 <img
                   src={selectedVehicleForModal.images[0]}
                   alt={`${selectedVehicleForModal.brand} ${selectedVehicleForModal.model}`}
@@ -1324,8 +1324,8 @@ Estoy interesado en el siguiente vehículo:
               <div className="w-full lg:w-[45%] flex flex-col h-full bg-white font-sans">
                 
                 {/* Header Info (Fixed at top) */}
-                <div className="p-6 lg:p-10 pb-0 flex-shrink-0">
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="p-4 sm:p-6 lg:p-10 pb-0 flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                     <Badge className="bg-slate-900 text-white font-bold text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm">
                       {selectedVehicleForModal.condition}
                     </Badge>
@@ -1333,14 +1333,14 @@ Estoy interesado en el siguiente vehículo:
                       VIN: {selectedVehicleForModal.vin}
                     </span>
                   </div>
-                  <h2 className="font-heading text-4xl sm:text-5xl font-extrabold text-slate-950 leading-[1.05] tracking-tight">
+                  <h2 className="font-heading text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 leading-tight tracking-tight">
                     {selectedVehicleForModal.brand}
-                    <span className="block mt-1 text-slate-500 font-light text-2xl sm:text-3xl tracking-normal">{selectedVehicleForModal.model} {selectedVehicleForModal.trim}</span>
+                    <span className="block mt-0.5 sm:mt-1 text-slate-500 font-light text-lg sm:text-2xl lg:text-3xl tracking-normal">{selectedVehicleForModal.model} {selectedVehicleForModal.trim}</span>
                   </h2>
-                  <p className="mt-3 text-xs font-bold tracking-widest text-slate-400 uppercase">{selectedVehicleForModal.year}</p>
+                  <p className="mt-2 sm:mt-3 text-xs font-bold tracking-widest text-slate-400 uppercase">{selectedVehicleForModal.year}</p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 lg:p-10 pt-6 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 pt-4 sm:pt-6 custom-scrollbar">
                   <Tabs defaultValue="resumen" className="w-full">
                     <TabsList className="w-full justify-start border-b border-slate-200 rounded-none bg-transparent p-0 mb-8 h-auto">
                       <TabsTrigger value="resumen" className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-900 data-[state=active]:bg-transparent data-[state=active]:text-slate-900 px-4 py-3 text-sm font-bold tracking-wider uppercase text-slate-500 transition-colors">Resumen</TabsTrigger>

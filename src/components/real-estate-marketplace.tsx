@@ -318,19 +318,19 @@ Estoy interesado en la siguiente propiedad:
       {/* ────────────────────────────────────────────────────── */}
       {/* REAL ESTATE HERO SECTION */}
       {/* ────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-8 sm:p-12 lg:p-16 shadow-2xl">
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-10 lg:p-14 shadow-2xl">
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
           {/* Left Column: Heading & Information */}
-          <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-400 backdrop-blur-md">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-emerald-400 backdrop-blur-md">
               <Building2 className="h-3.5 w-3.5 text-emerald-400" />
               <span>División de Bienes Raíces & Inmuebles Prime &bull; Colombia</span>
             </div>
 
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl font-heading text-white">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-heading text-white leading-tight">
               Propiedades de Autor,{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                 Penthouses & Mansiones
@@ -338,20 +338,20 @@ Estoy interesado en la siguiente propiedad:
               en Colombia.
             </h1>
 
-            <p className="text-base text-slate-300 sm:text-lg max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-300 sm:text-lg max-w-2xl leading-relaxed">
               Curaduría exclusiva de inmuebles de alto estándar en Bogotá, Medellín, Cartagena, Barranquilla y Llanogrande. Estudio de títulos jurídico garantizado y asesoría VIP por WhatsApp.
             </p>
 
             {/* Search Input Bar */}
-            <div className="pt-2 flex flex-col gap-2.5 sm:flex-row sm:items-center max-w-xl">
+            <div className="pt-1 sm:pt-2 flex flex-col gap-2 sm:flex-row sm:items-center max-w-xl">
               <div className="relative flex-1">
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder="Buscar por sector (El Poblado, Chicó, Castillogrande), código o tipo..."
+                  placeholder="Buscar por sector (El Poblado, Chicó, Castillogrande), código..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-12 pl-10 pr-4 text-xs sm:text-sm bg-slate-900/90 border-slate-700 text-white placeholder:text-slate-400 rounded-xl focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 transition-all"
+                  className="h-11 sm:h-12 pl-10 pr-4 text-xs sm:text-sm bg-slate-900/90 border-slate-700 text-white placeholder:text-slate-400 rounded-xl focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -367,42 +367,42 @@ Estoy interesado en la siguiente propiedad:
                   const gridElement = document.getElementById("real-estate-catalog");
                   gridElement?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="h-12 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 rounded-xl shadow-lg transition-all cursor-pointer"
+                className="h-11 sm:h-12 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 sm:px-6 rounded-xl shadow-lg transition-all cursor-pointer text-xs sm:text-sm"
               >
                 Explorar ({filteredProperties.length})
               </Button>
             </div>
 
-            {/* Quick Chips / Filters */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 pt-1">
-              <span className="font-semibold text-slate-300">Explorar por:</span>
+            {/* Quick Chips / Filters with smooth horizontal scroll on touch devices */}
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-400 pt-1 overflow-x-auto pb-1.5 -mx-1 px-1 no-scrollbar sm:flex-wrap">
+              <span className="font-semibold text-slate-300 shrink-0">Explorar:</span>
               <button
                 onClick={() => applyQuickFilter("penthouse")}
-                className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition"
+                className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 sm:px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition shrink-0 whitespace-nowrap"
               >
                 Penthouses ({propertyTypeCounts["Penthouse"] || 0})
               </button>
               <button
                 onClick={() => applyQuickFilter("medellin")}
-                className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition"
+                className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 sm:px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition shrink-0 whitespace-nowrap"
               >
-                El Poblado & Palmas
+                El Poblado
               </button>
               <button
                 onClick={() => applyQuickFilter("beach")}
-                className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition"
+                className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 sm:px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition shrink-0 whitespace-nowrap"
               >
-                Frente al Mar (Cartagena)
+                Frente al Mar
               </button>
               <button
                 onClick={() => applyQuickFilter("campestre")}
-                className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition"
+                className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 sm:px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition shrink-0 whitespace-nowrap"
               >
-                Casas Campestres
+                Campestres
               </button>
               <button
                 onClick={() => applyQuickFilter("under2b")}
-                className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition"
+                className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 sm:px-3 py-1 text-slate-200 hover:border-emerald-500 hover:text-emerald-400 transition shrink-0 whitespace-nowrap"
               >
                 Hasta $2.000M
               </button>
@@ -953,13 +953,13 @@ Estoy interesado en la siguiente propiedad:
         open={Boolean(selectedPropertyForModal)}
         onOpenChange={(open) => !open && setSelectedPropertyForModal(null)}
       >
-        <DialogContent className="!max-w-[1200px] !w-[95vw] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 md:p-10 rounded-3xl border-slate-200 shadow-2xl">
+        <DialogContent className="!max-w-[1200px] !w-[96vw] sm:!w-[92vw] max-h-[92vh] overflow-y-auto bg-white p-4 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl border-slate-200 shadow-2xl">
           {selectedPropertyForModal && (
-            <div className="space-y-6 text-xs text-slate-700">
+            <div className="space-y-5 sm:space-y-6 text-xs text-slate-700">
               {/* Modal Header */}
-              <DialogHeader className="text-left space-y-2 border-b border-slate-100 pb-4">
+              <DialogHeader className="text-left space-y-1.5 sm:space-y-2 border-b border-slate-100 pb-3 sm:pb-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <Badge className="bg-slate-950 text-white font-bold text-[10px]">
                       {selectedPropertyForModal.operationType}
                     </Badge>
@@ -972,32 +972,32 @@ Estoy interesado en la siguiente propiedad:
                       </Badge>
                     )}
                   </div>
-                  <span className="font-bold text-slate-400 uppercase text-xs">
+                  <span className="font-bold text-slate-400 uppercase text-[10px] sm:text-xs">
                     Código: {selectedPropertyForModal.code}
                   </span>
                 </div>
 
-                <DialogTitle className="text-2xl sm:text-3xl font-black font-heading text-slate-950 leading-tight">
+                <DialogTitle className="text-xl sm:text-3xl font-black font-heading text-slate-950 leading-tight">
                   {selectedPropertyForModal.title}
                 </DialogTitle>
                 <DialogDescription className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 shrink-0" />
                   {selectedPropertyForModal.addressBrief} &bull; {selectedPropertyForModal.neighborhood}, {selectedPropertyForModal.city}
                 </DialogDescription>
               </DialogHeader>
 
-              {/* Gallery Carousel */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                <div className="md:col-span-2 h-72 sm:h-96 md:h-[400px] rounded-2xl overflow-hidden bg-slate-950 shadow-sm">
+              {/* Gallery Carousel with responsive mobile height */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                <div className="md:col-span-2 h-56 sm:h-80 md:h-[400px] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 shadow-sm">
                   <img
                     src={selectedPropertyForModal.images[0]}
                     alt={selectedPropertyForModal.title}
                     className="h-full w-full object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-2 sm:gap-3 md:gap-4">
                   {selectedPropertyForModal.images.slice(1, 3).map((img, idx) => (
-                    <div key={idx} className="h-36 sm:h-46 md:h-[192px] rounded-2xl overflow-hidden bg-slate-950 shadow-sm">
+                    <div key={idx} className="h-28 sm:h-38 md:h-[192px] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 shadow-sm">
                       <img src={img} alt="Vista detalle" className="h-full w-full object-cover hover:scale-105 transition-transform duration-500" />
                     </div>
                   ))}
@@ -1005,16 +1005,16 @@ Estoy interesado en la siguiente propiedad:
               </div>
 
               {/* Tabs: Detalles, Amenidades, Simulador Hipotecario */}
-              <Tabs defaultValue="details" className="w-full pt-2">
-                <TabsList className="grid grid-cols-3 bg-slate-100 p-1 rounded-2xl h-11">
-                  <TabsTrigger value="details" className="rounded-xl text-xs sm:text-sm font-bold">
+              <Tabs defaultValue="details" className="w-full pt-1 sm:pt-2">
+                <TabsList className="grid grid-cols-3 bg-slate-100 p-1 rounded-xl sm:rounded-2xl h-10 sm:h-11">
+                  <TabsTrigger value="details" className="rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold">
                     Características
                   </TabsTrigger>
-                  <TabsTrigger value="amenities" className="rounded-xl text-xs sm:text-sm font-bold">
+                  <TabsTrigger value="amenities" className="rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold truncate">
                     Amenidades ({selectedPropertyForModal.amenities.length})
                   </TabsTrigger>
-                  <TabsTrigger value="mortgage" className="rounded-xl text-xs sm:text-sm font-bold">
-                    Simulador de Crédito
+                  <TabsTrigger value="mortgage" className="rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold">
+                    Simulador
                   </TabsTrigger>
                 </TabsList>
 
@@ -1149,12 +1149,12 @@ Estoy interesado en la siguiente propiedad:
               </Tabs>
 
               {/* Modal Bottom Contact & Action Bar */}
-              <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                     VALOR TOTAL DE LA PROPIEDAD
                   </span>
-                  <span className="text-2xl font-black text-slate-950 font-heading">
+                  <span className="text-xl sm:text-2xl font-black text-slate-950 font-heading">
                     {formatCop(selectedPropertyForModal.priceCop)}
                   </span>
                 </div>
@@ -1163,7 +1163,7 @@ Estoy interesado en la siguiente propiedad:
                   <Button
                     variant="outline"
                     onClick={() => setSelectedPropertyForModal(null)}
-                    className="rounded-xl text-xs font-bold"
+                    className="rounded-xl text-xs font-bold h-11 px-4"
                   >
                     Cerrar
                   </Button>
@@ -1171,10 +1171,10 @@ Estoy interesado en la siguiente propiedad:
                     href={buildWhatsAppPropertyLink(selectedPropertyForModal)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-3 shadow-lg transition"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 sm:px-5 h-11 shadow-lg transition"
                   >
                     <MessageCircle className="h-4 w-4 fill-white text-emerald-600" />
-                    <span>Solicitar Brochure & Cita por WhatsApp</span>
+                    <span className="truncate">Solicitar Brochure & Cita</span>
                   </a>
                 </div>
               </div>
