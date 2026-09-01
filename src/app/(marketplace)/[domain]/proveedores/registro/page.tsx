@@ -85,6 +85,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import {
+  Vehicle,
+  getStoredVehicles,
+  saveStoredVehicles,
+  DEFAULT_DEALER,
+} from "@/lib/marketplace-mocks";
 
 // Types
 export interface CompanyData {
@@ -165,9 +171,9 @@ export interface ContractSignatureData {
 }
 
 const POPULAR_BRANDS = [
-  "Porsche", "Mercedes-Benz", "BMW", "Audi", "Land Rover", "Volvo", "Ferrari",
-  "Maserati", "Jaguar", "Lexus", "Toyota", "Ford", "Chevrolet", "Volkswagen",
-  "Jeep", "Hyundai", "Kia", "Mazda", "Tesla", "BYD"
+  "Toyota", "Mazda", "Chevrolet", "Renault", "Yamaha", "Honda", "Suzuki", "Kawasaki",
+  "BMW", "Mercedes-Benz", "Porsche", "Audi", "Ford", "Kia", "Hyundai", "Nissan",
+  "Volkswagen", "KTM", "Ducati", "BMW Motorrad", "Land Rover", "Volvo", "Jeep", "BYD"
 ];
 
 const AVAILABLE_FEATURES = [
@@ -614,21 +620,119 @@ export default function ProviderRegistrationPage({
   };
 
   // Final formalization
-  const handleSignContract = () => {
+  const handleSignContract = async () => {
     if (!validateStep3()) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // 1. Transform vehicle items into the marketplace format
+      const newVehiclesToPublish: Vehicle[] = vehicles.map((v) => {
+        const fuelMapped: "Gasolina" | "Híbrido" | "Eléctrico" | "Diésel" =
+          v.fuelType.toLowerCase().includes("híbrido") || v.fuelType.toLowerCase().includes("hybrid")
+            ? "Híbrido"
+            : v.fuelType.toLowerCase().includes("eléctrico") || v.fuelType.toLowerCase().includes("electric")
+            ? "Eléctrico"
+            : v.fuelType.toLowerCase().includes("diésel") || v.fuelType.toLowerCase().includes("diesel")
+            ? "Diésel"
+            : "Gasolina";
+
+        const transMapped: "Automática" | "Secuencial / DCT" | "Manual" =
+          v.transmission.toLowerCase().includes("manual")
+            ? "Manual"
+            : v.transmission.toLowerCase().includes("secuencial") || v.transmission.toLowerCase().includes("dct")
+            ? "Secuencial / DCT"
+            : "Automática";
+
+        const bodyMapped: any = v.bodyType || "SUV / Camioneta";
+
+        return {
+          id: v.id || `veh-prov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          brand: v.brand,
+          model: v.model,
+          trim: v.trim || undefined,
+          year: Number(v.year),
+          price: Number(v.suggestedPrice),
+          currency: "COP",
+          monthlyEstimate: Math.round(Number(v.suggestedPrice) / 48),
+          mileage: Number(v.mileage) || 0,
+          fuelType: fuelMapped,
+          transmission: transMapped,
+          bodyType: bodyMapped,
+          region: "Barranquilla (Atlántico)",
+          city: companyData.city || "Barranquilla, Atlántico",
+          exteriorColor: v.exteriorColor || "Gris / Plata",
+          interiorColor: v.interiorColor || "Cuero Negro",
+          doors: bodyMapped.includes("Moto") ? 0 : 4,
+          condition: "Seminuevo Certificado",
+          badge: "Certificado",
+          featured: true,
+          vin: v.vin || `VIN-${Date.now().toString().slice(-6)}`,
+          plateEnding: v.licensePlate ? `Placa ${v.licensePlate}` : "Placa de Barranquilla",
+          images: v.images && v.images.length > 0
+            ? v.images.map((img) => img.url)
+            : ["https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"],
+          specs: {
+            engine: v.engine || "2.0L Turbo",
+            horsepower: 200,
+            acceleration: "0-100 km/h: 6.8s",
+            traction: "AWD",
+          },
+          keyFeatures: v.features && v.features.length > 0 ? v.features : ["Garantía de Procedencia", "Inspección Pericial 360°"],
+          inspectionScore: 98,
+          dealer: {
+            ...DEFAULT_DEALER,
+            name: companyData.tradeName || DEFAULT_DEALER.name,
+            legalName: companyData.legalName || DEFAULT_DEALER.legalName,
+            phone: companyData.phone || DEFAULT_DEALER.phone,
+            city: companyData.city || DEFAULT_DEALER.city,
+            address: companyData.address || DEFAULT_DEALER.address,
+          },
+        };
+      });
+
+      // 2. Save directly into persistent database
+      const existing = getStoredVehicles();
+      const updatedList = [...newVehiclesToPublish, ...existing];
+      saveStoredVehicles(updatedList);
+
+      // 3. Dispatch storage event for real-time sync across open pages
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      // 4. Send payload to backend API
+      try {
+        await fetch("/api/proveedores/registro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company: companyData,
+            vehicles: vehicles,
+            contract: {
+              ...contractSignature,
+              verificationHash: calculatedVerificationHash,
+              signedAtTimestamp: new Date().toISOString(),
+            },
+          }),
+        });
+      } catch (apiErr) {
+        console.warn("API log error:", apiErr);
+      }
+
       setContractSignature((prev) => ({
         ...prev,
         verificationHash: calculatedVerificationHash,
         signedAtTimestamp: new Date().toISOString(),
       }));
+
+      setIsSubmitting(false);
       setCurrentStep(4);
-      toast.success("¡Contrato firmado y formalizado con éxito! Registro de proveedor activo.");
-    }, 1800);
+      toast.success("¡Contrato firmado y formalizado con éxito! Los vehículos quedaron publicados en el marketplace.");
+    } catch (err) {
+      setIsSubmitting(false);
+      toast.error("Ocurrió un error al procesar el contrato.");
+    }
   };
 
   // Total valuation calculation
@@ -2564,33 +2668,33 @@ export default function ProviderRegistrationPage({
           <div className="space-y-6 pt-4 text-xs leading-relaxed text-zinc-800">
             <div className="text-center pb-2 border-b border-zinc-200 font-sans">
               <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-900">
-                JY TRINOVA S.A.S. · CONTRATO DE INTERMEDIACIÓN & CORRETAJE MERCANTIL
+                YJD TRINOVA S.A.S. · CONTRATO DE INTERMEDIACIÓN & CORRETAJE MERCANTIL
               </h2>
-              <p className="text-xs text-zinc-500 font-mono mt-1">ID: {contractSignature.contractId}</p>
+              <p className="text-xs text-zinc-500 font-mono mt-1">NIT 902.095.222-8 · Barranquilla, Atlántico · ID: {contractSignature.contractId}</p>
             </div>
 
             <p>
-              En la ciudad de {companyData.city}, a los {new Date().getDate()} días del mes de{" "}
+              En la ciudad de {companyData.city || "Barranquilla"}, a los {new Date().getDate()} días del mes de{" "}
               {new Date().toLocaleString("es-ES", { month: "long" })} de {new Date().getFullYear()}, se suscribe
-              el presente contrato entre <strong>JY TRINOVA S.A.S.</strong> (El Corredor Intermediario) y{" "}
+              el presente contrato entre <strong>YJD TRINOVA S.A.S.</strong> (NIT 902.095.222-8, con domicilio en Calle 82 # 21 Sur 06 Esquina, Barranquilla, actuando como El Corredor Intermediario) y{" "}
               <strong>{companyData.legalName.toUpperCase()}</strong> ({companyData.taxIdType} No. {companyData.taxId}),
               representada legalmente por <strong>{companyData.legalRepName}</strong> ({companyData.legalRepDocType} No. {companyData.legalRepDocId}).
             </p>
 
             <div className="border border-zinc-200 p-4 rounded bg-zinc-50 font-sans text-xs space-y-2">
-              <p className="font-bold text-zinc-900">INVENTARIO ASIGNADO:</p>
+              <p className="font-bold text-zinc-900">INVENTARIO ASIGNADO AL MANDATO:</p>
               {vehicles.map((v, idx) => (
                 <div key={v.id} className="flex justify-between border-b border-zinc-200 pb-1">
                   <span>
                     #{idx + 1}: {v.brand} {v.model} {v.year} (VIN: {v.vin})
                   </span>
-                  <span className="font-bold font-mono">${v.suggestedPrice.toLocaleString()} USD</span>
+                  <span className="font-bold font-mono">${Number(v.suggestedPrice).toLocaleString("es-CO")} COP</span>
                 </div>
               ))}
             </div>
 
             <p>
-              Las partes manifiestan haber leído, consentido y aceptado en su totalidad las estipulaciones contractuales relativas a honorarios, garantías de procedencia, liquidación de fondos y protección de datos.
+              Las partes manifiestan haber leído, consentido y aceptado en su totalidad las estipulaciones contractuales relativas a honorarios de corretaje comercial, garantías de procedencia legal, liquidación directa y protección de datos conforme a la Ley 1581 de 2012.
             </p>
 
             {/* Signature Box */}
@@ -2598,11 +2702,11 @@ export default function ProviderRegistrationPage({
               <div className="space-y-2">
                 <p className="text-[11px] font-bold uppercase text-zinc-500">Por la Plataforma Corredora:</p>
                 <div className="h-16 flex items-end">
-                  <span className="font-heading italic text-lg text-zinc-800">AutoBroker Digital Signature Seal</span>
+                  <span className="font-heading italic text-lg text-zinc-800">YJD TRINOVA S.A.S. Digital Seal</span>
                 </div>
                 <div className="border-t border-zinc-400 pt-1 text-[11px] text-zinc-600">
-                  <p className="font-bold">Director Legal & Operaciones</p>
-                  <p>AutoBroker Core Technologies S.A.S.</p>
+                  <p className="font-bold">Dirección General & Comercial</p>
+                  <p>YJD TRINOVA S.A.S. · NIT 902.095.222-8</p>
                 </div>
               </div>
 

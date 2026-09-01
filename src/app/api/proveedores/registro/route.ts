@@ -27,10 +27,10 @@ export async function POST(req: Request) {
     */
 
     // Lógica de Notificación Automática vía WhatsApp (Meta API)
-    // El sistema llama internamente al Webhook de WhatsApp de NeuroLabs
+    // Notificación a la administradora fiscal de YJD TRINOVA S.A.S.
     const whatsappPayload = {
       messaging_product: "whatsapp",
-      to: "573000000000", // Número de la dueña de JJ TrinoVa
+      to: "573005765530", // WhatsApp oficial de YJD TRINOVA S.A.S.
       type: "template",
       template: {
         name: "nuevo_vehiculo_consignado",
@@ -39,20 +39,19 @@ export async function POST(req: Request) {
           {
             type: "body",
             parameters: [
-              { type: "text", text: payload.company?.tradeName || "Un proveedor" },
-              { type: "text", text: `${payload.vehicle?.brand} ${payload.vehicle?.model}` }
+              { type: "text", text: payload.company?.tradeName || "Un proveedor aliado" },
+              { type: "text", text: `${payload.vehicles?.length || 1} vehículo(s) consignado(s)` }
             ]
           }
         ]
       }
     };
 
-    console.log("[Registro de Proveedor] Simulando envío de WhatsApp a la intermediaria...");
-    // await fetch('https://graph.facebook.com/v17.0/PHONE_NUMBER_ID/messages', { method: 'POST', body: JSON.stringify(whatsappPayload) });
+    console.log("[Registro de Proveedor] YJD TRINOVA S.A.S. - Notificación recibida para WhatsApp:", whatsappPayload);
 
     return NextResponse.json({
       success: true,
-      message: "Contrato firmado exitosamente. Vehículo publicado y notificación enviada a la administradora.",
+      message: "Contrato firmado exitosamente. Vehículos registrados y publicados para YJD TRINOVA S.A.S.",
       contractHash: payload.contract?.verificationHash || "hash_generado_en_servidor"
     }, { status: 200 });
 
