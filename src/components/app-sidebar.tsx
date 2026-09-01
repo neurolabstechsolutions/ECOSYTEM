@@ -75,14 +75,14 @@ export function AppSidebar() {
         <div className="flex items-center gap-3 px-2">
           <Avatar className="h-9 w-9 border border-slate-200 shadow-sm">
             <AvatarImage src="https://i.pravatar.cc/150?u=admin" />
-            <AvatarFallback className="bg-slate-100 text-black font-semibold">AD</AvatarFallback>
+            <AvatarFallback className="bg-slate-100 text-black font-semibold">NL</AvatarFallback>
           </Avatar>
           <div className="flex flex-col flex-1 overflow-hidden">
-            <span className="text-sm font-semibold truncate text-black">Admin Piloto</span>
-            <span className="text-xs text-slate-500 truncate">admin@automotriz.com</span>
+            <span className="text-sm font-semibold truncate text-black">Dirección General</span>
+            <span className="text-xs text-slate-500 truncate">neurolabstechsolutions@gmail.com</span>
           </div>
           <form action="/login" method="GET">
-            <button type="submit" className="text-slate-400 hover:text-black transition-colors">
+            <button type="submit" className="text-slate-400 hover:text-black transition-colors" title="Cerrar sesión">
               <LogOut size={18} />
             </button>
           </form>

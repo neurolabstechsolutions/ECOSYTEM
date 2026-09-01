@@ -14,10 +14,10 @@ export const MOCK_METRICS = {
 }
 
 export const MOCK_USER = {
-  name: 'Admin Piloto',
-  email: 'admin@automotriz.com',
+  name: 'Dirección General',
+  email: 'neurolabstechsolutions@gmail.com',
   role: 'TENANT_ADMIN',
-  tenant: 'Piloto Automotriz',
+  tenant: 'NeuroLabs Tech Solutions S.A.S.',
   avatar: 'https://i.pravatar.cc/150?u=admin'
 }
 
@@ -25,16 +25,16 @@ export const MOCK_SIDEBAR_LINKS = [
   { name: 'Dashboard', path: '/', icon: 'LayoutDashboard' },
   { name: 'Centro de Clientes & SaaS', path: '/clients-hub', icon: 'Building2' },
   { name: 'Tareas & Metas del Equipo', path: '/tasks', icon: 'CheckSquare' },
-  { name: 'Campañas & Outbound AI', path: '/campaigns', icon: 'Megaphone' },
+  { name: 'Campañas & Outbound', path: '/campaigns', icon: 'Megaphone' },
   { name: 'Contactos B2B', path: '/contacts', icon: 'Users' },
   { name: 'Pipeline de Ventas', path: '/leads', icon: 'Target' },
   { name: 'Bandeja WhatsApp', path: '/conversations', icon: 'MessageSquare' },
   { name: 'Portafolio & Soluciones', path: '/inventory', icon: 'Package' },
   { name: 'Contratos & Propuestas', path: '/contracts', icon: 'FileCheck2' },
-  { name: 'Agentes IA', path: '/agents', icon: 'Bot' },
+  { name: 'Agentes & Modelos', path: '/agents', icon: 'Bot' },
   { name: 'Base de Conocimiento', path: '/knowledge', icon: 'Library' },
   { name: 'Automatizaciones', path: '/automations', icon: 'Workflow' },
-  { name: 'Simulador IA', path: '/playground', icon: 'Sparkles' },
+  { name: 'Simulador de Respuestas', path: '/playground', icon: 'Terminal' },
   { name: 'Agenda & Citas', path: '/appointments', icon: 'Calendar' },
   { name: 'Analytics & BI', path: '/analytics', icon: 'BarChart3' },
   { name: 'Integraciones', path: '/integrations', icon: 'Plug' },

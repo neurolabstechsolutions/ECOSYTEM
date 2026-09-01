@@ -4,9 +4,8 @@ import React, { useState, useMemo } from "react";
 import { 
   Users, Search, Plus, Building2, ShieldCheck, ShieldAlert, AlertTriangle, 
   ExternalLink, Phone, Mail, FileText, CheckCircle2, Sliders, Database, 
-  Sparkles, Download, ArrowUpRight, Lock
+  Download, ArrowUpRight, Lock
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface B2BContact {
   id: string;
@@ -27,7 +28,7 @@ interface B2BContact {
   phone: string;
   email: string;
   industry: string;
-  fraudRiskScore: number; // 0 to 100 (lower is safer)
+  fraudRiskScore: number;
   riskTier: "BAJO" | "MEDIO" | "ALTO";
   source: string;
   tags: string[];
@@ -46,21 +47,21 @@ const INITIAL_CONTACTS: B2BContact[] = [
     fraudRiskScore: 4,
     riskTier: "BAJO",
     source: "WhatsApp Direct",
-    tags: ["Cliente Verificado", "Contrato Software", "VIP"]
+    tags: ["Cliente Verificado", "VIP"]
   },
   {
     id: "cnt-002",
     name: "Yury Jaramillo",
-    companyName: "JY Trinova S.A.S.",
-    nit: "901.789.442-1",
+    companyName: "YJD Trinova S.A.S.",
+    nit: "902.095.222-8",
     chamberOfCommerceStatus: "ACTIVA_VERIFICADA",
     phone: "+57 323 5845145",
-    email: "direccion@jytrinova.com",
+    email: "dondeblanca15@gmail.com",
     industry: "Automotriz & Corretaje",
     fraudRiskScore: 2,
     riskTier: "BAJO",
     source: "Portal Trinova",
-    tags: ["Administradora", "Corretaje Oficial", "Firma Digital"]
+    tags: ["Administradora", "Corretaje Oficial"]
   },
   {
     id: "cnt-003",
@@ -70,25 +71,11 @@ const INITIAL_CONTACTS: B2BContact[] = [
     chamberOfCommerceStatus: "ACTIVA_VERIFICADA",
     phone: "+57 310 4492011",
     email: "racosta@inversionesprime.co",
-    industry: "Inmobiliario & Bienes Raíces",
+    industry: "Inmobiliario",
     fraudRiskScore: 12,
     riskTier: "BAJO",
-    source: "Prospección Cámara",
-    tags: ["Propietario", "B2B Prospección"]
-  },
-  {
-    id: "cnt-004",
-    name: "Perfil No Identificado (Número Sospechoso)",
-    companyName: "Sin Registro Mercantil RUES",
-    nit: "No Registrado",
-    chamberOfCommerceStatus: "ALERTA_SUSPENDIDA",
-    phone: "+57 320 0009182",
-    email: "anonimo@tempmail.com",
-    industry: "Sin Categoría",
-    fraudRiskScore: 89,
-    riskTier: "ALTO",
-    source: "WhatsApp Desconocido",
-    tags: ["Bloqueo Preventivo", "Riesgo Extorsión"]
+    source: "Prospección",
+    tags: ["Propietario", "B2B"]
   }
 ];
 
@@ -97,218 +84,271 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<B2BContact | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isNewContactOpen, setIsNewContactOpen] = useState(false);
 
-  const filtered = useMemo(() => {
+  // Form State
+  const [newName, setNewName] = useState("");
+  const [newCompany, setNewCompany] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newNit, setNewNit] = useState("");
+  const [newIndustry, setNewIndustry] = useState("Automotriz");
+
+  const filteredContacts = useMemo(() => {
     return contacts.filter(c => 
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.nit.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.phone.includes(searchQuery)
     );
   }, [contacts, searchQuery]);
 
-  const handleOpenDetail = (contact: B2BContact) => {
-    setSelectedContact(contact);
-    setIsDetailOpen(true);
+  const handleCreateContact = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName || !newPhone) {
+      toast.error("Ingrese al menos el nombre y teléfono");
+      return;
+    }
+
+    const created: B2BContact = {
+      id: `cnt-${Date.now().toString(36)}`,
+      name: newName,
+      companyName: newCompany || "Persona Natural",
+      nit: newNit || "N/A",
+      chamberOfCommerceStatus: "ACTIVA_VERIFICADA",
+      phone: newPhone,
+      email: newEmail || "N/A",
+      industry: newIndustry,
+      fraudRiskScore: 5,
+      riskTier: "BAJO",
+      source: "Manual",
+      tags: ["Nuevo Contacto"]
+    };
+
+    setContacts([created, ...contacts]);
+    setIsNewContactOpen(false);
+    setNewName("");
+    setNewCompany("");
+    setNewPhone("");
+    setNewEmail("");
+    toast.success("Contacto guardado correctamente");
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 p-8 space-y-8 pb-32">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6">
+    <div className="space-y-4">
+      {/* ─── Compact Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-200/80">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-950 font-serif flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-black" />
-            Directorio B2B & Validación de Empresas
-          </h1>
-          <p className="text-slate-500 mt-2 text-base">
-            Prospección empresarial, verificación oficial en Cámara de Comercio / RUES y escudo anti-fraude algorítmico.
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Contactos B2B & Clientes</h1>
+            <Badge variant="outline" className="text-xs bg-zinc-100 text-zinc-700 font-semibold rounded-md border-zinc-200">
+              {filteredContacts.length} Registros
+            </Badge>
+          </div>
+          <p className="text-xs text-zinc-500 mt-0.5">Directorio verificado de personas naturales, jurídicas y propietarios</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button className="bg-slate-950 hover:bg-black text-white rounded-2xl shadow-md px-5 py-6 font-bold flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            <span>Importar Base Cámara de Comercio</span>
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setIsNewContactOpen(true)}
+          size="sm"
+          className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-lg px-3 gap-1.5 shadow-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Nuevo Contacto</span>
+        </Button>
       </div>
 
-      {/* Security & Risk Overview Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-100 text-emerald-700 rounded-2xl">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase">Validación RUES / Cámara</p>
-              <h4 className="text-xl font-bold text-slate-900">100% Automatizada</h4>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 text-blue-700 rounded-2xl">
-              <Database className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase">Empresas en Directorio</p>
-              <h4 className="text-xl font-bold text-slate-900">{contacts.length} Registradas</h4>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 text-red-700 rounded-2xl">
-              <Lock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase">Filtro Anti-Extorsión</p>
-              <h4 className="text-xl font-bold text-red-600">Escudo Activo (Llama 120B)</h4>
-            </div>
-          </div>
-        </Card>
+      {/* ─── Compact Search ─── */}
+      <div className="relative max-w-sm">
+        <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
+        <Input 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar por nombre, empresa o teléfono..."
+          className="h-8 pl-8 text-xs border-zinc-200 bg-white rounded-lg focus-visible:ring-zinc-900"
+        />
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-        <div className="relative w-full sm:w-96">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-          <Input 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por Nombre, Empresa, NIT o Teléfono..."
-            className="pl-10 bg-white border-slate-200 rounded-xl text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <Card className="bg-white border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase border-b border-slate-100">
-                <tr>
-                  <th className="p-4 font-bold">Empresa & Razón Social</th>
-                  <th className="p-4 font-bold">Contacto Principal</th>
-                  <th className="p-4 font-bold">Estado Cámara / RUES</th>
-                  <th className="p-4 font-bold">Nivel de Riesgo (IA)</th>
-                  <th className="p-4 font-bold">Sector</th>
-                  <th className="p-4 text-right font-bold">Auditoría</th>
+      {/* ─── Compact Table View ─── */}
+      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-semibold">
+              <tr>
+                <th className="py-2.5 px-3">Nombre / Contacto</th>
+                <th className="py-2.5 px-3">Empresa / Razón Social</th>
+                <th className="py-2.5 px-3">Teléfono / WhatsApp</th>
+                <th className="py-2.5 px-3">Sector</th>
+                <th className="py-2.5 px-3">Verificación RUES</th>
+                <th className="py-2.5 px-3 text-right">Detalle</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {filteredContacts.map(c => (
+                <tr key={c.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <td className="py-2.5 px-3">
+                    <div className="font-semibold text-zinc-900">{c.name}</div>
+                    <div className="text-[11px] text-zinc-400">{c.email}</div>
+                  </td>
+                  <td className="py-2.5 px-3 text-zinc-700 text-[11px]">
+                    <div className="font-medium">{c.companyName}</div>
+                    <div className="text-[10px] text-zinc-400 font-mono">NIT: {c.nit}</div>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <a 
+                      href={`https://wa.me/${c.phone.replace(/[^0-9]/g, '')}`} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-emerald-600 font-mono text-[11px] hover:underline flex items-center gap-1"
+                    >
+                      <Phone className="h-2.5 w-2.5" />
+                      <span>{c.phone}</span>
+                    </a>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <Badge variant="outline" className="text-[10px] font-medium bg-zinc-100 text-zinc-700 border-zinc-200">
+                      {c.industry}
+                    </Badge>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                      <span>Verificado</span>
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-right">
+                    <Button 
+                      onClick={() => { setSelectedContact(c); setIsDetailOpen(true); }}
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[11px] border-zinc-200 px-2"
+                    >
+                      Ver Ficha
+                    </Button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filtered.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-900 text-sm">{c.companyName}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">NIT: {c.nit}</div>
-                    </td>
-                    <td className="p-4 space-y-0.5">
-                      <div className="font-semibold text-slate-800">{c.name}</div>
-                      <div className="text-[11px] text-slate-500">{c.phone}</div>
-                    </td>
-                    <td className="p-4">
-                      {c.chamberOfCommerceStatus === 'ACTIVA_VERIFICADA' && (
-                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1 w-fit">
-                          <CheckCircle2 className="w-3 h-3" /> Activa & Vigente
-                        </Badge>
-                      )}
-                      {c.chamberOfCommerceStatus === 'ALERTA_SUSPENDIDA' && (
-                        <Badge className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1 w-fit">
-                          <AlertTriangle className="w-3 h-3" /> No Registrada / Alerta
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {c.riskTier === 'BAJO' && (
-                        <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                          <ShieldCheck className="w-4 h-4" />
-                          <span>Riesgo Bajo ({c.fraudRiskScore}%)</span>
-                        </div>
-                      )}
-                      {c.riskTier === 'ALTO' && (
-                        <div className="flex items-center gap-1.5 text-red-600 font-bold">
-                          <ShieldAlert className="w-4 h-4" />
-                          <span>Alto Riesgo ({c.fraudRiskScore}%)</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <Badge variant="outline" className="text-slate-600 border-slate-200 bg-white">
-                        {c.industry}
-                      </Badge>
-                    </td>
-                    <td className="p-4 text-right">
-                      <Button 
-                        onClick={() => handleOpenDetail(c)}
-                        variant="outline" 
-                        size="sm" 
-                        className="rounded-xl text-xs font-bold text-slate-700 hover:text-black border-slate-200"
-                      >
-                        Ver Ficha
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      {/* Detail Modal */}
+      {/* ─── Modal: Detalle de Contacto ─── */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-lg bg-white border-slate-200 rounded-3xl p-6 sm:p-8">
+        <DialogContent className="max-w-sm bg-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold font-serif text-slate-950">
-              Expediente de Validación Empresarial
+            <DialogTitle className="text-base font-bold text-zinc-900">
+              {selectedContact?.name}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Reporte consolidado con cruce de fuentes y análisis de riesgo por IA.
+            <DialogDescription className="text-xs text-zinc-500">
+              {selectedContact?.companyName} · NIT {selectedContact?.nit}
             </DialogDescription>
           </DialogHeader>
 
           {selectedContact && (
-            <div className="space-y-4 py-4 text-xs">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Razón Social:</span>
-                  <span className="font-bold text-slate-900">{selectedContact.companyName}</span>
+            <div className="space-y-2.5 pt-2 text-xs">
+              <div className="p-2.5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+                <div className="flex justify-between text-zinc-600">
+                  <span>Teléfono:</span>
+                  <span className="font-mono font-bold text-zinc-900">{selectedContact.phone}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">NIT / Matrícula:</span>
-                  <span className="font-semibold text-slate-800">{selectedContact.nit}</span>
+                <div className="flex justify-between text-zinc-600">
+                  <span>Correo:</span>
+                  <span className="text-zinc-900">{selectedContact.email}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Representante:</span>
-                  <span className="font-semibold text-slate-800">{selectedContact.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Teléfono / WhatsApp:</span>
-                  <span className="font-bold text-slate-900">{selectedContact.phone}</span>
+                <div className="flex justify-between text-zinc-600">
+                  <span>Origen:</span>
+                  <span className="text-zinc-900">{selectedContact.source}</span>
                 </div>
               </div>
 
-              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 space-y-2">
-                <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  Dictamen de Seguridad IA (Llama 120B):
-                </div>
-                <p className="text-slate-600 leading-relaxed">
-                  El contacto presenta concordancia entre nombre, teléfono e historial de registro. No se detectan patrones de extorsión, llamadas de spam masivo o suplantación de identidad.
-                </p>
+              <div className="flex justify-end pt-2">
+                <Button size="sm" onClick={() => setIsDetailOpen(false)} className="h-8 text-xs bg-zinc-900 text-white">
+                  Cerrar
+                </Button>
               </div>
-
-              <Button onClick={() => setIsDetailOpen(false)} className="w-full bg-slate-950 hover:bg-black text-white font-bold rounded-xl py-5">
-                Cerrar Expediente
-              </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Modal: Crear Contacto ─── */}
+      <Dialog open={isNewContactOpen} onOpenChange={setIsNewContactOpen}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-zinc-900">
+              Nuevo Contacto B2B / Propietario
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500">
+              Agrega un cliente al directorio centralizado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateContact} className="space-y-3 pt-2 text-xs">
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-700">Nombre Completo *</label>
+              <Input 
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Ej. Roberto Durán"
+                className="h-9 text-xs"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Empresa / Razón Social</label>
+                <Input 
+                  value={newCompany}
+                  onChange={(e) => setNewCompany(e.target.value)}
+                  placeholder="Ej. Distribuciones del Norte"
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">NIT o Cédula</label>
+                <Input 
+                  value={newNit}
+                  onChange={(e) => setNewNit(e.target.value)}
+                  placeholder="901.123.456-7"
+                  className="h-9 text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Teléfono / WhatsApp *</label>
+                <Input 
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder="+57 300 1234567"
+                  className="h-9 text-xs font-mono"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Correo Electrónico</label>
+                <Input 
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="cliente@correo.com"
+                  className="h-9 text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsNewContactOpen(false)} className="h-8 text-xs">
+                Cancelar
+              </Button>
+              <Button type="submit" size="sm" className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold">
+                Guardar Contacto
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

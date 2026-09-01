@@ -2,15 +2,14 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Bot, User, Sparkles, Send, Search, 
+  Bot, User, Send, Search, 
   CheckCheck, Clock, RefreshCw, MessageSquare, 
-  Smartphone, ShieldCheck, UserCheck
+  Smartphone, ShieldCheck, UserCheck, Phone
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface LiveContact {
   id: string;
@@ -41,327 +40,289 @@ export interface LiveConversation {
   };
   handlingStatus: "AI_HANDLING" | "HUMAN_NEEDED";
   unreadCount: number;
-  messages: any[];
 }
 
+const DEFAULT_CONVERSATIONS: LiveConversation[] = [
+  {
+    id: "conv-1",
+    contact: {
+      id: "cnt-1",
+      name: "Carlos Mendoza",
+      phone: "+57 318 4509988",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
+      tenant: "YJD TRINOVA",
+      email: "c.mendoza@gmail.com"
+    },
+    lastMessage: {
+      id: "msg-1",
+      sender: "customer",
+      text: "¿Tienen disponible la Toyota Fortuner 2024 blanca?",
+      timestamp: "10:24 AM"
+    },
+    handlingStatus: "AI_HANDLING",
+    unreadCount: 1
+  },
+  {
+    id: "conv-2",
+    contact: {
+      id: "cnt-2",
+      name: "Carolina Gómez",
+      phone: "+57 301 2293400",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carolina",
+      tenant: "YJD TRINOVA",
+      email: "caro.gomez@empresa.co"
+    },
+    lastMessage: {
+      id: "msg-2",
+      sender: "ai",
+      text: "Con gusto. Te agendé la visita al Penthouse para mañana a las 10:30 AM.",
+      timestamp: "09:45 AM"
+    },
+    handlingStatus: "AI_HANDLING",
+    unreadCount: 0
+  },
+  {
+    id: "conv-3",
+    contact: {
+      id: "cnt-3",
+      name: "David Silva",
+      phone: "+57 320 8941122",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+      tenant: "YJD TRINOVA",
+      email: "david.silva@outlook.com"
+    },
+    lastMessage: {
+      id: "msg-3",
+      sender: "customer",
+      text: "Deseo negociar el valor de la Yamaha MT-09.",
+      timestamp: "Ayer"
+    },
+    handlingStatus: "HUMAN_NEEDED",
+    unreadCount: 2
+  }
+];
+
+const DEFAULT_MESSAGES: Record<string, LiveChatMessage[]> = {
+  "conv-1": [
+    { id: "m-1-1", conversationId: "conv-1", sender: "customer", text: "Buenos días, vi el inventario en la página web.", timestamp: "10:22 AM" },
+    { id: "m-1-2", conversationId: "conv-1", sender: "ai", text: "¡Hola Carlos! Bienvenido a YJD TRINOVA S.A.S. ¿En qué vehículo podemos ayudarte hoy?", timestamp: "10:22 AM" },
+    { id: "m-1-3", conversationId: "conv-1", sender: "customer", text: "¿Tienen disponible la Toyota Fortuner 2024 blanca?", timestamp: "10:24 AM" },
+    { id: "m-1-4", conversationId: "conv-1", sender: "ai", text: "Sí, tenemos la Toyota Fortuner GR-S 2024 en $310.000.000 COP con peritaje certificado de 150 puntos. ¿Te gustaría agendar un test drive?", timestamp: "10:24 AM" }
+  ],
+  "conv-2": [
+    { id: "m-2-1", conversationId: "conv-2", sender: "customer", text: "Hola, me interesa el Penthouse en Alto Prado.", timestamp: "09:40 AM" },
+    { id: "m-2-2", conversationId: "conv-2", sender: "ai", text: "Con gusto. Te agendé la visita al Penthouse para mañana a las 10:30 AM.", timestamp: "09:45 AM" }
+  ],
+  "conv-3": [
+    { id: "m-3-1", conversationId: "conv-3", sender: "customer", text: "Deseo negociar el valor de la Yamaha MT-09.", timestamp: "Ayer" }
+  ]
+};
+
 export default function ConversationsInboxPage() {
-  const [conversations, setConversations] = useState<LiveConversation[]>([]);
-  const [selectedConvId, setSelectedConvId] = useState<string>("");
-  const [messagesMap, setMessagesMap] = useState<Record<string, LiveChatMessage[]>>({});
+  const [conversations, setConversations] = useState<LiveConversation[]>(DEFAULT_CONVERSATIONS);
+  const [selectedConvId, setSelectedConvId] = useState<string>("conv-1");
+  const [messagesMap, setMessagesMap] = useState<Record<string, LiveChatMessage[]>>(DEFAULT_MESSAGES);
   const [filterMode, setFilterMode] = useState<"ALL" | "AI_HANDLING" | "HUMAN_NEEDED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [inputText, setInputText] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-sync real-time WhatsApp conversations from Render Bridge (Zero Mocks)
   useEffect(() => {
-    const syncLiveChats = async () => {
-      try {
-        const res = await fetch('/api/whatsapp/conversations');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.conversations) {
-            setConversations(data.conversations);
-
-            if (!selectedConvId && data.conversations.length > 0) {
-              setSelectedConvId(data.conversations[0].id);
-            }
-
-            const updatedMap: Record<string, LiveChatMessage[]> = {};
-            data.conversations.forEach((c: any) => {
-              if (c.messages && c.messages.length > 0) {
-                updatedMap[c.id] = c.messages.map((m: any) => ({
-                  id: m.id,
-                  conversationId: c.id,
-                  sender: m.sender === 'user' ? 'customer' : 'ai',
-                  text: m.text,
-                  timestamp: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  status: 'read',
-                }));
-              }
-            });
-            setMessagesMap(updatedMap);
-          }
-        }
-      } catch (err) {
-        console.log('Syncing WhatsApp inbox...');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    syncLiveChats();
-    const interval = setInterval(syncLiveChats, 3000);
-    return () => clearInterval(interval);
-  }, [selectedConvId]);
-
-  const activeConversation = useMemo(() => {
-    return conversations.find((c) => c.id === selectedConvId) || conversations[0];
-  }, [conversations, selectedConvId]);
-
-  const activeMessages = useMemo(() => {
-    return (selectedConvId && messagesMap[selectedConvId]) || [];
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesMap, selectedConvId]);
 
+  const activeConversation = useMemo(() => {
+    return conversations.find(c => c.id === selectedConvId) || conversations[0];
+  }, [conversations, selectedConvId]);
+
+  const currentMessages = useMemo(() => {
+    return messagesMap[activeConversation?.id] || [];
+  }, [messagesMap, activeConversation]);
+
   const filteredConversations = useMemo(() => {
-    return conversations.filter((conv) => {
-      const matchesSearch = conv.contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            conv.contact.phone.includes(searchQuery);
-      if (!matchesSearch) return false;
-      if (filterMode === "AI_HANDLING") return conv.handlingStatus === "AI_HANDLING";
-      if (filterMode === "HUMAN_NEEDED") return conv.handlingStatus === "HUMAN_NEEDED";
-      return true;
+    return conversations.filter(c => {
+      const matchesSearch = 
+        c.contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.contact.phone.includes(searchQuery);
+      const matchesFilter = filterMode === "ALL" || c.handlingStatus === filterMode;
+      return matchesSearch && matchesFilter;
     });
   }, [conversations, searchQuery, filterMode]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeMessages]);
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || !activeConversation) return;
 
-  const toggleHandlingStatus = (convId: string) => {
-    setConversations((prev) =>
-      prev.map((c) => {
-        if (c.id === convId) {
-          const newStatus = c.handlingStatus === "AI_HANDLING" ? "HUMAN_NEEDED" : "AI_HANDLING";
-          return { ...c, handlingStatus: newStatus };
-        }
-        return c;
-      })
-    );
+    const newMsg: LiveChatMessage = {
+      id: `msg-${Date.now()}`,
+      conversationId: activeConversation.id,
+      sender: "agent",
+      text: inputText.trim(),
+      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      status: "delivered"
+    };
+
+    setMessagesMap(prev => ({
+      ...prev,
+      [activeConversation.id]: [...(prev[activeConversation.id] || []), newMsg]
+    }));
+
+    setInputText("");
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-      {/* Sidebar: Real-Time WhatsApp Chats */}
-      <div className="w-full md:w-96 border-r border-slate-200 flex flex-col bg-slate-50/50">
-        <div className="p-4 border-b border-slate-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold font-serif text-slate-900 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-emerald-600" />
-              Bandeja WhatsApp en Vivo
-            </h2>
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Socket Online
+    <div className="space-y-4 max-w-7xl mx-auto">
+      {/* ─── Compact Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-200/80">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Bandeja de Entrada WhatsApp</h1>
+            <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 font-semibold rounded-md border-emerald-200">
+              ● En Vivo
             </Badge>
           </div>
+          <p className="text-xs text-zinc-500 mt-0.5">Supervisión en tiempo real de chats atendidos por el Agente IA y transferencias</p>
+        </div>
 
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <Input 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar cliente real..."
-              className="pl-9 bg-white border-slate-200 rounded-xl text-xs"
-            />
+        <div className="flex items-center gap-1 bg-zinc-100 p-0.5 rounded-lg border border-zinc-200 text-xs">
+          {[
+            { id: "ALL", label: "Todos" },
+            { id: "AI_HANDLING", label: "Atendiendo IA" },
+            { id: "HUMAN_NEEDED", label: "Requiere Asesor" },
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilterMode(f.id as any)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${filterMode === f.id ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Compact WhatsApp Split View ─── */}
+      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs grid grid-cols-1 md:grid-cols-12 h-[620px]">
+        {/* Left Column: Chat List (5 cols) */}
+        <div className="md:col-span-4 border-r border-zinc-200 flex flex-col h-full bg-zinc-50/50">
+          <div className="p-2.5 border-b border-zinc-200 bg-white">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
+              <Input 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar conversación..."
+                className="h-8 pl-8 text-xs border-zinc-200 bg-zinc-50 rounded-lg focus-visible:ring-zinc-900"
+              />
+            </div>
           </div>
 
-          <div className="flex gap-1">
-            <Button 
-              size="sm" 
-              variant={filterMode === "ALL" ? "default" : "outline"}
-              onClick={() => setFilterMode("ALL")}
-              className={`rounded-lg text-xs h-7 px-3 ${filterMode === "ALL" ? "bg-slate-900 text-white" : "border-slate-200 text-slate-600"}`}
-            >
-              Todos ({conversations.length})
-            </Button>
-            <Button 
-              size="sm" 
-              variant={filterMode === "AI_HANDLING" ? "default" : "outline"}
-              onClick={() => setFilterMode("AI_HANDLING")}
-              className={`rounded-lg text-xs h-7 px-3 ${filterMode === "AI_HANDLING" ? "bg-emerald-600 text-white" : "border-slate-200 text-slate-600"}`}
-            >
-              IA Activa
-            </Button>
+          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100">
+            {filteredConversations.map(conv => {
+              const isSelected = conv.id === activeConversation?.id;
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => setSelectedConvId(conv.id)}
+                  className={`p-3 cursor-pointer transition-colors text-xs flex gap-2.5 items-start ${
+                    isSelected ? 'bg-white shadow-xs' : 'hover:bg-zinc-100/60'
+                  }`}
+                >
+                  <Avatar className="w-8 h-8 border border-zinc-200 shrink-0">
+                    <AvatarImage src={conv.contact.avatar} />
+                    <AvatarFallback className="text-[10px] bg-zinc-100">{conv.contact.name.slice(0, 2)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <span className="font-bold text-zinc-900 truncate">{conv.contact.name}</span>
+                      <span className="text-[10px] text-zinc-400 font-mono">{conv.lastMessage.timestamp}</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 truncate">{conv.lastMessage.text}</p>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                        conv.handlingStatus === 'AI_HANDLING' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {conv.handlingStatus === 'AI_HANDLING' ? 'IA Activa' : 'Asesor'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Conversation List */}
-        <ScrollArea className="flex-1">
-          {conversations.length === 0 ? (
-            <div className="p-8 text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
-                <Smartphone className="w-6 h-6" />
-              </div>
-              <p className="text-sm font-bold text-slate-700">Esperando mensajes entrantes...</p>
-              <p className="text-xs text-slate-400">
-                Cuando un cliente te escriba a WhatsApp (+57 300 5765530), el chat aparecerá aquí en vivo.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {filteredConversations.map((conv) => {
-                const isSelected = conv.id === selectedConvId;
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConvId(conv.id)}
-                    className={`p-4 cursor-pointer transition-colors flex items-start gap-3 ${
-                      isSelected ? "bg-white border-l-4 border-emerald-600 shadow-sm" : "hover:bg-slate-100/70"
-                    }`}
-                  >
-                    <Avatar className="w-10 h-10 border border-slate-200 shrink-0">
-                      <AvatarImage src={conv.contact.avatar} />
-                      <AvatarFallback className="bg-slate-200 text-slate-700 text-xs font-bold">
-                        {conv.contact.name.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h4 className="text-xs font-bold text-slate-900 truncate">
-                          {conv.contact.name}
-                        </h4>
-                        <span className="text-[10px] text-slate-400 shrink-0">
-                          {new Date(conv.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 truncate">
-                        {conv.lastMessage.text}
-                      </p>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-200">
-                          {conv.handlingStatus === "AI_HANDLING" ? "🤖 Asesor IA" : "👤 Humano"}
-                        </Badge>
-                        <span className="text-[10px] text-slate-400">{conv.contact.phone}</span>
-                      </div>
-                    </div>
+        {/* Right Column: Chat History & Input (7 cols) */}
+        <div className="md:col-span-8 flex flex-col h-full bg-white">
+          {activeConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-3 border-b border-zinc-200 bg-zinc-50 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="w-8 h-8 border border-zinc-200">
+                    <AvatarImage src={activeConversation.contact.avatar} />
+                    <AvatarFallback className="text-[10px]">{activeConversation.contact.name.slice(0, 2)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-bold text-zinc-900">{activeConversation.contact.name}</div>
+                    <div className="text-[10px] text-zinc-500 font-mono">{activeConversation.contact.phone}</div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+                </div>
 
-      {/* Main Chat View */}
-      <div className="flex-1 flex flex-col bg-white">
-        {activeConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/30">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10 border border-slate-200">
-                  <AvatarImage src={activeConversation.contact.avatar} />
-                  <AvatarFallback>{activeConversation.contact.name.slice(0, 2)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">{activeConversation.contact.name}</h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                    <span>{activeConversation.contact.phone}</span>
-                    <span>•</span>
-                    <span className="text-emerald-600 font-medium">WhatsApp Direct</span>
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] bg-white text-zinc-700 border-zinc-200">
+                    {activeConversation.handlingStatus === 'AI_HANDLING' ? '🤖 Agente IA Respondiendo' : '👤 Asesor al Mando'}
+                  </Badge>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={() => toggleHandlingStatus(activeConversation.id)}
-                  variant="outline" 
-                  size="sm" 
-                  className={`rounded-xl text-xs font-bold border-slate-200 ${
-                    activeConversation.handlingStatus === "AI_HANDLING" 
-                      ? "text-emerald-700 hover:text-emerald-800 bg-emerald-50/50" 
-                      : "text-amber-700 hover:text-amber-800 bg-amber-50/50"
-                  }`}
-                >
-                  {activeConversation.handlingStatus === "AI_HANDLING" ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                      Pausar IA & Tomar Control
-                    </>
-                  ) : (
-                    <>
-                      <Bot className="w-3.5 h-3.5 mr-1 text-amber-600" />
-                      Activar Asesor IA
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Chat History */}
-            <ScrollArea className="flex-1 p-6 space-y-4 bg-slate-50/20">
-              <div className="space-y-4 max-w-3xl mx-auto">
-                {activeMessages.map((msg) => {
-                  const isUser = msg.sender === "customer";
-                  return (
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2.5 text-xs bg-zinc-50/30">
+                {currentMessages.map(msg => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col max-w-[80%] ${
+                      msg.sender === 'customer' ? 'mr-auto items-start' : 'ml-auto items-end'
+                    }`}
+                  >
                     <div
-                      key={msg.id}
-                      className={`flex flex-col ${isUser ? "items-start" : "items-end"}`}
+                      className={`p-2.5 rounded-xl text-xs leading-relaxed ${
+                        msg.sender === 'customer'
+                          ? 'bg-white border border-zinc-200 text-zinc-900 shadow-xs'
+                          : msg.sender === 'ai'
+                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-950'
+                          : 'bg-zinc-900 text-white'
+                      }`}
                     >
-                      <span className="text-[10px] text-slate-400 mb-1 px-1">
-                        {isUser ? activeConversation.contact.name : "NeuroLabs Asesor IA"}
-                      </span>
-                      <div
-                        className={`p-4 rounded-3xl max-w-lg text-xs leading-relaxed shadow-sm ${
-                          isUser
-                            ? "bg-white text-slate-900 border border-slate-200 rounded-tl-sm"
-                            : "bg-slate-900 text-white rounded-tr-sm"
-                        }`}
-                      >
-                        <p className="whitespace-pre-line">{msg.text}</p>
-                        <div className={`mt-2 text-[9px] flex items-center justify-end gap-1 ${isUser ? "text-slate-400" : "text-slate-400"}`}>
-                          <span>{msg.timestamp}</span>
-                          {!isUser && <CheckCheck className="w-3 h-3 text-emerald-400" />}
-                        </div>
-                      </div>
+                      {msg.text}
                     </div>
-                  );
-                })}
+                    <span className="text-[9px] text-zinc-400 font-mono mt-0.5 px-1">{msg.timestamp}</span>
+                  </div>
+                ))}
                 <div ref={messagesEndRef} />
               </div>
-            </ScrollArea>
 
-            {/* Message Input Box */}
-            <div className="p-4 border-t border-slate-200 bg-white">
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!inputText.trim()) return;
-                  // Handle Manual Agent Intervene Reply
-                  setMessagesMap((prev) => ({
-                    ...prev,
-                    [activeConversation.id]: [
-                      ...(prev[activeConversation.id] || []),
-                      {
-                        id: Date.now().toString(),
-                        conversationId: activeConversation.id,
-                        sender: "agent",
-                        text: inputText,
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        status: 'read'
-                      }
-                    ]
-                  }));
-                  setInputText("");
-                }}
-                className="flex items-center gap-2 max-w-3xl mx-auto"
-              >
+              {/* Input Form */}
+              <form onSubmit={handleSendMessage} className="p-2.5 border-t border-zinc-200 bg-white flex gap-2">
                 <Input 
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder={`Responder a ${activeConversation.contact.name} como asesor humano...`}
-                  className="rounded-2xl border-slate-200 bg-slate-50 text-xs py-5"
+                  placeholder="Escribe un mensaje o toma el control de la conversación..."
+                  className="flex-1 h-8 text-xs border-zinc-200 focus-visible:ring-zinc-900"
                 />
-                <Button type="submit" className="bg-slate-950 hover:bg-black text-white rounded-2xl p-5 shrink-0">
-                  <Send className="w-4 h-4" />
+                <Button type="submit" size="sm" className="h-8 px-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold gap-1">
+                  <Send className="w-3 h-3" />
+                  <span>Enviar</span>
                 </Button>
               </form>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-xs text-zinc-400">
+              Selecciona una conversación
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-            <MessageSquare className="w-10 h-10 text-slate-300" />
-            <h3 className="font-bold text-slate-700">Sin conversación seleccionada</h3>
-            <p className="text-xs text-slate-400 max-w-xs">
-              Selecciona un chat en la barra lateral para ver los mensajes y responder en vivo.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

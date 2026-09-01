@@ -3,10 +3,9 @@
 import React, { useState } from "react";
 import { 
   Megaphone, PhoneCall, Send, MessageSquare, Play, Pause, Plus, 
-  Users, Building2, Sparkles, CheckCircle2, Clock, AlertTriangle, 
+  Users, Building2, CheckCircle2, Clock, AlertTriangle, 
   FileText, ArrowUpRight, BarChart3, Filter, Download, Zap, Radio
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -39,18 +39,18 @@ const INITIAL_CAMPAIGNS: OutboundCampaign[] = [
     id: "cmp-001",
     name: "Prospección B2B: Concesionarios & Flotas Automotrices",
     type: "OMNICANAL",
-    targetIndustry: "Sector Automotriz (Cámara de Comercio)",
+    targetIndustry: "Sector Automotriz",
     totalContacts: 250,
     sentCount: 184,
     answeredCount: 142,
     interestedCount: 38,
     conversionRate: "26.7%",
     status: "ACTIVA",
-    scriptSummary: "El Agente saluda al Gerente Comercial, presenta la plataforma de consignación digital Trinova y ofrece agendar demostración técnica.",
+    scriptSummary: "El Agente saluda al Gerente Comercial y presenta la plataforma Trinova.",
   },
   {
     id: "cmp-002",
-    name: "Llamadas de Voz IA: Propietarios Inmobiliarios",
+    name: "Llamadas de Voz: Propietarios Inmobiliarios",
     type: "LLAMADAS_VOZ_AI",
     targetIndustry: "Inmobiliarias & Desarrolladores",
     totalContacts: 120,
@@ -59,11 +59,11 @@ const INITIAL_CAMPAIGNS: OutboundCampaign[] = [
     interestedCount: 19,
     conversionRate: "29.6%",
     status: "ACTIVA",
-    scriptSummary: "Llamada automatizada por voz natural ofreciendo software de gestión y agente de ventas 24/7.",
+    scriptSummary: "Llamada automatizada por voz natural ofreciendo software y agente 24/7.",
   },
   {
     id: "cmp-003",
-    name: "WhatsApp Masivo: Oferta SaaS & Agentes IA para PYMES",
+    name: "WhatsApp Masivo: Oferta SaaS para PYMES",
     type: "WHATSAPP_MASIVO",
     targetIndustry: "Empresas de Servicios & Comercio",
     totalContacts: 500,
@@ -72,7 +72,7 @@ const INITIAL_CAMPAIGNS: OutboundCampaign[] = [
     interestedCount: 85,
     conversionRate: "25.0%",
     status: "COMPLETADA",
-    scriptSummary: "Envío consultivo con generación instantánea de PDF oficial y agenda de llamada con NeuroLabs Tech.",
+    scriptSummary: "Envío consultivo con cotización en PDF y agenda de llamada.",
   }
 ];
 
@@ -83,16 +83,12 @@ export default function OutboundCampaignsPage() {
   const [campaignType, setCampaignType] = useState<"WHATSAPP_MASIVO" | "LLAMADAS_VOZ_AI" | "OMNICANAL">("OMNICANAL");
   const [targetIndustry, setTargetIndustry] = useState("Empresas de Tecnología & PYMES");
   const [promptScript, setPromptScript] = useState("");
-  const [isLaunching, setIsLaunching] = useState(false);
 
-  const handleLaunchCampaign = async () => {
+  const handleLaunchCampaign = () => {
     if (!campaignName.trim()) {
       toast.error("Por favor ingresa un nombre para la campaña");
       return;
     }
-
-    setIsLaunching(true);
-    await new Promise(r => setTimeout(r, 1200));
 
     const newCamp: OutboundCampaign = {
       id: `cmp-00${campaigns.length + 1}`,
@@ -105,15 +101,14 @@ export default function OutboundCampaignsPage() {
       interestedCount: 1,
       conversionRate: "100%",
       status: "ACTIVA",
-      scriptSummary: promptScript || "Prospección autónoma inteligente con envío de cotización en PDF y llamadas de cierre.",
+      scriptSummary: promptScript || "Prospección autónoma inteligente.",
     };
 
     setCampaigns([newCamp, ...campaigns]);
-    setIsLaunching(false);
     setIsCreateModalOpen(false);
     setCampaignName("");
     setPromptScript("");
-    toast.success("🚀 ¡Campaña de Prospección y Llamadas IA lanzada con éxito!");
+    toast.success("Campaña de prospección lanzada con éxito");
   };
 
   const toggleStatus = (id: string) => {
@@ -124,257 +119,164 @@ export default function OutboundCampaignsPage() {
       }
       return c;
     }));
+    toast.success("Estado de campaña actualizado");
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 p-8 space-y-8 pb-32">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6">
+    <div className="space-y-4">
+      {/* ─── Compact Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-200/80">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-950 font-serif flex items-center gap-3">
-            <Megaphone className="w-8 h-8 text-black" />
-            Campañas Outbound & Marketing de Prospección IA
-          </h1>
-          <p className="text-slate-500 mt-2 text-base">
-            Tu Agente de IA prospecta empresas, escribe por WhatsApp, realiza llamadas de voz y agenda reuniones comerciales.
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Campañas & Outbound</h1>
+            <Badge variant="outline" className="text-xs bg-zinc-100 text-zinc-700 font-semibold rounded-md border-zinc-200">
+              {campaigns.length} Campañas
+            </Badge>
+          </div>
+          <p className="text-xs text-zinc-500 mt-0.5">Automatización de mensajes, llamadas y prospección B2B</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-slate-950 hover:bg-black text-white rounded-2xl shadow-md px-5 py-6 font-bold flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Crear Campaña Outbound</span>
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setIsCreateModalOpen(true)}
+          size="sm"
+          className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-lg px-3 gap-1.5 shadow-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Nueva Campaña</span>
+        </Button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase text-slate-500">Contactados en Frío</span>
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-2xl">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900">772 Empresas</h3>
-            <p className="text-xs text-blue-600 font-bold mt-0.5">Bases RUES & Cámara</p>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase text-slate-500">Llamadas de Voz Realizadas</span>
-            <div className="p-2 bg-purple-100 text-purple-700 rounded-2xl">
-              <PhoneCall className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900">208 Llamadas</h3>
-            <p className="text-xs text-purple-600 font-bold mt-0.5">Voz Neural Llama 120B</p>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase text-slate-500">Respuestas & Citas</span>
-            <div className="p-2 bg-emerald-100 text-emerald-700 rounded-2xl">
-              <Sparkles className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900">142 Prospectos</h3>
-            <p className="text-xs text-emerald-600 font-bold mt-0.5">26.8% Tasa de Interés</p>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-50 border-slate-200 rounded-3xl p-5">
-          <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase text-slate-500">PDFs Enviados</span>
-            <div className="p-2 bg-slate-200 text-slate-800 rounded-2xl">
-              <FileText className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900">89 Cotizaciones</h3>
-            <p className="text-xs text-slate-600 font-bold mt-0.5">Generadas al Vuelo</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Campaigns Grid */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold font-serif text-slate-900">Campañas Activas de Prospección</h3>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map((camp) => (
-            <Card key={camp.id} className="bg-white border-slate-200 shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-all flex flex-col justify-between p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <Badge variant="outline" className={`text-xs font-bold ${
-                    camp.type === 'OMNICANAL' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                    camp.type === 'LLAMADAS_VOZ_AI' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                    'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  }`}>
-                    {camp.type === 'OMNICANAL' ? 'Omnicanal (Voz + WhatsApp)' :
-                     camp.type === 'LLAMADAS_VOZ_AI' ? 'Llamadas de Voz IA' : 'WhatsApp Masivo'}
-                  </Badge>
-
-                  <Badge className={`text-[10px] ${
-                    camp.status === 'ACTIVA' ? 'bg-emerald-500 text-white' :
-                    camp.status === 'PAUSADA' ? 'bg-amber-500 text-white' : 'bg-slate-300 text-slate-800'
-                  }`}>
-                    {camp.status}
-                  </Badge>
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-base text-slate-900 font-serif">{camp.name}</h4>
-                  <p className="text-xs text-slate-500 mt-1">{camp.targetIndustry}</p>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 rounded-2xl text-xs space-y-2 border border-slate-100">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Contactos Objetivo:</span>
-                    <span className="font-bold text-slate-900">{camp.totalContacts}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Enviados / Marcados:</span>
-                    <span className="font-bold text-slate-900">{camp.sentCount}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Interesados Reales:</span>
-                    <span className="font-bold text-emerald-600">{camp.interestedCount} ({camp.conversionRate})</span>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-500 italic bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                  "{camp.scriptSummary}"
-                </p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex gap-2">
-                <Button 
-                  onClick={() => toggleStatus(camp.id)}
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full rounded-xl text-xs font-bold border-slate-200 text-slate-700"
-                >
-                  {camp.status === 'ACTIVA' ? (
-                    <>
-                      <Pause className="w-3.5 h-3.5 mr-1 text-amber-600" /> Pausar
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Reanudar
-                    </>
-                  )}
-                </Button>
-              </div>
-            </Card>
-          ))}
+      {/* ─── Compact Table View ─── */}
+      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-semibold">
+              <tr>
+                <th className="py-2.5 px-3">Campaña</th>
+                <th className="py-2.5 px-3">Canal</th>
+                <th className="py-2.5 px-3">Audiencia</th>
+                <th className="py-2.5 px-3">Enviados / Respondidos</th>
+                <th className="py-2.5 px-3">Conversión</th>
+                <th className="py-2.5 px-3">Estado</th>
+                <th className="py-2.5 px-3 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {campaigns.map(camp => (
+                <tr key={camp.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <td className="py-2.5 px-3">
+                    <div className="font-semibold text-zinc-900">{camp.name}</div>
+                    <div className="text-[11px] text-zinc-500 line-clamp-1">{camp.scriptSummary}</div>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <Badge variant="outline" className="text-[10px] font-medium bg-zinc-100 text-zinc-700 border-zinc-200">
+                      {camp.type.replace(/_/g, ' ')}
+                    </Badge>
+                  </td>
+                  <td className="py-2.5 px-3 text-zinc-600 text-[11px]">
+                    {camp.targetIndustry}
+                  </td>
+                  <td className="py-2.5 px-3 font-mono text-[11px] text-zinc-700">
+                    <span className="font-bold text-zinc-900">{camp.sentCount}</span> / {camp.totalContacts} ({camp.answeredCount} respuestas)
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {camp.conversionRate}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      camp.status === 'ACTIVA' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      camp.status === 'COMPLETADA' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                      'bg-zinc-100 text-zinc-600'
+                    }`}>
+                      {camp.status}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-right">
+                    <Button 
+                      onClick={() => toggleStatus(camp.id)}
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[11px] border-zinc-200 px-2"
+                    >
+                      {camp.status === 'ACTIVA' ? 'Pausar' : 'Reanudar'}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* CREATE CAMPAIGN MODAL */}
+      {/* ─── Modal: Crear Campaña ─── */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-lg bg-white border-slate-200 rounded-3xl p-6 sm:p-8">
+        <DialogContent className="max-w-md bg-white">
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="p-2.5 bg-slate-100 rounded-2xl text-slate-900">
-                <Megaphone className="w-5 h-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-bold font-serif text-slate-950">
-                  Nueva Campaña de Marketing Outbound
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500">
-                  Configura el guion de tu Agente IA para captar clientes en frío.
-                </DialogDescription>
-              </div>
-            </div>
+            <DialogTitle className="text-base font-bold text-zinc-900">
+              Crear Campaña Outbound
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500">
+              Configura los parámetros para prospección automatizada.
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4 text-xs">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Nombre de la Campaña</label>
+          <div className="space-y-3 pt-2 text-xs">
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-700">Nombre de la Campaña *</label>
               <Input 
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
-                placeholder="Ej: Captación de Concesionarios y Clientes PYME"
-                className="bg-slate-50 border-slate-200 rounded-xl py-5 text-xs"
+                placeholder="Ej. Prospección Concesionarios Barranquilla"
+                className="h-9 text-xs"
+                required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Canal de Prospección</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCampaignType("OMNICANAL")}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    campaignType === "OMNICANAL" ? "bg-slate-900 text-white border-slate-900 font-bold" : "bg-slate-50 text-slate-600 border-slate-200"
-                  }`}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Canal</label>
+                <select 
+                  value={campaignType}
+                  onChange={(e) => setCampaignType(e.target.value as any)}
+                  className="w-full h-9 rounded-lg border border-zinc-200 px-2 text-xs bg-white text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                 >
-                  Omnicanal (Ambos)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCampaignType("WHATSAPP_MASIVO")}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    campaignType === "WHATSAPP_MASIVO" ? "bg-slate-900 text-white border-slate-900 font-bold" : "bg-slate-50 text-slate-600 border-slate-200"
-                  }`}
-                >
-                  WhatsApp Masivo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCampaignType("LLAMADAS_VOZ_AI")}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    campaignType === "LLAMADAS_VOZ_AI" ? "bg-slate-900 text-white border-slate-900 font-bold" : "bg-slate-50 text-slate-600 border-slate-200"
-                  }`}
-                >
-                  Llamadas de Voz IA
-                </button>
+                  <option value="OMNICANAL">Omnicanal (WhatsApp + Voz)</option>
+                  <option value="WHATSAPP_MASIVO">WhatsApp Masivo</option>
+                  <option value="LLAMADAS_VOZ_AI">Llamadas de Voz</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Sector Objetivo</label>
+                <Input 
+                  value={targetIndustry}
+                  onChange={(e) => setTargetIndustry(e.target.value)}
+                  placeholder="Sector Automotriz"
+                  className="h-9 text-xs"
+                />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Sector Objetivo / Base de Datos</label>
-              <Input 
-                value={targetIndustry}
-                onChange={(e) => setTargetIndustry(e.target.value)}
-                placeholder="Ej: Directorio Cámara de Comercio / Automotriz / Inmobiliario"
-                className="bg-slate-50 border-slate-200 rounded-xl py-5 text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Guion y Objetivo del Asesor IA</label>
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-700">Instrucciones del Script</label>
               <Textarea 
                 value={promptScript}
                 onChange={(e) => setPromptScript(e.target.value)}
-                placeholder="Instrucciones: Saludar cordialmente al representante, explicar la propuesta de valor de NeuroLabs, ofrecer envío de cotización en PDF y solicitar agendamiento de videollamada comercial..."
-                className="bg-slate-50 border-slate-200 rounded-xl text-xs h-24"
+                placeholder="Mensaje o guion de prospección..."
+                className="text-xs min-h-[70px]"
               />
             </div>
-          </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="rounded-xl text-xs font-semibold">
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleLaunchCampaign}
-              disabled={isLaunching}
-              className="bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold px-5"
-            >
-              {isLaunching ? "Lanzando Agentes..." : "Lanzar Campaña Ahora"}
-            </Button>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsCreateModalOpen(false)} className="h-8 text-xs">
+                Cancelar
+              </Button>
+              <Button onClick={handleLaunchCampaign} size="sm" className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold">
+                Lanzar Campaña
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,183 +1,131 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Settings, Building2, Bell, Shield, Paintbrush, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Building2, Bell, Shield, Paintbrush, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const [companyName, setCompanyName] = useState("NeuroLabs Tech Solutions S.A.S.");
+  const [taxId, setTaxId] = useState("901.482.119-4");
+  const [city, setCity] = useState("Barranquilla, Colombia");
+  const [whatsappNotifications, setWhatsappNotifications] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [twoFactorAuth, setTwoFactorAuth] = useState(true);
+
   const handleSave = () => {
-    toast.success("Configuraciones guardadas correctamente.");
+    toast.success("Configuraciones guardadas y sincronizadas exitosamente");
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 p-6 pb-32 space-y-8 font-sans">
-      <div>
-        <h1 className="text-4xl font-black tracking-tight text-black font-serif flex items-center gap-3">
-          <Settings className="h-8 w-8 text-blue-500" />
-          Configuración
-        </h1>
-        <p className="text-sm text-slate-400 mt-2">
-          Administra las preferencias de tu espacio de trabajo (Tenant), notificaciones y seguridad.
-        </p>
+    <div className="space-y-4 max-w-4xl mx-auto">
+      {/* ─── Compact Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-200/80">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Configuración del Sistema</h1>
+            <Badge variant="outline" className="text-xs bg-zinc-100 text-zinc-700 font-semibold rounded-md border-zinc-200">
+              Producción Activa
+            </Badge>
+          </div>
+          <p className="text-xs text-zinc-500 mt-0.5">Preferencias del tenant, reglas de notificación y seguridad de accesos</p>
+        </div>
+
+        <Button 
+          onClick={handleSave}
+          size="sm"
+          className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-lg px-3 gap-1.5 shadow-xs"
+        >
+          <Save className="w-3.5 h-3.5" />
+          <span>Guardar Cambios</span>
+        </Button>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="bg-slate-50 border border-slate-200 p-1">
-          <TabsTrigger value="general" className="data-[state=active]:bg-black text-white data-[state=active]:text-slate-900">
-            <Building2 className="w-4 h-4 mr-2" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="branding" className="data-[state=active]:bg-black text-white data-[state=active]:text-slate-900">
-            <Paintbrush className="w-4 h-4 mr-2" />
-            Branding
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-black text-white data-[state=active]:text-slate-900">
-            <Bell className="w-4 h-4 mr-2" />
-            Notificaciones
-          </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-black text-white data-[state=active]:text-slate-900">
-            <Shield className="w-4 h-4 mr-2" />
-            Seguridad
-          </TabsTrigger>
-        </TabsList>
+      {/* ─── Compact Form Sections ─── */}
+      <div className="bg-white border border-zinc-200 rounded-xl divide-y divide-zinc-100 shadow-xs text-xs">
+        {/* Section 1: Empresa */}
+        <div className="p-4 space-y-3">
+          <div>
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">Perfil de la Organización</h2>
+            <p className="text-[11px] text-zinc-400">Información fiscal y regional del tenant principal.</p>
+          </div>
 
-        <TabsContent value="general" className="space-y-6 outline-none">
-          <Card className="bg-white  border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Perfil de la Empresa (Tenant)</CardTitle>
-              <CardDescription className="text-slate-400">
-                Información pública y configuración regional.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="companyName" className="text-slate-300">Nombre de la Empresa</Label>
-                <Input id="companyName" defaultValue="Piloto Automotriz" className="bg-slate-50 border-slate-700 text-slate-900" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="industry" className="text-slate-300">Industria</Label>
-                <Input id="industry" defaultValue="Automotriz" className="bg-slate-50 border-slate-700 text-slate-900" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="timezone" className="text-slate-300">Zona Horaria</Label>
-                  <Input id="timezone" defaultValue="America/Mexico_City" className="bg-slate-50 border-slate-700 text-slate-900" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="currency" className="text-slate-300">Moneda por Defecto</Label>
-                  <Input id="currency" defaultValue="MXN (Pesos Mexicanos)" className="bg-slate-50 border-slate-700 text-slate-900" />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-slate-200 pt-6">
-              <Button onClick={handleSave} className="bg-black text-white hover:bg-blue-700 text-slate-900">
-                <Save className="w-4 h-4 mr-2" /> Guardar Cambios
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-zinc-700">Razón Social</Label>
+              <Input 
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="h-8 text-xs bg-zinc-50 border-zinc-200"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-zinc-700">NIT / Identificación Fiscal</Label>
+              <Input 
+                value={taxId}
+                onChange={(e) => setTaxId(e.target.value)}
+                className="h-8 text-xs bg-zinc-50 border-zinc-200 font-mono"
+              />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label className="text-xs font-semibold text-zinc-700">Ciudad y Sede</Label>
+              <Input 
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="h-8 text-xs bg-zinc-50 border-zinc-200"
+              />
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="branding" className="space-y-6 outline-none">
-          <Card className="bg-white  border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Personalización (White Label)</CardTitle>
-              <CardDescription className="text-slate-400">
-                Ajusta los colores y el logotipo para el portal de clientes y correos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-2">
-                <Label className="text-slate-300">Color Principal (Hex)</Label>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-md bg-black text-white border border-slate-700"></div>
-                  <Input defaultValue="#2563EB" className="bg-slate-50 border-slate-700 text-slate-900 w-48" />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label className="text-slate-300">Logotipo de la Empresa</Label>
-                <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 flex flex-col items-center justify-center text-slate-500 bg-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
-                  <Paintbrush className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">Haz clic para subir un logotipo (PNG, JPG)</p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-slate-200 pt-6">
-              <Button onClick={handleSave} className="bg-black text-white hover:bg-blue-700 text-slate-900">
-                <Save className="w-4 h-4 mr-2" /> Guardar Branding
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+        {/* Section 2: Notificaciones */}
+        <div className="p-4 space-y-3">
+          <div>
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">Notificaciones & Alertas</h2>
+            <p className="text-[11px] text-zinc-400">Canales para recibir avisos de nuevos leads y contratos.</p>
+          </div>
 
-        <TabsContent value="notifications" className="space-y-6 outline-none">
-          <Card className="bg-white  border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Preferencias de Alertas</CardTitle>
-              <CardDescription className="text-slate-400">
-                Controla qué notificaciones recibes de la IA y el sistema.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base text-slate-900">Alertas de Leads Calientes</Label>
-                  <p className="text-sm text-slate-400">Recibir notificación cuando la IA identifique un lead con intención de compra alta.</p>
-                </div>
-                <Switch defaultChecked />
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center justify-between p-2.5 bg-zinc-50 rounded-lg border border-zinc-200/60">
+              <div>
+                <span className="font-semibold text-zinc-800">Alertas Inmediatas por WhatsApp</span>
+                <p className="text-[11px] text-zinc-500">Notificar al asesor cuando un cliente califique con alta intención.</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base text-slate-900">Transferencias a Humano</Label>
-                  <p className="text-sm text-slate-400">Notificar por email cuando un bot de WhatsApp no pueda resolver una duda.</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base text-slate-900">Resumen Semanal</Label>
-                  <p className="text-sm text-slate-400">Envío de reporte en PDF con métricas de ventas y consumo de tokens.</p>
-                </div>
-                <Switch />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <Switch checked={whatsappNotifications} onCheckedChange={setWhatsappNotifications} />
+            </div>
 
-        <TabsContent value="security" className="space-y-6 outline-none">
-          <Card className="bg-white  border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Seguridad y Acceso</CardTitle>
-              <CardDescription className="text-slate-400">
-                Configura las políticas de acceso para tu Tenant.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base text-slate-900">Autenticación en 2 Pasos (2FA)</Label>
-                  <p className="text-sm text-slate-400">Requerir código temporal en cada inicio de sesión de los administradores.</p>
-                </div>
-                <Switch defaultChecked />
+            <div className="flex items-center justify-between p-2.5 bg-zinc-50 rounded-lg border border-zinc-200/60">
+              <div>
+                <span className="font-semibold text-zinc-800">Resumen Diario por Correo</span>
+                <p className="text-[11px] text-zinc-500">Enviar reporte de métricas y ventas a la dirección general.</p>
               </div>
-              <div className="grid gap-2 pt-4 border-t border-slate-200">
-                <Label className="text-slate-300">Cambiar Contraseña</Label>
-                <div className="flex gap-4 max-w-sm">
-                  <Input type="password" placeholder="Nueva contraseña" className="bg-slate-50 border-slate-700 text-slate-900" />
-                  <Button variant="outline" className="border-slate-700 text-slate-900 hover:bg-white">Actualizar</Button>
-                </div>
+              <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Seguridad */}
+        <div className="p-4 space-y-3">
+          <div>
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">Seguridad & Cifrado</h2>
+            <p className="text-[11px] text-zinc-400">Políticas de autenticación y protección de datos.</p>
+          </div>
+
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center justify-between p-2.5 bg-zinc-50 rounded-lg border border-zinc-200/60">
+              <div>
+                <span className="font-semibold text-zinc-800">Autenticación de Dos Factores (2FA)</span>
+                <p className="text-[11px] text-zinc-500">Requerir confirmación biométrica o SMS al iniciar sesión.</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <Switch checked={twoFactorAuth} onCheckedChange={setTwoFactorAuth} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
-
