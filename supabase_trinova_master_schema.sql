@@ -5,108 +5,125 @@
 -- MÓDULOS: Vehículos, Motos, Bienes Raíces (Venta & Renta), Contratos, CRM & Leads
 -- ==============================================================================
 
--- 1. EXTENSIONES
+-- 1. EXTENSIONES CRIPTOGRÁFICAS Y DE IDENTIFICADORES
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. TABLA: TENANTS (ORGANIZACIONES / EMPRESAS MATRICULADAS)
+-- ==============================================================================
+-- 2. TABLA: TENANTS (ORGANIZACIONES / EMPRESA TRINOVA)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL DEFAULT 'YJD TRINOVA S.A.S.',
-    legal_name TEXT DEFAULT 'YJD TRINOVA S.A.S.',
-    nit TEXT DEFAULT '902.095.222-8',
-    slug TEXT UNIQUE NOT NULL DEFAULT 'yjdtrinova',
-    phone TEXT DEFAULT '+57 (605) 322-5918',
-    whatsapp TEXT DEFAULT '573005765530',
-    email TEXT DEFAULT 'dondeblanca15@gmail.com',
-    address TEXT DEFAULT 'Calle 82 # 21 Sur 06 Esquina',
-    city TEXT DEFAULT 'Barranquilla, Atlántico',
-    logo_url TEXT DEFAULT '/logo.png',
-    plan TEXT DEFAULT 'ENTERPRISE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. TABLA: CONTACTS / PROVEEDORES & CLIENTES (PERSONAS NATURALES Y JURÍDICAS)
+-- Asegurar columnas si la tabla ya existía previamente
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS legal_name TEXT DEFAULT 'YJD TRINOVA S.A.S.';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS nit TEXT DEFAULT '902.095.222-8';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS slug TEXT DEFAULT 'yjdtrinova';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '+57 (605) 322-5918';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS whatsapp TEXT DEFAULT '573005765530';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS email TEXT DEFAULT 'dondeblanca15@gmail.com';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS address TEXT DEFAULT 'Calle 82 # 21 Sur 06 Esquina';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Barranquilla, Atlántico';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS logo_url TEXT DEFAULT '/logo.png';
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'ENTERPRISE';
+
+-- Crear índice único en slug si no existe
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tenants_slug_key') THEN
+        ALTER TABLE public.tenants ADD CONSTRAINT tenants_slug_key UNIQUE (slug);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
+
+-- ==============================================================================
+-- 3. TABLA: CONTACTS (PROPIETARIOS PARTICULARES PERSONA NATURAL & EMPRESAS)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.contacts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
-    person_type TEXT CHECK (person_type IN ('PERSONA_NATURAL', 'PERSONA_JURIDICA')) DEFAULT 'PERSONA_NATURAL',
     full_name TEXT NOT NULL,
-    trade_name TEXT,
-    doc_type TEXT DEFAULT 'CC', -- CC, CE, PASAPORTE, NIT, PEP
-    doc_number TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
-    city TEXT DEFAULT 'Barranquilla',
-    address TEXT,
-    bank_name TEXT,
-    bank_account_type TEXT,
-    bank_account_number TEXT,
-    role_type TEXT CHECK (role_type IN ('PROPIETARIO_CONSIGNANTE', 'COMPRADOR', 'ARRENDADOR', 'ARRENDATARIO', 'ALIADO')) DEFAULT 'PROPIETARIO_CONSIGNANTE',
-    tags TEXT[] DEFAULT ARRAY['PERSONA_NATURAL'],
-    status TEXT DEFAULT 'ACTIVO',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4. TABLA: INVENTORY ITEMS / CATÁLOGO CENTRAL (VEHÍCULOS, MOTOS, CASAS, RENTAS)
+-- Asegurar columnas para Persona Natural y Jurídica
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS person_type TEXT DEFAULT 'PERSONA_NATURAL';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS trade_name TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS doc_type TEXT DEFAULT 'CC';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS doc_number TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Barranquilla';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS bank_name TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS bank_account_type TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS bank_account_number TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS role_type TEXT DEFAULT 'PROPIETARIO_CONSIGNANTE';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT ARRAY['PERSONA_NATURAL'];
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ACTIVO';
+
+-- ==============================================================================
+-- 4. TABLA: INVENTORY_ITEMS (CARROS, MOTOS, INMUEBLES EN VENTA & RENTA)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.inventory_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
-    owner_contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    
-    -- Clasificación del bien
-    category_type TEXT CHECK (category_type IN ('VEHICULO', 'MOTO', 'INMUEBLE_VENTA', 'INMUEBLE_RENTA')) NOT NULL DEFAULT 'VEHICULO',
-    sub_category TEXT, -- SUV, Sedán, Moto Deportiva, Apartamento, Casa Campestre, Penthouse, Local
-    
-    -- Datos del Ítem
     title TEXT NOT NULL,
-    brand TEXT, -- Toyota, Yamaha, Mazda, Honda
-    model TEXT, -- MT-09, Fortuner, CX-30, Casa Campestre
-    year INTEGER,
-    price_cop NUMERIC(15, 2) NOT NULL,
-    monthly_rent_cop NUMERIC(15, 2), -- Si es renta
-    
-    -- Especificaciones de Vehículos / Motos
-    mileage INTEGER DEFAULT 0,
-    fuel_type TEXT DEFAULT 'Gasolina', -- Gasolina, Diésel, Híbrido, Eléctrico
-    transmission TEXT DEFAULT 'Automática', -- Automática, Manual, Secuencial
-    engine_displacement TEXT, -- 2.0L Turbo, 890cc, etc.
-    license_plate TEXT,
-    vin TEXT,
-    exterior_color TEXT,
-    interior_color TEXT,
-    
-    -- Especificaciones de Inmuebles
-    area_m2 NUMERIC(10, 2),
-    bedrooms INTEGER,
-    bathrooms INTEGER,
-    parking_spots INTEGER,
-    stratum INTEGER,
-    neighborhood TEXT,
-    
-    -- Multimedia & Detalles
-    images TEXT[] DEFAULT ARRAY[]::TEXT[],
-    features TEXT[] DEFAULT ARRAY[]::TEXT[],
-    description TEXT,
-    
-    -- Estado de Comercialización
-    condition TEXT DEFAULT 'Seminuevo Certificado',
-    status TEXT CHECK (status IN ('DISPONIBLE', 'RESERVADO', 'CONSIGNADO', 'VENDIDO', 'ARRENDADO')) DEFAULT 'DISPONIBLE',
-    is_featured BOOLEAN DEFAULT true,
-    inspection_score INTEGER DEFAULT 98,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Asegurar todas las columnas técnicas y comerciales
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS owner_contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS category_type TEXT DEFAULT 'VEHICULO';
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS sub_category TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS brand TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS model TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS year INTEGER;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS price_cop NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS monthly_rent_cop NUMERIC(15, 2);
+
+-- Especificaciones Carros / Motos
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS mileage INTEGER DEFAULT 0;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS fuel_type TEXT DEFAULT 'Gasolina';
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS transmission TEXT DEFAULT 'Automática';
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS engine_displacement TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS license_plate TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS vin TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS exterior_color TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS interior_color TEXT;
+
+-- Especificaciones Inmuebles
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS area_m2 NUMERIC(10, 2);
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS bedrooms INTEGER;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS bathrooms INTEGER;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS parking_spots INTEGER;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS stratum INTEGER;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS neighborhood TEXT;
+
+-- Galería & Estado
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS features TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS condition TEXT DEFAULT 'Seminuevo Certificado';
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'DISPONIBLE';
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT true;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS inspection_score INTEGER DEFAULT 98;
+ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+
+-- ==============================================================================
 -- 5. TABLA: PRODUCTS (COMPATIBILIDAD CON TIENDA Y PASARELAS)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    sku TEXT UNIQUE,
-    category TEXT NOT NULL,
-    price NUMERIC(15, 2) NOT NULL,
+    sku TEXT,
+    category TEXT DEFAULT 'GENERAL',
+    price NUMERIC(15, 2) DEFAULT 0,
     stock INTEGER DEFAULT 1,
     status TEXT DEFAULT 'AVAILABLE',
     images TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -114,94 +131,96 @@ CREATE TABLE IF NOT EXISTS public.products (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- ==============================================================================
 -- 6. TABLA: CONTRACTS (CONTRATOS DE CORRETAJE & MANDATOS NOTARIALES DIGITALES)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
-    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    
     contract_code TEXT NOT NULL,
-    contract_type TEXT CHECK (contract_type IN ('CORRETAJE_VEHICULO', 'CORRETAJE_MOTO', 'CORRETAJE_INMOBILIARIO_VENTA', 'CORRETAJE_INMOBILIARIO_RENTA')) DEFAULT 'CORRETAJE_VEHICULO',
-    person_type TEXT CHECK (person_type IN ('PERSONA_NATURAL', 'PERSONA_JURIDICA')) DEFAULT 'PERSONA_NATURAL',
-    
-    -- Datos del Otorgante / Propietario
     client_name TEXT NOT NULL,
-    client_doc_type TEXT NOT NULL,
-    client_doc_number TEXT NOT NULL,
-    client_phone TEXT NOT NULL,
-    client_email TEXT NOT NULL,
-    client_city TEXT DEFAULT 'Barranquilla',
-    
-    -- Datos del Mandato y Bienes
-    items_assigned JSONB NOT NULL DEFAULT '[]'::JSONB,
-    total_valuation_cop NUMERIC(15, 2) NOT NULL,
-    commission_type TEXT DEFAULT 'PERCENTAGE', -- PERCENTAGE o FIXED
-    commission_value NUMERIC(10, 2) DEFAULT 3.5,
-    
-    -- Validez y Firma Digital
     verification_hash TEXT NOT NULL,
-    signed_timestamp TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-    signer_ip TEXT,
-    signature_type TEXT DEFAULT 'DRAW',
-    signature_data_url TEXT,
-    pdf_url TEXT,
-    
-    status TEXT CHECK (status IN ('BORRADOR', 'FIRMADO', 'RADICADO', 'LIQUIDADO')) DEFAULT 'FIRMADO',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 7. TABLA: LEADS / PIPELINE DE VENTAS (PROSPECTOS INTERESADOS)
+-- Asegurar columnas de contrato digital
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS contract_type TEXT DEFAULT 'CORRETAJE_VEHICULO';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS person_type TEXT DEFAULT 'PERSONA_NATURAL';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS client_doc_type TEXT DEFAULT 'CC';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS client_doc_number TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS client_phone TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS client_email TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS client_city TEXT DEFAULT 'Barranquilla';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS items_assigned JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS total_valuation_cop NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'PERCENTAGE';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS commission_value NUMERIC(10, 2) DEFAULT 3.5;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS signed_timestamp TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS signer_ip TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS signature_type TEXT DEFAULT 'DRAW';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS signature_data_url TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS pdf_url TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'FIRMADO';
+
+-- ==============================================================================
+-- 7. TABLA: LEADS (PIPELINE DE VENTAS Y PROSPECTOS INTERESADOS)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.leads (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
-    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    inventory_item_id UUID REFERENCES public.inventory_items(id) ON DELETE SET NULL,
-    
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
-    email TEXT,
-    interest_category TEXT, -- VEHICULO, MOTO, INMUEBLE_VENTA, INMUEBLE_RENTA
-    interest_item_title TEXT,
-    budget_cop NUMERIC(15, 2),
-    lead_score INTEGER DEFAULT 85,
-    intent_level TEXT DEFAULT 'ALTA',
-    status TEXT CHECK (status IN ('NUEVO', 'CONTACTADO', 'CALIFICADO', 'VISITA_PROGRAMADA', 'NEGOCIACION', 'CERRADO_GANADO', 'PERDIDO')) DEFAULT 'NUEVO',
-    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 8. TABLA: APPOINTMENTS / CITAS Y TEST DRIVES
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS inventory_item_id UUID REFERENCES public.inventory_items(id) ON DELETE SET NULL;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS interest_category TEXT;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS interest_item_title TEXT;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS budget_cop NUMERIC(15, 2);
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS lead_score INTEGER DEFAULT 85;
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS intent_level TEXT DEFAULT 'ALTA';
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'NUEVO';
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- ==============================================================================
+-- 8. TABLA: APPOINTMENTS (CITAS, VISITAS Y TEST DRIVES)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
-    lead_id UUID REFERENCES public.leads(id) ON DELETE SET NULL,
-    inventory_item_id UUID REFERENCES public.inventory_items(id) ON DELETE SET NULL,
-    
     client_name TEXT NOT NULL,
     client_phone TEXT NOT NULL,
-    appointment_type TEXT CHECK (appointment_type IN ('TEST_DRIVE', 'VISITA_INMUEBLE', 'INSPECCION_PERICIAL', 'FIRMA_NOTARIAL')) DEFAULT 'TEST_DRIVE',
-    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    location TEXT DEFAULT 'Vitrina Principal YJD TRINOVA - Barranquilla',
-    status TEXT CHECK (status IN ('PROGRAMADA', 'CONFIRMADA', 'COMPLETADA', 'CANCELADA')) DEFAULT 'PROGRAMADA',
-    notes TEXT,
+    scheduled_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 9. TABLA: KNOWLEDGE BASE (BASE DE CONOCIMIENTO PARA EL AGENTE DE IA)
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS lead_id UUID REFERENCES public.leads(id) ON DELETE SET NULL;
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS inventory_item_id UUID REFERENCES public.inventory_items(id) ON DELETE SET NULL;
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS appointment_type TEXT DEFAULT 'TEST_DRIVE';
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS location TEXT DEFAULT 'Vitrina Principal YJD TRINOVA - Barranquilla';
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PROGRAMADA';
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- ==============================================================================
+-- 9. TABLA: KNOWLEDGE_BASE (BASE DE CONOCIMIENTO PARA EL AGENTE DE IA)
+-- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.knowledge_base (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    category TEXT DEFAULT 'POLITICAS_CORRETAJE_YJD_TRINOVA',
-    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- ==============================================================================
--- ⚡ POLÍTICAS DE ACCESO PÚBLICO & RLS (ROW LEVEL SECURITY)
--- ==============================================================================
+ALTER TABLE public.knowledge_base ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'POLITICAS_CORRETAJE_YJD_TRINOVA';
+ALTER TABLE public.knowledge_base ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
+-- ==============================================================================
+-- ⚡ ROW LEVEL SECURITY (RLS) & POLÍTICAS DE ACCESO PÚBLICO
+-- ==============================================================================
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_items ENABLE ROW LEVEL SECURITY;
@@ -210,6 +229,15 @@ ALTER TABLE public.contracts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knowledge_base ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all on tenants" ON public.tenants;
+DROP POLICY IF EXISTS "Allow all on contacts" ON public.contacts;
+DROP POLICY IF EXISTS "Allow all on inventory_items" ON public.inventory_items;
+DROP POLICY IF EXISTS "Allow all on products" ON public.products;
+DROP POLICY IF EXISTS "Allow all on contracts" ON public.contracts;
+DROP POLICY IF EXISTS "Allow all on leads" ON public.leads;
+DROP POLICY IF EXISTS "Allow all on appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Allow all on knowledge_base" ON public.knowledge_base;
 
 CREATE POLICY "Allow all on tenants" ON public.tenants FOR ALL USING (true);
 CREATE POLICY "Allow all on contacts" ON public.contacts FOR ALL USING (true);
@@ -221,9 +249,8 @@ CREATE POLICY "Allow all on appointments" ON public.appointments FOR ALL USING (
 CREATE POLICY "Allow all on knowledge_base" ON public.knowledge_base FOR ALL USING (true);
 
 -- ==============================================================================
--- 📋 INSERTAR REGISTRO BASE DE YJD TRINOVA S.A.S.
+-- 📋 REGISTRO OFICIAL DE LA EMPRESA YJD TRINOVA S.A.S.
 -- ==============================================================================
-
 INSERT INTO public.tenants (name, legal_name, nit, slug, phone, whatsapp, email, address, city, plan)
 VALUES (
     'YJD Trinova S.A.S.',
@@ -238,6 +265,7 @@ VALUES (
     'ENTERPRISE'
 )
 ON CONFLICT (slug) DO UPDATE SET
+    name = EXCLUDED.name,
     legal_name = EXCLUDED.legal_name,
     nit = EXCLUDED.nit,
     phone = EXCLUDED.phone,
@@ -254,3 +282,4 @@ VALUES (
     'POLITICAS_CORRETAJE_YJD_TRINOVA'
 )
 ON CONFLICT DO NOTHING;
+
