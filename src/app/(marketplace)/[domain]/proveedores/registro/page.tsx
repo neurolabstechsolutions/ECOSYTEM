@@ -44,6 +44,9 @@ import {
   FileSignature,
   FileSpreadsheet,
   HelpCircle,
+  User,
+  Home,
+  Key,
 } from "lucide-react";
 
 import {
@@ -87,13 +90,23 @@ import {
 import { toast } from "sonner";
 import {
   Vehicle,
+  Property,
   getStoredVehicles,
   saveStoredVehicles,
+  getStoredProperties,
+  saveStoredProperties,
   DEFAULT_DEALER,
+  DEFAULT_AGENCY,
 } from "@/lib/marketplace-mocks";
 
 // Types
 export interface CompanyData {
+  personType: "NATURAL" | "JURIDICA";
+  // Persona Natural
+  fullName: string;
+  docType: string;
+  docId: string;
+  // Persona Jurídica
   legalName: string;
   tradeName: string;
   taxIdType: string;
@@ -102,17 +115,18 @@ export interface CompanyData {
   yearsInBusiness: string;
   branchesCount: string;
   website: string;
-  address: string;
-  city: string;
-  country: string;
-  phone: string;
-  email: string;
   legalRepName: string;
   legalRepDocType: string;
   legalRepDocId: string;
   legalRepRole: string;
   legalRepEmail: string;
   legalRepPhone: string;
+  // Campos comunes
+  address: string;
+  city: string;
+  country: string;
+  phone: string;
+  email: string;
   bankName: string;
   bankAccountType: string;
   bankAccountNumber: string;
@@ -127,6 +141,7 @@ export interface VehicleImage {
 
 export interface VehicleItem {
   id: string;
+  itemType: "VEHICULO" | "MOTO" | "INMUEBLE_VENTA" | "INMUEBLE_RENTA";
   brand: string;
   model: string;
   year: number;
@@ -139,7 +154,7 @@ export interface VehicleItem {
   interiorColor: string;
   vin: string;
   licensePlate: string;
-  condition: "Nuevo (0km)" | "Seminuevo Certificado" | "Usado Seleccionado";
+  condition: string;
   engine: string;
   suggestedPrice: number;
   brokerageFeeType: "percentage" | "fixed";
@@ -148,6 +163,13 @@ export interface VehicleItem {
   description: string;
   features: string[];
   images: VehicleImage[];
+  // Campos inmobiliarios
+  propertyType?: string;
+  areaM2?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  parkingSpots?: number;
+  neighborhood?: string;
 }
 
 export interface ContractSignatureData {
@@ -170,11 +192,22 @@ export interface ContractSignatureData {
   acceptDigitalSignatureValidity: boolean;
 }
 
-const POPULAR_BRANDS = [
-  "Toyota", "Mazda", "Chevrolet", "Renault", "Yamaha", "Honda", "Suzuki", "Kawasaki",
-  "BMW", "Mercedes-Benz", "Porsche", "Audi", "Ford", "Kia", "Hyundai", "Nissan",
-  "Volkswagen", "KTM", "Ducati", "BMW Motorrad", "Land Rover", "Volvo", "Jeep", "BYD"
+const CAR_BRANDS = [
+  "Toyota", "Mazda", "Chevrolet", "Renault", "Kia", "Hyundai", "Nissan",
+  "Volkswagen", "Ford", "BMW", "Mercedes-Benz", "Audi", "Porsche", "Land Rover",
+  "Volvo", "Jeep", "BYD", "Suzuki", "Honda", "Mitsubishi"
 ];
+
+const MOTO_BRANDS = [
+  "Yamaha", "Honda", "Suzuki", "Kawasaki", "KTM", "BMW Motorrad", "Ducati",
+  "Bajaj / Pulsar", "Royal Enfield", "TVS", "Hero", "Harley-Davidson", "Triumph", "Benelli"
+];
+
+const PROPERTY_TYPES = [
+  "Casa", "Apartamento", "Penthouse", "Casa Campestre", "Oficina / Local", "Lote / Terreno", "Bodega / Industrial"
+];
+
+const POPULAR_BRANDS = [...CAR_BRANDS, ...MOTO_BRANDS];
 
 const AVAILABLE_FEATURES = [
   "Techo Panorámico de Cristal",
@@ -249,8 +282,12 @@ export default function ProviderRegistrationPage({
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showPrintView, setShowPrintView] = useState<boolean>(false);
 
-  // STEP 1: Company Data (Inicia limpio para datos reales)
+  // STEP 1: Company / Owner Data (Persona Natural por defecto)
   const [companyData, setCompanyData] = useState<CompanyData>({
+    personType: "NATURAL",
+    fullName: "",
+    docType: "Cédula de Ciudadanía",
+    docId: "",
     legalName: "",
     tradeName: "",
     taxIdType: "NIT",
@@ -259,27 +296,29 @@ export default function ProviderRegistrationPage({
     yearsInBusiness: "1",
     branchesCount: "1",
     website: "",
-    address: "",
-    city: "Barranquilla",
-    country: "Colombia",
-    phone: "",
-    email: "",
     legalRepName: "",
     legalRepDocType: "Cédula de Ciudadanía",
     legalRepDocId: "",
     legalRepRole: "Propietario / Representante Legal",
     legalRepEmail: "",
     legalRepPhone: "",
+    address: "",
+    city: "Barranquilla",
+    country: "Colombia",
+    phone: "",
+    email: "",
     bankName: "Bancolombia",
     bankAccountType: "Cuenta de Ahorros",
     bankAccountNumber: "",
   });
 
-  // STEP 2: Vehicle Inventory List (Inicia vacío para datos reales)
+  // STEP 2: Category Selector & Inventory List
+  const [selectedAssetType, setSelectedAssetType] = useState<"VEHICULO" | "MOTO" | "INMUEBLE_VENTA" | "INMUEBLE_RENTA">("VEHICULO");
   const [vehicles, setVehicles] = useState<VehicleItem[]>([]);
 
-  // Form state for creating a new vehicle in Step 2
+  // Form state for creating a new item in Step 2
   const [currentVehicle, setCurrentVehicle] = useState<Omit<VehicleItem, "id">>({
+    itemType: "VEHICULO",
     brand: "",
     model: "",
     year: new Date().getFullYear(),
@@ -306,6 +345,12 @@ export default function ProviderRegistrationPage({
       "Frenos ABS"
     ],
     images: [],
+    propertyType: "Apartamento",
+    areaM2: 85,
+    bedrooms: 3,
+    bathrooms: 2,
+    parkingSpots: 1,
+    neighborhood: "Villa Country",
   });
 
   const [activeVehicleTab, setActiveVehicleTab] = useState<"individual" | "bulk">("individual");
@@ -426,25 +471,44 @@ export default function ProviderRegistrationPage({
 
   // Step 1 Validation
   const validateStep1 = (): boolean => {
-    if (!companyData.legalName.trim()) {
-      toast.error("Por favor ingresa la Razón Social de la empresa");
-      return false;
-    }
-    if (!companyData.taxId.trim()) {
-      toast.error("Por favor ingresa el NIT / Identificación Fiscal");
-      return false;
-    }
-    if (!companyData.email.trim() || !companyData.email.includes("@")) {
-      toast.error("Por favor ingresa un correo corporativo válido");
-      return false;
-    }
-    if (!companyData.legalRepName.trim()) {
-      toast.error("Por favor ingresa el nombre del Representante Legal");
-      return false;
-    }
-    if (!companyData.legalRepDocId.trim()) {
-      toast.error("Por favor ingresa el documento del Representante Legal");
-      return false;
+    if (companyData.personType === "NATURAL") {
+      if (!companyData.fullName.trim()) {
+        toast.error("Por favor ingresa tus Nombres y Apellidos Completos");
+        return false;
+      }
+      if (!companyData.docId.trim()) {
+        toast.error("Por favor ingresa tu Número de Cédula / Documento");
+        return false;
+      }
+      if (!companyData.phone.trim()) {
+        toast.error("Por favor ingresa tu Número de Teléfono Celular o WhatsApp");
+        return false;
+      }
+      if (!companyData.email.trim() || !companyData.email.includes("@")) {
+        toast.error("Por favor ingresa un correo electrónico válido");
+        return false;
+      }
+    } else {
+      if (!companyData.legalName.trim()) {
+        toast.error("Por favor ingresa la Razón Social de la empresa");
+        return false;
+      }
+      if (!companyData.taxId.trim()) {
+        toast.error("Por favor ingresa el NIT / Identificación Fiscal");
+        return false;
+      }
+      if (!companyData.legalRepName.trim()) {
+        toast.error("Por favor ingresa el nombre del Representante Legal");
+        return false;
+      }
+      if (!companyData.legalRepDocId.trim()) {
+        toast.error("Por favor ingresa el documento del Representante Legal");
+        return false;
+      }
+      if (!companyData.email.trim() || !companyData.email.includes("@")) {
+        toast.error("Por favor ingresa un correo corporativo válido");
+        return false;
+      }
     }
     return true;
   };
@@ -452,11 +516,11 @@ export default function ProviderRegistrationPage({
   // Step 2 Validation
   const validateStep2 = (): boolean => {
     if (vehicles.length === 0) {
-      if (currentVehicle.brand.trim() && currentVehicle.model.trim() && Number(currentVehicle.suggestedPrice) > 0) {
+      if ((currentVehicle.brand.trim() || currentVehicle.model.trim()) && Number(currentVehicle.suggestedPrice) > 0) {
         handleAddVehicleToList();
         return true;
       }
-      toast.error("Por favor completa los datos del vehículo y haz clic en 'Agregar Vehículo al Contrato' antes de continuar.");
+      toast.error("Por favor completa los datos del bien y haz clic en 'Agregar al Contrato' antes de continuar.");
       return false;
     }
     return true;
@@ -469,7 +533,7 @@ export default function ProviderRegistrationPage({
       return false;
     }
     if (!contractSignature.acceptVehicleWarranty) {
-      toast.error("Debes certificar la procedencia legal y estado del inventario");
+      toast.error("Debes certificar la procedencia legal y libre posesión del inventario");
       return false;
     }
     if (!contractSignature.acceptDataPrivacy) {
@@ -491,59 +555,79 @@ export default function ProviderRegistrationPage({
     return true;
   };
 
-  // Handler to add a new vehicle to the list
+  // Handler to add a new item (vehicle, moto, property) to the list
   const handleAddVehicleToList = () => {
-    if (!currentVehicle.brand || !currentVehicle.model || !currentVehicle.suggestedPrice) {
-      toast.error("Completa al menos la Marca, Modelo y Precio de Venta sugerido");
+    const isRealEstate = selectedAssetType === "INMUEBLE_VENTA" || selectedAssetType === "INMUEBLE_RENTA";
+    if (!isRealEstate && (!currentVehicle.brand || !currentVehicle.model || !currentVehicle.suggestedPrice)) {
+      toast.error("Completa la Marca, Modelo y Precio sugerido");
+      return;
+    }
+    if (isRealEstate && (!currentVehicle.brand || !currentVehicle.suggestedPrice)) {
+      toast.error("Completa el Título comercial y el Precio / Canon mensual");
       return;
     }
 
+    const defaultImages = selectedAssetType === "MOTO"
+      ? [{ id: `img-${Date.now()}`, name: "Moto.jpg", url: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80", tag: "Principal" }]
+      : isRealEstate
+      ? [{ id: `img-${Date.now()}`, name: "Inmueble.jpg", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80", tag: "Fachada" }]
+      : [{ id: `img-${Date.now()}`, name: "Vehiculo.jpg", url: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80", tag: "Frontal" }];
+
     const newVehicle: VehicleItem = {
       ...currentVehicle,
-      id: `veh-${Date.now()}`,
-      images: currentVehicle.images.length > 0 ? currentVehicle.images : SAMPLE_VEHICLE_IMAGES.slice(0, 2),
+      itemType: selectedAssetType,
+      id: `item-${Date.now()}`,
+      images: currentVehicle.images.length > 0 ? currentVehicle.images : defaultImages,
     };
 
     setVehicles((prev) => [...prev, newVehicle]);
-    toast.success(`Vehículo ${newVehicle.brand} ${newVehicle.model} agregado al inventario del contrato`);
+    toast.success(`Ítem ${newVehicle.brand} ${newVehicle.model} agregado al contrato de corretaje`);
 
     // Reset current form to a clean state
     setCurrentVehicle({
-      brand: "Mercedes-Benz",
-      model: "GLE 450 4MATIC",
-      year: 2024,
-      trim: "AMG Line Night Edition",
-      bodyType: "SUV",
-      mileage: 4200,
-      transmission: "9G-TRONIC Automática",
-      fuelType: "Mild Hybrid Gasolina (3.0L Turbo)",
-      exteriorColor: "Negro Obsidiana Metalizado",
-      interiorColor: "Cuero Nappa Café Tartufo",
-      vin: "W1N1671591A992810",
-      licensePlate: "LUX-777",
+      itemType: selectedAssetType,
+      brand: "",
+      model: "",
+      year: new Date().getFullYear(),
+      trim: "",
+      bodyType: selectedAssetType === "MOTO" ? "Moto / Motocicleta" : "SUV / Camioneta",
+      mileage: 0,
+      transmission: "Automática",
+      fuelType: "Gasolina",
+      exteriorColor: "",
+      interiorColor: "",
+      vin: "",
+      licensePlate: "",
       condition: "Seminuevo Certificado",
-      engine: "3.0L Turbo Inline-6 EQ Boost (375 HP)",
-      suggestedPrice: 104500,
+      engine: selectedAssetType === "MOTO" ? "890cc" : "2.0L",
+      suggestedPrice: 0,
       brokerageFeeType: "percentage",
       brokerageFeeValue: 3.5,
-      availability: "Disponible en Vitrina",
-      description: "Estado impecable, techo panorámico, paquete acústico con doble cristal.",
+      availability: "Disponible para Venta Inmediata",
+      description: "",
       features: [
-        "Techo Panorámico de Cristal",
-        "Sistema de Sonido Premium (Burmester / Bose / Harman Kardon)",
-        "Suspensión Neumática Adaptativa"
+        "Aire Acondicionado",
+        "Rines de Lujo",
+        "Pantalla Táctil",
+        "Frenos ABS"
       ],
       images: [],
+      propertyType: "Apartamento",
+      areaM2: 85,
+      bedrooms: 3,
+      bathrooms: 2,
+      parkingSpots: 1,
+      neighborhood: "Villa Country",
     });
   };
 
   const handleRemoveVehicle = (id: string) => {
     if (vehicles.length <= 1) {
-      toast.error("El contrato debe contener al menos un vehículo registrado.");
+      toast.error("El contrato debe contener al menos un ítem registrado.");
       return;
     }
     setVehicles((prev) => prev.filter((v) => v.id !== id));
-    toast.info("Vehículo retirado de la lista");
+    toast.info("Ítem retirado de la lista");
   };
 
   const toggleFeatureInCurrentVehicle = (feature: string) => {
@@ -593,75 +677,129 @@ export default function ProviderRegistrationPage({
     setIsSubmitting(true);
 
     try {
-      // 1. Transform vehicle items into the marketplace format
-      const newVehiclesToPublish: Vehicle[] = vehicles.map((v) => {
-        const fuelMapped: "Gasolina" | "Híbrido" | "Eléctrico" | "Diésel" =
-          v.fuelType.toLowerCase().includes("híbrido") || v.fuelType.toLowerCase().includes("hybrid")
-            ? "Híbrido"
-            : v.fuelType.toLowerCase().includes("eléctrico") || v.fuelType.toLowerCase().includes("electric")
-            ? "Eléctrico"
-            : v.fuelType.toLowerCase().includes("diésel") || v.fuelType.toLowerCase().includes("diesel")
-            ? "Diésel"
-            : "Gasolina";
+      // 1. Separate vehicle / moto items from real estate items
+      const newVehiclesToPublish: Vehicle[] = [];
+      const newPropertiesToPublish: Property[] = [];
 
-        const transMapped: "Automática" | "Secuencial / DCT" | "Manual" =
-          v.transmission.toLowerCase().includes("manual")
-            ? "Manual"
-            : v.transmission.toLowerCase().includes("secuencial") || v.transmission.toLowerCase().includes("dct")
-            ? "Secuencial / DCT"
-            : "Automática";
+      const ownerDisplayName = companyData.personType === "NATURAL"
+        ? companyData.fullName || "Propietario Particular"
+        : companyData.tradeName || companyData.legalName || "Concesionario Aliado";
 
-        const bodyMapped: any = v.bodyType || "SUV / Camioneta";
+      vehicles.forEach((v) => {
+        if (v.itemType === "INMUEBLE_VENTA" || v.itemType === "INMUEBLE_RENTA") {
+          const prop: Property = {
+            id: v.id || `prop-prov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            title: v.brand ? `${v.propertyType || "Inmueble"} - ${v.brand}` : `${v.propertyType || "Inmueble"} en ${companyData.city || "Barranquilla"}`,
+            propertyType: (v.propertyType as any) || "Apartamento",
+            operationType: v.itemType === "INMUEBLE_RENTA" ? "Arriendo" : "Venta",
+            priceCop: Number(v.suggestedPrice) || 0,
+            region: "Barranquilla (Atlántico)",
+            city: companyData.city || "Barranquilla",
+            neighborhood: v.neighborhood || "Zona Norte",
+            addressBrief: companyData.address || "Sector Residencial",
+            code: `TRN-RE-${Math.floor(100 + Math.random() * 900)}`,
+            images: v.images && v.images.length > 0
+              ? v.images.map((img) => img.url)
+              : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80"],
+            specs: {
+              areaM2: v.areaM2 || 85,
+              lotAreaM2: (v.areaM2 || 85) + 20,
+              bedrooms: v.bedrooms || 3,
+              bathrooms: v.bathrooms || 2,
+              parkingSpots: v.parkingSpots || 1,
+              stratum: 4,
+              builtYear: Number(v.year) || new Date().getFullYear(),
+            },
+            amenities: v.features && v.features.length > 0 ? v.features : ["Seguridad 24/7", "Parqueadero Privado"],
+            description: v.description || `Excelente inmueble en ${v.itemType === "INMUEBLE_RENTA" ? "arriendo" : "venta"}, consignado a través de YJD TRINOVA S.A.S.`,
+            featured: true,
+            agency: {
+              ...DEFAULT_AGENCY,
+              name: ownerDisplayName,
+              phone: companyData.phone || DEFAULT_AGENCY.phone,
+              whatsappPhone: companyData.phone || DEFAULT_AGENCY.whatsappPhone,
+              address: companyData.address || DEFAULT_AGENCY.address,
+              city: companyData.city || DEFAULT_AGENCY.city,
+            },
+          };
+          newPropertiesToPublish.push(prop);
+        } else {
+          // Vehículo o Moto
+          const fuelMapped: "Gasolina" | "Híbrido" | "Eléctrico" | "Diésel" =
+            v.fuelType.toLowerCase().includes("híbrido") || v.fuelType.toLowerCase().includes("hybrid")
+              ? "Híbrido"
+              : v.fuelType.toLowerCase().includes("eléctrico") || v.fuelType.toLowerCase().includes("electric")
+              ? "Eléctrico"
+              : v.fuelType.toLowerCase().includes("diésel") || v.fuelType.toLowerCase().includes("diesel")
+              ? "Diésel"
+              : "Gasolina";
 
-        return {
-          id: v.id || `veh-prov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          brand: v.brand,
-          model: v.model,
-          trim: v.trim || undefined,
-          year: Number(v.year),
-          price: Number(v.suggestedPrice),
-          currency: "COP",
-          monthlyEstimate: Math.round(Number(v.suggestedPrice) / 48),
-          mileage: Number(v.mileage) || 0,
-          fuelType: fuelMapped,
-          transmission: transMapped,
-          bodyType: bodyMapped,
-          region: "Barranquilla (Atlántico)",
-          city: companyData.city || "Barranquilla, Atlántico",
-          exteriorColor: v.exteriorColor || "Gris / Plata",
-          interiorColor: v.interiorColor || "Cuero Negro",
-          doors: bodyMapped.includes("Moto") ? 0 : 4,
-          condition: "Seminuevo Certificado",
-          badge: "Certificado",
-          featured: true,
-          vin: v.vin || `VIN-${Date.now().toString().slice(-6)}`,
-          plateEnding: v.licensePlate ? `Placa ${v.licensePlate}` : "Placa de Barranquilla",
-          images: v.images && v.images.length > 0
-            ? v.images.map((img) => img.url)
-            : ["https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"],
-          specs: {
-            engine: v.engine || "2.0L Turbo",
-            horsepower: 200,
-            acceleration: "0-100 km/h: 6.8s",
-            traction: "AWD",
-          },
-          keyFeatures: v.features && v.features.length > 0 ? v.features : ["Garantía de Procedencia", "Inspección Pericial 360°"],
-          inspectionScore: 98,
-          dealer: {
-            ...DEFAULT_DEALER,
-            name: companyData.tradeName || DEFAULT_DEALER.name,
-            legalName: companyData.legalName || DEFAULT_DEALER.legalName,
-            phone: companyData.phone || DEFAULT_DEALER.phone,
-            city: companyData.city || DEFAULT_DEALER.city,
-            address: companyData.address || DEFAULT_DEALER.address,
-          },
-        };
+          const transMapped: "Automática" | "Secuencial / DCT" | "Manual" =
+            v.transmission.toLowerCase().includes("manual")
+              ? "Manual"
+              : v.transmission.toLowerCase().includes("secuencial") || v.transmission.toLowerCase().includes("dct")
+              ? "Secuencial / DCT"
+              : "Automática";
+
+          const bodyMapped: any = v.itemType === "MOTO" ? "Moto / Motocicleta" : (v.bodyType || "SUV / Camioneta");
+
+          const veh: Vehicle = {
+            id: v.id || `veh-prov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            brand: v.brand,
+            model: v.model,
+            trim: v.trim || undefined,
+            year: Number(v.year),
+            price: Number(v.suggestedPrice),
+            currency: "COP",
+            monthlyEstimate: Math.round(Number(v.suggestedPrice) / 48),
+            mileage: Number(v.mileage) || 0,
+            fuelType: fuelMapped,
+            transmission: transMapped,
+            bodyType: bodyMapped,
+            region: "Barranquilla (Atlántico)",
+            city: companyData.city || "Barranquilla, Atlántico",
+            exteriorColor: v.exteriorColor || "Gris / Plata",
+            interiorColor: v.interiorColor || "Cuero Negro",
+            doors: bodyMapped.includes("Moto") ? 0 : 4,
+            condition: "Seminuevo Certificado",
+            badge: "Certificado",
+            featured: true,
+            vin: v.vin || `VIN-${Date.now().toString().slice(-6)}`,
+            plateEnding: v.licensePlate ? `Placa ${v.licensePlate}` : "Placa de Barranquilla",
+            images: v.images && v.images.length > 0
+              ? v.images.map((img) => img.url)
+              : [v.itemType === "MOTO"
+                  ? "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80"
+                  : "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"],
+            specs: {
+              engine: v.engine || (v.itemType === "MOTO" ? "890cc DOHC" : "2.0L Turbo"),
+              horsepower: v.itemType === "MOTO" ? 119 : 200,
+              acceleration: v.itemType === "MOTO" ? "0-100 km/h: 3.5s" : "0-100 km/h: 6.8s",
+              traction: v.itemType === "MOTO" ? "RWD" : "AWD",
+            },
+            keyFeatures: v.features && v.features.length > 0 ? v.features : ["Garantía de Procedencia", "Inspección Pericial 360°"],
+            inspectionScore: 98,
+            dealer: {
+              ...DEFAULT_DEALER,
+              name: ownerDisplayName,
+              phone: companyData.phone || DEFAULT_DEALER.phone,
+              city: companyData.city || DEFAULT_DEALER.city,
+              address: companyData.address || DEFAULT_DEALER.address,
+            },
+          };
+          newVehiclesToPublish.push(veh);
+        }
       });
 
-      // 2. Save directly into persistent database
-      const existing = getStoredVehicles();
-      const updatedList = [...newVehiclesToPublish, ...existing];
-      saveStoredVehicles(updatedList);
+      // 2. Save directly into persistent databases
+      if (newVehiclesToPublish.length > 0) {
+        const existingVeh = getStoredVehicles();
+        saveStoredVehicles([...newVehiclesToPublish, ...existingVeh]);
+      }
+      if (newPropertiesToPublish.length > 0) {
+        const existingProp = getStoredProperties();
+        saveStoredProperties([...newPropertiesToPublish, ...existingProp]);
+      }
 
       // 3. Dispatch storage event for real-time sync across open pages
       if (typeof window !== "undefined") {
@@ -695,7 +833,7 @@ export default function ProviderRegistrationPage({
 
       setIsSubmitting(false);
       setCurrentStep(4);
-      toast.success("¡Contrato firmado y formalizado con éxito! Los vehículos quedaron publicados en el marketplace.");
+      toast.success("¡Contrato firmado y formalizado con éxito! El inventario quedó publicado en el marketplace.");
     } catch (err) {
       setIsSubmitting(false);
       toast.error("Ocurrió un error al procesar el contrato.");
@@ -720,6 +858,10 @@ export default function ProviderRegistrationPage({
   // Load demo data helper
   const handleLoadDemoData = () => {
     setCompanyData({
+      personType: "NATURAL",
+      fullName: "Carlos Eduardo Mendoza Valenzuela",
+      docType: "Cédula de Ciudadanía",
+      docId: "80.456.912",
       legalName: "Grupo Automotriz Premier & Luxury Cars S.A.S.",
       tradeName: "Premier Motors Selection",
       taxIdType: "NIT",
@@ -927,1127 +1069,857 @@ export default function ProviderRegistrationPage({
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            STEP 1: COMPANY DETAILS (DATOS DE LA EMPRESA / DEALERSHIP)
+            STEP 1: OWNER / COMPANY DETAILS (PERSONA NATURAL O JURÍDICA)
         ══════════════════════════════════════════════════════════════════ */}
         {currentStep === 1 && (
           <div className="space-y-6 max-w-[1200px] mx-auto">
-            {/* Card: Información Jurídica y Comercial */}
-            <Card className="border-zinc-200 bg-white shadow-sm">
-              <CardHeader className="border-b border-zinc-100 pb-4">
+            {/* Card: Selector de Tipo de Persona */}
+            <Card className="border-zinc-200 bg-white shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-zinc-100 pb-4 bg-zinc-50/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-zinc-100 text-zinc-900">
-                      <Building2 className="h-5 w-5" />
+                    <div className="p-2 rounded-xl bg-zinc-900 text-white">
+                      {companyData.personType === "NATURAL" ? (
+                        <User className="h-5 w-5" />
+                      ) : (
+                        <Building2 className="h-5 w-5" />
+                      )}
                     </div>
                     <div>
-                      <CardTitle className="text-lg font-bold text-zinc-900">
-                        1. Información Jurídica y Comercial de la Empresa
+                      <CardTitle className="text-base sm:text-lg font-bold text-zinc-900">
+                        1. Identificación del Propietario / Consignante
                       </CardTitle>
                       <CardDescription className="text-xs text-zinc-500">
-                        Identificación fiscal y características de la entidad proveedora o concesionario
+                        Selecciona si eres propietario particular (Persona Natural) o representas a una empresa / concesionario
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className="border-zinc-200 text-zinc-600 bg-zinc-50 text-xs">
+                  <Badge variant="outline" className="border-zinc-200 text-zinc-600 bg-white text-xs">
                     Paso 1 de 3
                   </Badge>
                 </div>
               </CardHeader>
 
               <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="legalName" className="text-xs font-semibold text-zinc-700">
-                      Razón Social Completa <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="legalName"
-                      placeholder="Ej. Inversiones Automotrices Andinas S.A.S."
-                      value={companyData.legalName}
-                      onChange={(e) => setCompanyData({ ...companyData, legalName: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
+                {/* Person Type Selector Segment */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-zinc-100/80 rounded-2xl border border-zinc-200/80">
+                  <button
+                    type="button"
+                    onClick={() => setCompanyData({ ...companyData, personType: "NATURAL" })}
+                    className={`flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                      companyData.personType === "NATURAL"
+                        ? "bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-900/10"
+                        : "text-zinc-500 hover:text-zinc-900"
+                    }`}
+                  >
+                    <User className="h-4 w-4 text-emerald-600" />
+                    <span>Persona Natural (Propietario / Dueño Particular)</span>
+                  </button>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tradeName" className="text-xs font-semibold text-zinc-700">
-                      Nombre Comercial / Marca de la Vitrina <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="tradeName"
-                      placeholder="Ej. Andina Motors Prestige"
-                      value={companyData.tradeName}
-                      onChange={(e) => setCompanyData({ ...companyData, tradeName: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCompanyData({ ...companyData, personType: "JURIDICA" })}
+                    className={`flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                      companyData.personType === "JURIDICA"
+                        ? "bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-900/10"
+                        : "text-zinc-500 hover:text-zinc-900"
+                    }`}
+                  >
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    <span>Persona Jurídica (Empresa / Concesionario / Inmobiliaria)</span>
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="taxIdType" className="text-xs font-semibold text-zinc-700">
-                      Tipo de Identificación Fiscal
-                    </Label>
-                    <Select
-                      value={companyData.taxIdType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, taxIdType: (val as any) || "NIT" })}
-                    >
-                      <SelectTrigger id="taxIdType" className="border-zinc-200 text-sm">
-                        <SelectValue placeholder="Selecciona tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NIT">NIT (Colombia)</SelectItem>
-                        <SelectItem value="RFC">RFC (México)</SelectItem>
-                        <SelectItem value="CIF/NIF">CIF / NIF (España)</SelectItem>
-                        <SelectItem value="RUT">RUT (Chile / Uruguay)</SelectItem>
-                        <SelectItem value="RUC">RUC (Perú / Ecuador)</SelectItem>
-                        <SelectItem value="EIN">EIN / Tax ID (USA)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* FORM FOR PERSONA NATURAL */}
+                {companyData.personType === "NATURAL" && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName" className="text-xs font-semibold text-zinc-700">
+                          Nombres y Apellidos Completos <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="fullName"
+                          placeholder="Ej. Juan Carlos Pérez Gómez"
+                          value={companyData.fullName}
+                          onChange={(e) => setCompanyData({ ...companyData, fullName: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="taxId" className="text-xs font-semibold text-zinc-700">
-                      Número de Identificación Fiscal <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="taxId"
-                      placeholder="901.458.789-3"
-                      value={companyData.taxId}
-                      onChange={(e) => setCompanyData({ ...companyData, taxId: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="docType" className="text-xs font-semibold text-zinc-700">
+                            Tipo Documento
+                          </Label>
+                          <Select
+                            value={companyData.docType}
+                            onValueChange={(val) => setCompanyData({ ...companyData, docType: val || "Cédula de Ciudadanía" })}
+                          >
+                            <SelectTrigger id="docType" className="border-zinc-200 text-xs h-11 rounded-xl">
+                              <SelectValue placeholder="Tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cédula de Ciudadanía">C.C. (Cédula)</SelectItem>
+                              <SelectItem value="Cédula de Extranjería">C.E. (Extranjería)</SelectItem>
+                              <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                              <SelectItem value="PEP">PEP / PPT</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="companyType" className="text-xs font-semibold text-zinc-700">
-                      Tipo de Concesionario / Dealer
-                    </Label>
-                    <Select
-                      value={companyData.companyType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, companyType: val || "" })}
-                    >
-                      <SelectTrigger id="companyType" className="border-zinc-200 text-sm">
-                        <SelectValue placeholder="Selecciona categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Concesionario Oficial & Multimarca Premium">
-                          Concesionario Oficial & Multimarca Premium
-                        </SelectItem>
-                        <SelectItem value="Dealer Autorizado de Marca Oficial">
-                          Dealer Autorizado de Marca Oficial
-                        </SelectItem>
-                        <SelectItem value="Boutique de Seminuevos de Alta Gama">
-                          Boutique de Seminuevos de Alta Gama
-                        </SelectItem>
-                        <SelectItem value="Importador Directo de Vehículos">
-                          Importador Directo de Vehículos
-                        </SelectItem>
-                        <SelectItem value="Flotilla Corporativa / Renting">
-                          Flotilla Corporativa / Renting
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                        <div className="sm:col-span-2 space-y-2">
+                          <Label htmlFor="docId" className="text-xs font-semibold text-zinc-700">
+                            Número de Documento <span className="text-rose-500">*</span>
+                          </Label>
+                          <Input
+                            id="docId"
+                            placeholder="Ej. 1.045.890.123"
+                            value={companyData.docId}
+                            onChange={(e) => setCompanyData({ ...companyData, docId: e.target.value })}
+                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="yearsInBusiness" className="text-xs font-semibold text-zinc-700">
-                      Años en el Mercado Automotriz
-                    </Label>
-                    <Input
-                      id="yearsInBusiness"
-                      type="number"
-                      placeholder="10"
-                      value={companyData.yearsInBusiness}
-                      onChange={(e) => setCompanyData({ ...companyData, yearsInBusiness: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phoneNatural" className="text-xs font-semibold text-zinc-700">
+                          Celular / WhatsApp <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="phoneNatural"
+                          placeholder="+57 300 123 4567"
+                          value={companyData.phone}
+                          onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="branchesCount" className="text-xs font-semibold text-zinc-700">
-                      Número de Sedes / Vitrinas
-                    </Label>
-                    <Input
-                      id="branchesCount"
-                      type="number"
-                      placeholder="2"
-                      value={companyData.branchesCount}
-                      onChange={(e) => setCompanyData({ ...companyData, branchesCount: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emailNatural" className="text-xs font-semibold text-zinc-700">
+                          Correo Electrónico <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="emailNatural"
+                          type="email"
+                          placeholder="propietario@email.com"
+                          value={companyData.email}
+                          onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="website" className="text-xs font-semibold text-zinc-700">
-                      Sitio Web / Enlace Corporativo
-                    </Label>
-                    <Input
-                      id="website"
-                      placeholder="https://..."
-                      value={companyData.website}
-                      onChange={(e) => setCompanyData({ ...companyData, website: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cityNatural" className="text-xs font-semibold text-zinc-700">
+                          Ciudad de Residencia <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="cityNatural"
+                          placeholder="Barranquilla / Soledad"
+                          value={companyData.city}
+                          onChange={(e) => setCompanyData({ ...companyData, city: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
 
-                <Separator className="bg-zinc-100 my-4" />
+                      <div className="space-y-2">
+                        <Label htmlFor="addressNatural" className="text-xs font-semibold text-zinc-700">
+                          Dirección de Residencia
+                        </Label>
+                        <Input
+                          id="addressNatural"
+                          placeholder="Calle / Carrera / Barrio"
+                          value={companyData.address}
+                          onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+                    </div>
 
-                {/* Sede y Contacto */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div className="lg:col-span-2 space-y-2">
-                    <Label htmlFor="address" className="text-xs font-semibold text-zinc-700">
-                      Dirección Sede Principal <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="address"
-                      placeholder="Calle o Avenida, Número, Sector"
-                      value={companyData.address}
-                      onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-xs font-semibold text-zinc-700">
-                      Ciudad <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="city"
-                      placeholder="Medellín / Bogotá / CDMX"
-                      value={companyData.city}
-                      onChange={(e) => setCompanyData({ ...companyData, city: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="country" className="text-xs font-semibold text-zinc-700">
-                      País
-                    </Label>
-                    <Input
-                      id="country"
-                      placeholder="Colombia"
-                      value={companyData.country}
-                      onChange={(e) => setCompanyData({ ...companyData, country: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs font-semibold text-zinc-700">
-                      Teléfono / WhatsApp PBX Comercial <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="phone"
-                      placeholder="+57 (604) 448-9000"
-                      value={companyData.phone}
-                      onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs font-semibold text-zinc-700">
-                      Correo Electrónico Institucional <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="contacto@concesionario.com"
-                      value={companyData.email}
-                      onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card: Representante Legal y Apoderado */}
-            <Card className="border-zinc-200 bg-white shadow-sm">
-              <CardHeader className="border-b border-zinc-100 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-zinc-100 text-zinc-900">
-                    <FileSignature className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold text-zinc-900">
-                      2. Datos del Representante Legal o Apoderado Firmante
-                    </CardTitle>
-                    <CardDescription className="text-xs text-zinc-500">
-                      Persona natural con facultad jurídica para celebrar contratos de intermediación y mandato
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepName" className="text-xs font-semibold text-zinc-700">
-                      Nombre Completo del Representante <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="legalRepName"
-                      placeholder="Ej. Mauricio Restrepo Saldarriaga"
-                      value={companyData.legalRepName}
-                      onChange={(e) => setCompanyData({ ...companyData, legalRepName: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepRole" className="text-xs font-semibold text-zinc-700">
-                      Cargo / Calidad en que Actúa <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="legalRepRole"
-                      placeholder="Ej. Representante Legal Principal / Gerente General"
-                      value={companyData.legalRepRole}
-                      onChange={(e) => setCompanyData({ ...companyData, legalRepRole: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepDocType" className="text-xs font-semibold text-zinc-700">
-                      Tipo de Documento
-                    </Label>
-                    <Select
-                      value={companyData.legalRepDocType}
-                      onValueChange={(val) => setCompanyData({ ...companyData, legalRepDocType: val || "" })}
-                    >
-                      <SelectTrigger id="legalRepDocType" className="border-zinc-200 text-sm">
-                        <SelectValue placeholder="Selecciona tipo de documento" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Cédula de Ciudadanía">Cédula de Ciudadanía (C.C.)</SelectItem>
-                        <SelectItem value="Cédula de Extranjería">Cédula de Extranjería (C.E.)</SelectItem>
-                        <SelectItem value="Pasaporte">Pasaporte Internacional</SelectItem>
-                        <SelectItem value="DNI">DNI (Documento Nacional)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepDocId" className="text-xs font-semibold text-zinc-700">
-                      Número de Documento <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="legalRepDocId"
-                      placeholder="71.298.441"
-                      value={companyData.legalRepDocId}
-                      onChange={(e) => setCompanyData({ ...companyData, legalRepDocId: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepPhone" className="text-xs font-semibold text-zinc-700">
-                      Teléfono Directo del Firmante
-                    </Label>
-                    <Input
-                      id="legalRepPhone"
-                      placeholder="+57 310 889 4521"
-                      value={companyData.legalRepPhone}
-                      onChange={(e) => setCompanyData({ ...companyData, legalRepPhone: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="legalRepEmail" className="text-xs font-semibold text-zinc-700">
-                      Correo Electrónico para Notificaciones Judiciales y Contrato <span className="text-rose-500">*</span>
-                    </Label>
-                    <Input
-                      id="legalRepEmail"
-                      type="email"
-                      placeholder="representante@concesionario.com"
-                      value={companyData.legalRepEmail}
-                      onChange={(e) => setCompanyData({ ...companyData, legalRepEmail: e.target.value })}
-                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-zinc-700">
-                      Cuenta Bancaria para Liquidaciones de Ventas
-                    </Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Input
-                        placeholder="Banco"
-                        value={companyData.bankName}
-                        onChange={(e) => setCompanyData({ ...companyData, bankName: e.target.value })}
-                        className="border-zinc-200 text-xs"
-                      />
-                      <Input
-                        placeholder="Tipo (Cte/Aho)"
-                        value={companyData.bankAccountType}
-                        onChange={(e) => setCompanyData({ ...companyData, bankAccountType: e.target.value })}
-                        className="border-zinc-200 text-xs"
-                      />
-                      <Input
-                        placeholder="# Cuenta"
-                        value={companyData.bankAccountNumber}
-                        onChange={(e) => setCompanyData({ ...companyData, bankAccountNumber: e.target.value })}
-                        className="border-zinc-200 text-xs font-mono"
-                      />
+                    <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/50 space-y-3">
+                      <Label className="text-xs font-bold text-zinc-800">
+                        Cuenta Bancaria para Transferencias de Liquidación (Venta / Canon de Renta)
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Input
+                          placeholder="Banco (Ej. Bancolombia, Davivienda, Nequi)"
+                          value={companyData.bankName}
+                          onChange={(e) => setCompanyData({ ...companyData, bankName: e.target.value })}
+                          className="border-zinc-200 text-xs h-10 rounded-lg bg-white"
+                        />
+                        <Select
+                          value={companyData.bankAccountType}
+                          onValueChange={(val) => setCompanyData({ ...companyData, bankAccountType: val || "Cuenta de Ahorros" })}
+                        >
+                          <SelectTrigger className="border-zinc-200 text-xs h-10 rounded-lg bg-white">
+                            <SelectValue placeholder="Tipo de Cuenta" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cuenta de Ahorros">Cuenta de Ahorros</SelectItem>
+                            <SelectItem value="Cuenta Corriente">Cuenta Corriente</SelectItem>
+                            <SelectItem value="Billetera Digital (Nequi / Daviplata)">Billetera Digital (Nequi / Daviplata)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          placeholder="Número de Cuenta / Celular Nequi"
+                          value={companyData.bankAccountNumber}
+                          onChange={(e) => setCompanyData({ ...companyData, bankAccountNumber: e.target.value })}
+                          className="border-zinc-200 text-xs font-mono h-10 rounded-lg bg-white"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* FORM FOR PERSONA JURÍDICA */}
+                {companyData.personType === "JURIDICA" && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="legalName" className="text-xs font-semibold text-zinc-700">
+                          Razón Social Completa <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="legalName"
+                          placeholder="Ej. Inversiones Automotrices Andinas S.A.S."
+                          value={companyData.legalName}
+                          onChange={(e) => setCompanyData({ ...companyData, legalName: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="tradeName" className="text-xs font-semibold text-zinc-700">
+                          Nombre Comercial / Marca de la Vitrina <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="tradeName"
+                          placeholder="Ej. Andina Motors Prestige"
+                          value={companyData.tradeName}
+                          onChange={(e) => setCompanyData({ ...companyData, tradeName: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="taxId" className="text-xs font-semibold text-zinc-700">
+                          NIT / Identificación Fiscal <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="taxId"
+                          placeholder="901.458.789-3"
+                          value={companyData.taxId}
+                          onChange={(e) => setCompanyData({ ...companyData, taxId: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="legalRepName" className="text-xs font-semibold text-zinc-700">
+                          Representante Legal <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="legalRepName"
+                          placeholder="Ej. Mauricio Restrepo Saldarriaga"
+                          value={companyData.legalRepName}
+                          onChange={(e) => setCompanyData({ ...companyData, legalRepName: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="legalRepDocId" className="text-xs font-semibold text-zinc-700">
+                          Cédula del Representante <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="legalRepDocId"
+                          placeholder="71.298.441"
+                          value={companyData.legalRepDocId}
+                          onChange={(e) => setCompanyData({ ...companyData, legalRepDocId: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phoneJuridica" className="text-xs font-semibold text-zinc-700">
+                          Teléfono / PBX Comercial <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="phoneJuridica"
+                          placeholder="+57 (605) 322-5918"
+                          value={companyData.phone}
+                          onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="emailJuridica" className="text-xs font-semibold text-zinc-700">
+                          Correo Institucional <span className="text-rose-500">*</span>
+                        </Label>
+                        <Input
+                          id="emailJuridica"
+                          type="email"
+                          placeholder="contacto@empresa.com"
+                          value={companyData.email}
+                          onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="addressJuridica" className="text-xs font-semibold text-zinc-700">
+                          Dirección Sede Principal
+                        </Label>
+                        <Input
+                          id="addressJuridica"
+                          placeholder="Calle o Carrera, Sede"
+                          value={companyData.address}
+                          onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
+                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Step 1 Actions */}
             <div className="flex items-center justify-between pt-4">
               <div className="text-xs text-zinc-500 flex items-center gap-1.5">
-                <Info className="h-4 w-4 text-zinc-400" />
-                <span>Sus datos están protegidos bajo protocolos de confidencialidad comercial.</span>
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span>Información encriptada y protegida bajo el marco legal de YJD TRINOVA S.A.S.</span>
               </div>
               <Button
-                type="button"
-                onClick={() => {
-                  if (validateStep1()) {
-                    setCurrentStep(2);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }
-                }}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white font-medium px-6 gap-2 shadow-sm"
-              >
-                <span>Continuar a Carga de Vehículos</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+                          type="button"
+                          onClick={() => {
+                            if (validateStep1()) {
+                              setCurrentStep(2);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }
+                          }}
+                          className="bg-zinc-900 hover:bg-zinc-800 text-white font-medium px-6 gap-2 shadow-sm rounded-xl h-11"
+                        >
+                          <span>Continuar a Carga de Bienes & Inventario</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 2: VEHICLE INVENTORY DETAILS (CARGA DE VEHÍCULOS / LOTE)
+                  {/* ══════════════════════════════════════════════════════════════════
+            STEP 2: ASSET CONSIGNMENT INVENTORY (VEHÍCULOS, MOTOS, INMUEBLES)
         ══════════════════════════════════════════════════════════════════ */}
-        {currentStep === 2 && (
-          <div className="space-y-6 max-w-[1200px] mx-auto">
-            {/* Top Summary Banner of Current Batch */}
-            <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-zinc-900 text-white">
-                  <Car className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-zinc-900">
-                      Inventario Asignado al Contrato de Corretaje
-                    </h2>
-                    <Badge variant="secondary" className="bg-zinc-100 text-zinc-800 font-mono text-xs">
-                      {vehicles.length} {vehicles.length === 1 ? "vehículo" : "vehículos"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    Valoración total estimada: <span className="font-semibold text-zinc-900">${totalValuation.toLocaleString()} USD</span> · Comisión Corretaje Est.: <span className="font-semibold text-emerald-700">${estimatedTotalBrokerage.toLocaleString()} USD</span>
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const elem = document.getElementById("vehicle-form-section");
-                  elem?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="border-zinc-300 hover:bg-zinc-100 text-zinc-700 text-xs h-9 gap-1.5 shrink-0"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Agregar Otra Unidad</span>
-              </Button>
-            </div>
-
-            {/* List of Already Added Vehicles */}
-            {vehicles.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                    Vehículos Registrados en este Lote ({vehicles.length})
-                  </Label>
-                  <span className="text-xs text-zinc-500">Listos para inclusión en contrato marco</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {vehicles.map((veh, index) => (
-                    <Card key={veh.id} className="border-zinc-200 bg-white shadow-sm hover:border-zinc-300 transition-all overflow-hidden">
-                      <div className="flex flex-col sm:flex-row h-full">
-                        {/* Thumbnail / Image Preview */}
-                        <div className="sm:w-44 h-36 sm:h-auto bg-zinc-100 relative shrink-0 overflow-hidden">
-                          {veh.images && veh.images.length > 0 ? (
-                            <img
-                              src={veh.images[0].url}
-                              alt={`${veh.brand} ${veh.model}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
-                              <Car className="h-8 w-8 mb-1" />
-                              <span className="text-[10px]">Sin imagen</span>
-                            </div>
-                          )}
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-zinc-900/90 text-white text-[10px] backdrop-blur font-mono">
-                              #{index + 1} · {veh.year}
-                            </Badge>
+                  {currentStep === 2 && (
+                    <div className="space-y-6 max-w-[1200px] mx-auto">
+                      {/* Top Summary Banner of Current Batch */}
+                      <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-zinc-900 text-white">
+                            {selectedAssetType === "MOTO" ? (
+                              <Car className="h-6 w-6" />
+                            ) : selectedAssetType.includes("INMUEBLE") ? (
+                              <Home className="h-6 w-6" />
+                            ) : (
+                              <Car className="h-6 w-6" />
+                            )}
                           </div>
-                          <div className="absolute bottom-2 right-2">
-                            <Badge variant="secondary" className="bg-white/90 text-zinc-800 text-[10px] backdrop-blur font-medium">
-                              {veh.images.length} fotos
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Details */}
-                        <div className="p-4 flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <h3 className="text-sm font-bold text-zinc-900 leading-tight">
-                                  {veh.brand} {veh.model}
-                                </h3>
-                                <p className="text-xs text-zinc-500">{veh.trim || veh.bodyType}</p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveVehicle(veh.id)}
-                                className="h-7 w-7 p-0 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 text-[11px] text-zinc-600">
-                              <div className="flex items-center gap-1">
-                                <Gauge className="h-3 w-3 text-zinc-400" />
-                                <span>{veh.mileage.toLocaleString()} km</span>
-                              </div>
-                              <div className="flex items-center gap-1 font-mono">
-                                <Hash className="h-3 w-3 text-zinc-400" />
-                                <span>{veh.licensePlate || "Sin placa"}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Fuel className="h-3 w-3 text-zinc-400" />
-                                <span className="truncate">{veh.fuelType.split(" ")[0]}</span>
-                              </div>
-                              <div className="flex items-center gap-1 font-mono text-[10px] text-zinc-500">
-                                <span>VIN: ...{veh.vin ? veh.vin.slice(-6) : "N/A"}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-3 mt-2 border-t border-zinc-100 flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] text-zinc-500">Precio Sugerido</p>
-                              <p className="text-sm font-extrabold text-zinc-900">
-                                ${veh.suggestedPrice.toLocaleString()} USD
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[10px] text-zinc-500">Comisión Corretaje</p>
-                              <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-800 bg-emerald-50 font-semibold">
-                                {veh.brokerageFeeType === "percentage"
-                                  ? `${veh.brokerageFeeValue}% ($${((veh.suggestedPrice * veh.brokerageFeeValue) / 100).toLocaleString()})`
-                                  : `$${veh.brokerageFeeValue.toLocaleString()}`}
+                            <div className="flex items-center gap-2">
+                              <h2 className="text-base font-bold text-zinc-900">
+                                Inventario Asignado al Contrato de Corretaje (Trinova)
+                              </h2>
+                              <Badge variant="secondary" className="bg-zinc-100 text-zinc-800 font-mono text-xs">
+                                {vehicles.length} {vehicles.length === 1 ? "ítem registrado" : "ítems registrados"}
                               </Badge>
                             </div>
+                            <p className="text-xs text-zinc-500 mt-0.5">
+                              Valoración total: <span className="font-semibold text-zinc-900">${totalValuation.toLocaleString("es-CO")} COP</span> · Comisión Est.: <span className="font-semibold text-emerald-700">${estimatedTotalBrokerage.toLocaleString("es-CO")} COP</span>
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Vehicle Creation Form Section */}
-            <div id="vehicle-form-section">
-              <Card className="border-zinc-200 bg-white shadow-sm">
-                <CardHeader className="border-b border-zinc-100 pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-zinc-100 text-zinc-900">
-                        <Plus className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg font-bold text-zinc-900">
-                          Formulario de Carga de Vehículo Individual
-                        </CardTitle>
-                        <CardDescription className="text-xs text-zinc-500">
-                          Complete la ficha técnica, condiciones comerciales y adjunte las fotografías
-                        </CardDescription>
-                      </div>
-                    </div>
-
-                    {/* Mode Tabs */}
-                    <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg border border-zinc-200">
-                      <button
-                        type="button"
-                        onClick={() => setActiveVehicleTab("individual")}
-                        className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${
-                          activeVehicleTab === "individual"
-                            ? "bg-white text-zinc-900 shadow-sm"
-                            : "text-zinc-600 hover:text-zinc-900"
-                        }`}
-                      >
-                        Ingreso Manual
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveVehicleTab("bulk")}
-                        className={`text-xs px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
-                          activeVehicleTab === "bulk"
-                            ? "bg-white text-zinc-900 shadow-sm"
-                            : "text-zinc-600 hover:text-zinc-900"
-                        }`}
-                      >
-                        <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>Carga Excel / CSV</span>
-                      </button>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-6 space-y-6">
-                  {activeVehicleTab === "bulk" ? (
-                    /* Bulk upload tab */
-                    <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 text-center bg-zinc-50/50 space-y-4">
-                      <div className="mx-auto h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                        <FileSpreadsheet className="h-6 w-6" />
-                      </div>
-                      <div className="max-w-md mx-auto">
-                        <h4 className="text-sm font-bold text-zinc-900">Carga Masiva de Flotilla o Inventario Dealer</h4>
-                        <p className="text-xs text-zinc-500 mt-1">
-                          Arrastre su archivo Excel (.xlsx) o CSV con las columnas estándar de marca, modelo, VIN, kilometraje y precio.
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs gap-1.5 border-zinc-300"
-                          onClick={() => toast.info("Descargando plantilla de inventario Excel...")}
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          <span>Descargar Plantilla .XLSX</span>
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-zinc-900 hover:bg-zinc-800 text-white text-xs gap-1.5"
                           onClick={() => {
-                            toast.success("Archivo demo procesado: 3 vehículos cargados al inventario");
-                            handleAddVehicleToList();
-                            setActiveVehicleTab("individual");
+                            const elem = document.getElementById("vehicle-form-section");
+                            elem?.scrollIntoView({ behavior: "smooth" });
                           }}
-                        >
-                          <Upload className="h-3.5 w-3.5" />
-                          <span>Subir y Procesar Archivo</span>
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Individual Form */
-                    <>
-                      {/* Brand, Model, Year, Trim */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="vBrand" className="text-xs font-semibold text-zinc-700">
-                            Marca <span className="text-rose-500">*</span>
-                          </Label>
-                          <Select
-                            value={currentVehicle.brand}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, brand: val || "" })}
-                          >
-                            <SelectTrigger id="vBrand" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Selecciona marca" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-60">
-                              {POPULAR_BRANDS.map((b) => (
-                                <SelectItem key={b} value={b}>
-                                  {b}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vModel" className="text-xs font-semibold text-zinc-700">
-                            Modelo <span className="text-rose-500">*</span>
-                          </Label>
-                          <Input
-                            id="vModel"
-                            placeholder="Ej. M3 Competition / Cayenne"
-                            value={currentVehicle.model}
-                            onChange={(e) => setCurrentVehicle({ ...currentVehicle, model: e.target.value })}
-                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vYear" className="text-xs font-semibold text-zinc-700">
-                            Año Modelo <span className="text-rose-500">*</span>
-                          </Label>
-                          <Select
-                            value={currentVehicle.year.toString()}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, year: parseInt(val || "2024") || 2024 })}
-                          >
-                            <SelectTrigger id="vYear" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Año" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-60">
-                              {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015].map((y) => (
-                                <SelectItem key={y} value={y.toString()}>
-                                  {y}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vTrim" className="text-xs font-semibold text-zinc-700">
-                            Versión / Línea / Trim
-                          </Label>
-                          <Input
-                            id="vTrim"
-                            placeholder="Ej. GTS / M Sport / AMG Line"
-                            value={currentVehicle.trim}
-                            onChange={(e) => setCurrentVehicle({ ...currentVehicle, trim: e.target.value })}
-                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Technical Specs: Body, Mileage, Transmission, Fuel */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="vBodyType" className="text-xs font-semibold text-zinc-700">
-                            Carrocería
-                          </Label>
-                          <Select
-                            value={currentVehicle.bodyType}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, bodyType: val || "" })}
-                          >
-                            <SelectTrigger id="vBodyType" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="SUV / Crossover">SUV / Crossover</SelectItem>
-                              <SelectItem value="Sedán Deportivo">Sedán Deportivo</SelectItem>
-                              <SelectItem value="Coupé">Coupé</SelectItem>
-                              <SelectItem value="Cabriolet / Convertible">Cabriolet / Convertible</SelectItem>
-                              <SelectItem value="Hatchback">Hatchback</SelectItem>
-                              <SelectItem value="Pick-up 4x4">Pick-up 4x4</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vMileage" className="text-xs font-semibold text-zinc-700">
-                            Kilometraje (km) <span className="text-rose-500">*</span>
-                          </Label>
-                          <Input
-                            id="vMileage"
-                            type="number"
-                            placeholder="12500"
-                            value={currentVehicle.mileage}
-                            onChange={(e) => setCurrentVehicle({ ...currentVehicle, mileage: parseInt(e.target.value) || 0 })}
-                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vTransmission" className="text-xs font-semibold text-zinc-700">
-                            Transmisión
-                          </Label>
-                          <Select
-                            value={currentVehicle.transmission}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, transmission: val || "" })}
-                          >
-                            <SelectTrigger id="vTransmission" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Transmisión" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Automática Secuencial">Automática Secuencial</SelectItem>
-                              <SelectItem value="Automática PDK 7 Vel.">Doble Embrague (PDK / DSG / DCT)</SelectItem>
-                              <SelectItem value="M Steptronic 8 Vel. Drivelogic">Automática 8 Vel. Deportiva</SelectItem>
-                              <SelectItem value="Manual 6 Velocidades">Manual 6 Velocidades</SelectItem>
-                              <SelectItem value="Direct Drive EV">Transmisión Directa Eléctrica</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vFuelType" className="text-xs font-semibold text-zinc-700">
-                            Motorización & Combustible
-                          </Label>
-                          <Select
-                            value={currentVehicle.fuelType}
-                            onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, fuelType: val || "" })}
-                          >
-                            <SelectTrigger id="vFuelType" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Combustible" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Gasolina Extra (V6 2.9L Biturbo)">Gasolina Turbo</SelectItem>
-                              <SelectItem value="Mild Hybrid Gasolina (3.0L Turbo)">Híbrido Ligero (MHEV)</SelectItem>
-                              <SelectItem value="Híbrido Enchufable (PHEV)">Híbrido Enchufable (PHEV)</SelectItem>
-                              <SelectItem value="100% Eléctrico (BEV)">100% Eléctrico (BEV)</SelectItem>
-                              <SelectItem value="Diésel Turbo">Diésel Turbo</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* VIN, License Plate, Condition, Colors */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="vVin" className="text-xs font-semibold text-zinc-700">
-                            Número de Chasis / VIN (17 Dígitos) <span className="text-rose-500">*</span>
-                          </Label>
-                          <Input
-                            id="vVin"
-                            placeholder="WP1ZZZ95ZPLB84920"
-                            value={currentVehicle.vin}
-                            onChange={(e) => setCurrentVehicle({ ...currentVehicle, vin: e.target.value.toUpperCase() })}
-                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono uppercase"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vPlate" className="text-xs font-semibold text-zinc-700">
-                            Placa / Matrícula
-                          </Label>
-                          <Input
-                            id="vPlate"
-                            placeholder="KLU-890"
-                            value={currentVehicle.licensePlate}
-                            onChange={(e) => setCurrentVehicle({ ...currentVehicle, licensePlate: e.target.value.toUpperCase() })}
-                            className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono uppercase"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vCondition" className="text-xs font-semibold text-zinc-700">
-                            Estado del Vehículo
-                          </Label>
-                          <Select
-                            value={currentVehicle.condition}
-                            onValueChange={(val: any) => setCurrentVehicle({ ...currentVehicle, condition: val })}
-                          >
-                            <SelectTrigger id="vCondition" className="border-zinc-200 text-sm">
-                              <SelectValue placeholder="Estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Nuevo (0km)">Nuevo (0km)</SelectItem>
-                              <SelectItem value="Seminuevo Certificado">Seminuevo Certificado</SelectItem>
-                              <SelectItem value="Usado Seleccionado">Usado Seleccionado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="vExtColor" className="text-xs font-semibold text-zinc-700">
-                            Color Exterior & Interior
-                          </Label>
-                          <div className="grid grid-cols-2 gap-1.5">
-                            <Input
-                              placeholder="Ext. (Gris Tiza)"
-                              value={currentVehicle.exteriorColor}
-                              onChange={(e) => setCurrentVehicle({ ...currentVehicle, exteriorColor: e.target.value })}
-                              className="border-zinc-200 text-xs"
-                            />
-                            <Input
-                              placeholder="Int. (Cuero Negro)"
-                              value={currentVehicle.interiorColor}
-                              onChange={(e) => setCurrentVehicle({ ...currentVehicle, interiorColor: e.target.value })}
-                              className="border-zinc-200 text-xs"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Pricing & Commercial Brokerage Terms */}
-                      <div className="bg-zinc-50 border border-zinc-200/80 rounded-xl p-5 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-emerald-700" />
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900">
-                              Condiciones Comerciales de Corretaje para este Vehículo
-                            </h4>
-                          </div>
-                          <Badge variant="outline" className="bg-white border-zinc-200 text-[11px] text-zinc-600">
-                            Cálculo en Tiempo Real
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="vPrice" className="text-xs font-semibold text-zinc-700">
-                              Precio de Venta al Público (PVP en USD) <span className="text-rose-500">*</span>
-                            </Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-2.5 text-zinc-400 text-sm font-semibold">$</span>
-                              <Input
-                                id="vPrice"
-                                type="number"
-                                placeholder="95000"
-                                value={currentVehicle.suggestedPrice}
-                                onChange={(e) => setCurrentVehicle({ ...currentVehicle, suggestedPrice: parseFloat(e.target.value) || 0 })}
-                                className="pl-7 border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono font-bold"
-                              />
-                            </div>
-                            <p className="text-[11px] text-zinc-500">Precio publicado en vitrina digital</p>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label htmlFor="vFee" className="text-xs font-semibold text-zinc-700">
-                              Comisión de Corretaje Acordada
-                            </Label>
-                            <div className="flex gap-2">
-                              <Select
-                                value={currentVehicle.brokerageFeeType}
-                                onValueChange={(val: any) => setCurrentVehicle({ ...currentVehicle, brokerageFeeType: val })}
-                              >
-                                <SelectTrigger className="w-24 border-zinc-200 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="percentage">% Porc.</SelectItem>
-                                  <SelectItem value="fixed">Fijo ($)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Input
-                                id="vFee"
-                                type="number"
-                                step="0.1"
-                                placeholder="3.5"
-                                value={currentVehicle.brokerageFeeValue}
-                                onChange={(e) => setCurrentVehicle({ ...currentVehicle, brokerageFeeValue: parseFloat(e.target.value) || 0 })}
-                                className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono"
-                              />
-                            </div>
-                            <p className="text-[11px] text-zinc-500">
-                              Honorario del corredor por cierre de venta
-                            </p>
-                          </div>
-
-                          {/* Calculated Net Payout */}
-                          <div className="space-y-1.5 bg-white p-3 rounded-lg border border-zinc-200">
-                            <p className="text-xs font-semibold text-zinc-700">Liquidación Neta para el Proveedor</p>
-                            <p className="text-lg font-extrabold text-emerald-800">
-                              ${(
-                                currentVehicle.suggestedPrice -
-                                (currentVehicle.brokerageFeeType === "percentage"
-                                  ? (currentVehicle.suggestedPrice * currentVehicle.brokerageFeeValue) / 100
-                                  : currentVehicle.brokerageFeeValue)
-                              ).toLocaleString()}{" "}
-                              <span className="text-xs font-normal text-zinc-500">USD</span>
-                            </p>
-                            <p className="text-[10px] text-zinc-400">Desembolso tras cierre de venta e inspección</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Highlighted Features / Extras */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-semibold text-zinc-700">
-                            Equipamiento Destacado y Extras (Haga clic para activar)
-                          </Label>
-                          <span className="text-xs text-zinc-500 font-mono">
-                            {currentVehicle.features.length} seleccionados
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {AVAILABLE_FEATURES.map((feat) => {
-                            const isSelected = currentVehicle.features.includes(feat);
-                            return (
-                              <button
-                                key={feat}
-                                type="button"
-                                onClick={() => toggleFeatureInCurrentVehicle(feat)}
-                                className={`text-xs px-3 py-1.5 rounded-lg border transition-all text-left flex items-center gap-1.5 ${
-                                  isSelected
-                                    ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
-                                    : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100 hover:border-zinc-300"
-                                }`}
-                              >
-                                {isSelected && <Check className="h-3 w-3 text-white" />}
-                                <span>{feat}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Custom Feature Add */}
-                        <div className="flex gap-2 max-w-md pt-1">
-                          <Input
-                            placeholder="Agregar otro equipamiento personalizado..."
-                            value={customFeatureInput}
-                            onChange={(e) => setCustomFeatureInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleAddCustomFeature();
-                              }
-                            }}
-                            className="text-xs border-zinc-200 h-8"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddCustomFeature}
-                            className="text-xs border-zinc-300 h-8"
-                          >
-                            Añadir
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Photo Upload Section */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-semibold text-zinc-700">
-                            Galería Fotográfica del Vehículo ({currentVehicle.images.length} fotos)
-                          </Label>
-                          <span className="text-xs text-zinc-500">Mínimo 2 fotos recomendadas (Frontal, Interior)</span>
-                        </div>
-
-                        {/* Image dropzone simulation */}
-                        <div className="border border-dashed border-zinc-300 rounded-xl p-5 bg-zinc-50/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <div className="flex items-center gap-3 text-left">
-                            <div className="p-3 rounded-xl bg-white border border-zinc-200 text-zinc-700 shadow-sm">
-                              <Upload className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-zinc-800">
-                                Carga de Fotografías en Alta Resolución (JPG, PNG, WebP)
-                              </p>
-                              <p className="text-[11px] text-zinc-500">
-                                Las fotos serán procesadas con sello de agua y optimizadas para el marketplace
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <Select
-                              value={selectedImageTag}
-                              onValueChange={(val) => setSelectedImageTag(val || "Frontal Principal")}
-                            >
-                              <SelectTrigger className="w-36 border-zinc-200 text-xs h-8 bg-white">
-                                <SelectValue placeholder="Etiqueta" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Frontal Principal">Frontal</SelectItem>
-                                <SelectItem value="Cabina / Interior">Interior</SelectItem>
-                                <SelectItem value="Vista Trasera">Trasera</SelectItem>
-                                <SelectItem value="Motor y Chasis">Motor</SelectItem>
-                                <SelectItem value="Rines y Llantas">Rines</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={handleSimulateAddImage}
-                              className="bg-zinc-900 hover:bg-zinc-800 text-white text-xs h-8 gap-1.5 whitespace-nowrap"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              <span>Agregar Foto Demo</span>
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Display uploaded images */}
-                        {currentVehicle.images.length > 0 && (
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                            {currentVehicle.images.map((img, idx) => (
-                              <div
-                                key={img.id}
-                                className="relative rounded-lg overflow-hidden border border-zinc-200 group bg-zinc-100 aspect-[4/3]"
-                              >
-                                <img
-                                  src={img.url}
-                                  alt={img.name}
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() => {
-                                      setCurrentVehicle((prev) => ({
-                                        ...prev,
-                                        images: prev.images.filter((i) => i.id !== img.id),
-                                      }));
-                                    }}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                                <div className="absolute bottom-1 left-1">
-                                  <Badge className="text-[9px] bg-zinc-900/80 text-white backdrop-blur">
-                                    {img.tag}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Observations / Description */}
-                      <div className="space-y-2">
-                        <Label htmlFor="vDesc" className="text-xs font-semibold text-zinc-700">
-                          Descripción Comercial & Observaciones del Peritaje
-                        </Label>
-                        <Textarea
-                          id="vDesc"
-                          rows={3}
-                          placeholder="Mencione el estado estético, garantías vigentes, mantenimientos recientes o accesorios incluidos..."
-                          value={currentVehicle.description}
-                          onChange={(e) => setCurrentVehicle({ ...currentVehicle, description: e.target.value })}
-                          className="border-zinc-200 focus-visible:ring-zinc-900 text-sm"
-                        />
-                      </div>
-
-                      {/* Add current vehicle button */}
-                      <div className="pt-2 flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleAddVehicleToList}
-                          className="border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white text-xs font-bold gap-2"
+                          className="border-zinc-300 hover:bg-zinc-100 text-zinc-700 text-xs h-9 gap-1.5 shrink-0 rounded-xl"
                         >
                           <Plus className="h-4 w-4" />
-                          <span>Guardar y Agregar Esta Unidad al Lote</span>
+                          <span>Agregar Otro Bien</span>
                         </Button>
                       </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+
+                      {/* List of Already Added Items */}
+                      {vehicles.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                              Bienes Registrados en este Contrato ({vehicles.length})
+                            </Label>
+                            <span className="text-xs text-zinc-500">Listos para inclusión en el contrato de mandato</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {vehicles.map((veh, index) => (
+                              <Card key={veh.id} className="border-zinc-200 bg-white shadow-sm hover:border-zinc-300 transition-all overflow-hidden">
+                                <div className="flex flex-col sm:flex-row h-full">
+                                  {/* Thumbnail */}
+                                  <div className="sm:w-44 h-36 sm:h-auto bg-zinc-100 relative shrink-0 overflow-hidden">
+                                    {veh.images && veh.images.length > 0 ? (
+                                      <img
+                                        src={veh.images[0].url}
+                                        alt={`${veh.brand} ${veh.model}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
+                                        <Car className="h-8 w-8 mb-1" />
+                                        <span className="text-[10px]">Sin imagen</span>
+                                      </div>
+                                    )}
+                                    <div className="absolute top-2 left-2">
+                                      <Badge className="bg-zinc-900/90 text-white text-[10px] backdrop-blur font-mono">
+                                        #{index + 1} · {veh.itemType === "MOTO" ? "Moto" : veh.itemType === "INMUEBLE_VENTA" ? "Venta" : veh.itemType === "INMUEBLE_RENTA" ? "Renta" : "Vehículo"}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  {/* Details */}
+                                  <div className="p-4 flex-1 flex flex-col justify-between">
+                                    <div>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                          <h3 className="text-sm font-bold text-zinc-900 leading-tight">
+                                            {veh.brand} {veh.model}
+                                          </h3>
+                                          <p className="text-xs text-zinc-500">{veh.trim || veh.bodyType || veh.propertyType || "Consignación"}</p>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleRemoveVehicle(veh.id)}
+                                          className="h-7 w-7 p-0 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 text-[11px] text-zinc-600">
+                                        <div className="flex items-center gap-1 font-mono">
+                                          <span>{veh.year || new Date().getFullYear()}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 font-mono">
+                                          <span>{veh.licensePlate || veh.neighborhood || "Barranquilla"}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="pt-3 mt-2 border-t border-zinc-100 flex items-center justify-between">
+                                      <div>
+                                        <p className="text-[10px] text-zinc-500">Valor / Canon</p>
+                                        <p className="text-sm font-extrabold text-zinc-900">
+                                          ${Number(veh.suggestedPrice).toLocaleString("es-CO")} COP
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-[10px] text-zinc-500">Comisión</p>
+                                        <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-800 bg-emerald-50 font-semibold">
+                                          {veh.brokerageFeeValue}%
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Asset Creation Form Section */}
+                      <div id="vehicle-form-section">
+                        <Card className="border-zinc-200 bg-white shadow-sm overflow-hidden">
+                          <CardHeader className="border-b border-zinc-100 pb-4 bg-zinc-50/50">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-zinc-900 text-white">
+                                  <Plus className="h-5 w-5" />
+                                </div>
+                                <div>
+                                  <CardTitle className="text-base sm:text-lg font-bold text-zinc-900">
+                                    2. Carga y Registro de Bien a Consignar
+                                  </CardTitle>
+                                  <CardDescription className="text-xs text-zinc-500">
+                                    Selecciona la categoría (Moto, Carro, Inmueble Venta o Renta) y completa la ficha técnica
+                                  </CardDescription>
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+
+                          <CardContent className="pt-6 space-y-6">
+                            {/* Category Selector */}
+                            <div className="space-y-2">
+                              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-700">
+                                ¿Qué tipo de bien o servicio deseas consignar con Trinova?
+                              </Label>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedAssetType("VEHICULO");
+                                    setCurrentVehicle((prev) => ({ ...prev, itemType: "VEHICULO", bodyType: "SUV / Camioneta", brand: "" }));
+                                  }}
+                                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all ${
+                                    selectedAssetType === "VEHICULO"
+                                      ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
+                                      : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  <Car className="h-5 w-5 mb-1" />
+                                  <span className="text-xs font-bold">Carro / Camioneta</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedAssetType("MOTO");
+                                    setCurrentVehicle((prev) => ({ ...prev, itemType: "MOTO", bodyType: "Moto / Motocicleta", brand: "" }));
+                                  }}
+                                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all ${
+                                    selectedAssetType === "MOTO"
+                                      ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
+                                      : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  <Car className="h-5 w-5 mb-1" />
+                                  <span className="text-xs font-bold">Moto / Motocicleta</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedAssetType("INMUEBLE_VENTA");
+                                    setCurrentVehicle((prev) => ({ ...prev, itemType: "INMUEBLE_VENTA", propertyType: "Apartamento", brand: "" }));
+                                  }}
+                                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all ${
+                                    selectedAssetType === "INMUEBLE_VENTA"
+                                      ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
+                                      : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  <Home className="h-5 w-5 mb-1" />
+                                  <span className="text-xs font-bold">Inmueble (Venta)</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedAssetType("INMUEBLE_RENTA");
+                                    setCurrentVehicle((prev) => ({ ...prev, itemType: "INMUEBLE_RENTA", propertyType: "Apartamento", brand: "" }));
+                                  }}
+                                  className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-center transition-all ${
+                                    selectedAssetType === "INMUEBLE_RENTA"
+                                      ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
+                                      : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  <Key className="h-5 w-5 mb-1" />
+                                  <span className="text-xs font-bold">Inmueble (Renta)</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* FORM FIELDS FOR VEHICLES & MOTOS */}
+                            {(selectedAssetType === "VEHICULO" || selectedAssetType === "MOTO") && (
+                              <div className="space-y-4 pt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vBrand" className="text-xs font-semibold text-zinc-700">
+                                      Marca <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Select
+                                      value={currentVehicle.brand}
+                                      onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, brand: val || "" })}
+                                    >
+                                      <SelectTrigger id="vBrand" className="border-zinc-200 text-sm h-11 rounded-xl">
+                                        <SelectValue placeholder="Selecciona marca" />
+                                      </SelectTrigger>
+                                      <SelectContent className="max-h-60">
+                                        {(selectedAssetType === "MOTO" ? MOTO_BRANDS : CAR_BRANDS).map((b) => (
+                                          <SelectItem key={b} value={b}>
+                                            {b}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vModel" className="text-xs font-semibold text-zinc-700">
+                                      Línea / Modelo <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="vModel"
+                                      placeholder={selectedAssetType === "MOTO" ? "Ej. MT-09" : "Ej. Fortuner"}
+                                      value={currentVehicle.model}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, model: e.target.value })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vYear" className="text-xs font-semibold text-zinc-700">
+                                      Año Modelo <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Select
+                                      value={currentVehicle.year.toString()}
+                                      onValueChange={(val) => setCurrentVehicle({ ...currentVehicle, year: parseInt(val || "2024") || 2024 })}
+                                    >
+                                      <SelectTrigger id="vYear" className="border-zinc-200 text-sm h-11 rounded-xl">
+                                        <SelectValue placeholder="Año" />
+                                      </SelectTrigger>
+                                      <SelectContent className="max-h-60">
+                                        {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((y) => (
+                                          <SelectItem key={y} value={y.toString()}>
+                                            {y}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vMileage" className="text-xs font-semibold text-zinc-700">
+                                      Kilometraje (km) <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="vMileage"
+                                      type="number"
+                                      placeholder="12000"
+                                      value={currentVehicle.mileage}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, mileage: parseInt(e.target.value) || 0 })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono h-11 rounded-xl"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vPlate" className="text-xs font-semibold text-zinc-700">
+                                      Placa (Ej. KLU-890)
+                                    </Label>
+                                    <Input
+                                      id="vPlate"
+                                      placeholder="Placa del vehículo"
+                                      value={currentVehicle.licensePlate}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, licensePlate: e.target.value.toUpperCase() })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono uppercase h-11 rounded-xl"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="vPrice" className="text-xs font-semibold text-zinc-700">
+                                      Precio de Venta Sugerido (COP) <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="vPrice"
+                                      type="number"
+                                      placeholder="Ej. 120000000"
+                                      value={currentVehicle.suggestedPrice || ""}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, suggestedPrice: parseFloat(e.target.value) || 0 })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono font-bold h-11 rounded-xl"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* FORM FIELDS FOR REAL ESTATE (VENTA / RENTA) */}
+                            {(selectedAssetType === "INMUEBLE_VENTA" || selectedAssetType === "INMUEBLE_RENTA") && (
+                              <div className="space-y-4 pt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="propType" className="text-xs font-semibold text-zinc-700">
+                                      Tipo de Inmueble <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Select
+                                      value={currentVehicle.propertyType}
+                                      onValueChange={(val: any) => setCurrentVehicle({ ...currentVehicle, propertyType: val || "Apartamento" })}
+                                    >
+                                      <SelectTrigger id="propType" className="border-zinc-200 text-sm h-11 rounded-xl">
+                                        <SelectValue placeholder="Tipo de Inmueble" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {["Apartamento", "Casa", "Lote", "Local Comercial", "Oficina"].map((pt) => (
+                                          <SelectItem key={pt} value={pt}>
+                                            {pt}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div className="sm:col-span-2 space-y-2">
+                                    <Label htmlFor="propTitle" className="text-xs font-semibold text-zinc-700">
+                                      Título Comercial del Inmueble <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="propTitle"
+                                      placeholder="Ej. Hermoso Apartamento con Vista al Río"
+                                      value={currentVehicle.brand}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, brand: e.target.value })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="propNeighborhood" className="text-xs font-semibold text-zinc-700">
+                                      Barrio / Sector <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="propNeighborhood"
+                                      placeholder="Ej. Alto Prado"
+                                      value={currentVehicle.neighborhood}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, neighborhood: e.target.value })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm h-11 rounded-xl"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="propArea" className="text-xs font-semibold text-zinc-700">
+                                      Área Construida (m²)
+                                    </Label>
+                                    <Input
+                                      id="propArea"
+                                      type="number"
+                                      placeholder="85"
+                                      value={currentVehicle.areaM2}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, areaM2: parseFloat(e.target.value) || 0 })}
+                                      className="border-zinc-200 text-sm h-11 rounded-xl"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="propBedrooms" className="text-xs font-semibold text-zinc-700">
+                                      Habitaciones
+                                    </Label>
+                                    <Input
+                                      id="propBedrooms"
+                                      type="number"
+                                      placeholder="3"
+                                      value={currentVehicle.bedrooms}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, bedrooms: parseInt(e.target.value) || 0 })}
+                                      className="border-zinc-200 text-sm h-11 rounded-xl"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="propPrice" className="text-xs font-semibold text-zinc-700">
+                                      {selectedAssetType === "INMUEBLE_RENTA" ? "Canon Mensual (COP)" : "Precio Venta (COP)"} <span className="text-rose-500">*</span>
+                                    </Label>
+                                    <Input
+                                      id="propPrice"
+                                      type="number"
+                                      placeholder={selectedAssetType === "INMUEBLE_RENTA" ? "Ej. 2800000" : "Ej. 450000000"}
+                                      value={currentVehicle.suggestedPrice || ""}
+                                      onChange={(e) => setCurrentVehicle({ ...currentVehicle, suggestedPrice: parseFloat(e.target.value) || 0 })}
+                                      className="border-zinc-200 focus-visible:ring-zinc-900 text-sm font-mono font-bold h-11 rounded-xl"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Photo & Description Section */}
+                            <div className="space-y-4 pt-2">
+                              <div className="border border-dashed border-zinc-300 rounded-xl p-5 bg-zinc-50/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 text-left">
+                                  <div className="p-3 rounded-xl bg-white border border-zinc-200 text-zinc-700 shadow-sm">
+                                    <Upload className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-bold text-zinc-800">
+                                      Galería de Fotos ({currentVehicle.images.length} cargadas)
+                                    </p>
+                                    <p className="text-[11px] text-zinc-500">
+                                      Cargue imágenes claras para la publicación en el marketplace de Trinova
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                  <Select
+                                    value={selectedImageTag}
+                                    onValueChange={(val) => setSelectedImageTag(val || "Principal")}
+                                  >
+                                    <SelectTrigger className="w-36 border-zinc-200 text-xs h-9 bg-white rounded-lg">
+                                      <SelectValue placeholder="Etiqueta" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Frontal Principal">Foto Principal</SelectItem>
+                                      <SelectItem value="Cabina / Interior">Interior</SelectItem>
+                                      <SelectItem value="Vista Trasera">Trasera / Baños</SelectItem>
+                                      <SelectItem value="Motor y Chasis">Motor / Cocina</SelectItem>
+                                      <SelectItem value="Rines y Llantas">Detalles</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleSimulateAddImage}
+                                    className="bg-zinc-900 hover:bg-zinc-800 text-white text-xs h-9 rounded-lg gap-1.5 whitespace-nowrap"
+                                  >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    <span>Agregar Foto</span>
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Observations / Description */}
+                              <div className="space-y-2">
+                                <Label htmlFor="vDesc" className="text-xs font-semibold text-zinc-700">
+                                  Descripción Comercial & Observaciones
+                                </Label>
+                                <Textarea
+                                  id="vDesc"
+                                  rows={3}
+                                  placeholder="Mencione el estado, características especiales, garantías, documentos al día, etc..."
+                                  value={currentVehicle.description}
+                                  onChange={(e) => setCurrentVehicle({ ...currentVehicle, description: e.target.value })}
+                                  className="border-zinc-200 focus-visible:ring-zinc-900 text-sm rounded-xl"
+                                />
+                              </div>
+
+                              {/* Add current vehicle button */}
+                              <div className="pt-2">
+                                <Button
+                                  type="button"
+                                  onClick={handleAddVehicleToList}
+                                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold h-11 rounded-xl gap-2 shadow-sm"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  <span>Guardar y Agregar Este Bien al Lote de Corretaje</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
 
             {/* Step 2 Actions */}
             <div className="flex items-center justify-between pt-4">
