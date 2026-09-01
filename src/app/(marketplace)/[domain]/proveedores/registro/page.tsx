@@ -249,98 +249,61 @@ export default function ProviderRegistrationPage({
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showPrintView, setShowPrintView] = useState<boolean>(false);
 
-  // STEP 1: Company Data
+  // STEP 1: Company Data (Inicia limpio para datos reales)
   const [companyData, setCompanyData] = useState<CompanyData>({
-    legalName: "Inversiones Automotrices Andinas S.A.S.",
-    tradeName: "Andina Motors Prestige",
+    legalName: "",
+    tradeName: "",
     taxIdType: "NIT",
-    taxId: "901.458.789-3",
-    companyType: "Concesionario Oficial & Multimarca Premium",
-    yearsInBusiness: "12",
-    branchesCount: "3",
-    website: "https://andinamotors.com",
-    address: "Avenida Las Palmas # 28 - 140, Sede Corporativa",
-    city: "Medellín",
+    taxId: "",
+    companyType: "Concesionario / Proveedor / Propietario Directo",
+    yearsInBusiness: "1",
+    branchesCount: "1",
+    website: "",
+    address: "",
+    city: "Barranquilla",
     country: "Colombia",
-    phone: "+57 (604) 448-9000",
-    email: "concesionario@andinamotors.com",
-    legalRepName: "Mauricio Restrepo Saldarriaga",
+    phone: "",
+    email: "",
+    legalRepName: "",
     legalRepDocType: "Cédula de Ciudadanía",
-    legalRepDocId: "71.298.441",
-    legalRepRole: "Representante Legal Principal",
-    legalRepEmail: "m.restrepo@andinamotors.com",
-    legalRepPhone: "+57 310 889 4521",
+    legalRepDocId: "",
+    legalRepRole: "Propietario / Representante Legal",
+    legalRepEmail: "",
+    legalRepPhone: "",
     bankName: "Bancolombia",
-    bankAccountType: "Cuenta Corriente",
-    bankAccountNumber: "032-984511-90",
+    bankAccountType: "Cuenta de Ahorros",
+    bankAccountNumber: "",
   });
 
-  // STEP 2: Vehicle Inventory List
-  const [vehicles, setVehicles] = useState<VehicleItem[]>([
-    {
-      id: "veh-demo-1",
-      brand: "Porsche",
-      model: "Macan GTS",
-      year: 2024,
-      trim: "Sport Chrono Package",
-      bodyType: "SUV Premium",
-      mileage: 8500,
-      transmission: "Automática PDK 7 Vel.",
-      fuelType: "Gasolina Extra (V6 2.9L Biturbo)",
-      exteriorColor: "Crayon Grey (Gris Tiza)",
-      interiorColor: "Cuero Negro con Costuras Carmine Red",
-      vin: "WP1ZZZ95ZPLB84920",
-      licensePlate: "KLU-890",
-      condition: "Seminuevo Certificado",
-      engine: "2.9L V6 Twin-Turbo (440 HP / 550 Nm)",
-      suggestedPrice: 118000,
-      brokerageFeeType: "percentage",
-      brokerageFeeValue: 3.5,
-      availability: "Disponible en Sala Principal",
-      description:
-        "Vehículo en impecable estado estético y mecánico. Garantía Porsche Approved activa hasta 2026. Mantenimientos al día en taller oficial, cero reclamaciones o siniestros.",
-      features: [
-        "Techo Panorámico de Cristal",
-        "Tapicería en Cuero Nappa / Alcantara",
-        "Sistema de Sonido Premium (Burmester / Bose / Harman Kardon)",
-        "Paquete de Asistencias a la Conducción ADAS (Nivel 2)",
-        "Suspensión Neumática Adaptativa",
-        "Cámaras de Visión 360° con Render 3D",
-        "Rines de Aleación Ligera Forjados",
-        "Garantía de Fábrica Vigente"
-      ],
-      images: SAMPLE_VEHICLE_IMAGES,
-    },
-  ]);
+  // STEP 2: Vehicle Inventory List (Inicia vacío para datos reales)
+  const [vehicles, setVehicles] = useState<VehicleItem[]>([]);
 
   // Form state for creating a new vehicle in Step 2
   const [currentVehicle, setCurrentVehicle] = useState<Omit<VehicleItem, "id">>({
-    brand: "BMW",
-    model: "M3 Competition xDrive",
-    year: 2023,
-    trim: "M Carbon Exterior Package",
-    bodyType: "Sedán Deportivo",
-    mileage: 14200,
-    transmission: "M Steptronic 8 Vel. Drivelogic",
-    fuelType: "Gasolina (S58 3.0L TwinPower Turbo)",
-    exteriorColor: "Isle of Man Green",
-    interiorColor: "Cuero Merino Silverstone / Negro",
-    vin: "WBA33AY08PFS91823",
-    licensePlate: "NXZ-432",
+    brand: "",
+    model: "",
+    year: new Date().getFullYear(),
+    trim: "",
+    bodyType: "SUV / Camioneta",
+    mileage: 0,
+    transmission: "Automática",
+    fuelType: "Gasolina",
+    exteriorColor: "",
+    interiorColor: "",
+    vin: "",
+    licensePlate: "",
     condition: "Seminuevo Certificado",
-    engine: "3.0L L6 Twin-Turbo (510 HP / 650 Nm)",
-    suggestedPrice: 99500,
+    engine: "2.0L",
+    suggestedPrice: 0,
     brokerageFeeType: "percentage",
     brokerageFeeValue: 3.5,
-    availability: "Disponible en Vitrina",
-    description:
-      "Unico dueño, paquete de frenos M Compound, escape deportivo M Sport, historial de servicio completo en BMW.",
+    availability: "Disponible para Venta Inmediata",
+    description: "",
     features: [
-      "Tapicería en Cuero Nappa / Alcantara",
-      "Head-Up Display Proyectado",
-      "Faros Matrix LED / Láser Adaptativos",
-      "Apple CarPlay & Android Auto Inalámbrico",
-      "Cámaras de Visión 360° con Render 3D"
+      "Aire Acondicionado",
+      "Rines de Lujo",
+      "Pantalla Táctil",
+      "Frenos ABS"
     ],
     images: [],
   });
@@ -489,7 +452,11 @@ export default function ProviderRegistrationPage({
   // Step 2 Validation
   const validateStep2 = (): boolean => {
     if (vehicles.length === 0) {
-      toast.error("Debes agregar al menos 1 vehículo al lote de corretaje para continuar");
+      if (currentVehicle.brand.trim() && currentVehicle.model.trim() && Number(currentVehicle.suggestedPrice) > 0) {
+        handleAddVehicleToList();
+        return true;
+      }
+      toast.error("Por favor completa los datos del vehículo y haz clic en 'Agregar Vehículo al Contrato' antes de continuar.");
       return false;
     }
     return true;
@@ -786,19 +753,19 @@ export default function ProviderRegistrationPage({
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shadow-sm">
-              <ShieldCheck className="h-5 w-5 text-zinc-100" />
+              <Building2 className="h-5 w-5 text-zinc-100" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-heading font-bold text-lg tracking-tight text-zinc-900">
-                  AutoBroker<span className="text-zinc-500 font-normal">Core</span>
+                <span className="font-heading font-bold text-base sm:text-lg tracking-tight text-zinc-900">
+                  YJD TRINOVA <span className="text-zinc-500 font-normal">S.A.S.</span>
                 </span>
-                <Badge variant="outline" className="text-[11px] font-mono uppercase bg-zinc-100 border-zinc-200 text-zinc-700">
-                  {resolvedDomain ? `${resolvedDomain}.marketplace` : "Portal Proveedores"}
+                <Badge variant="outline" className="text-[10px] font-mono uppercase bg-zinc-100 border-zinc-200 text-zinc-700">
+                  NIT 902.095.222-8
                 </Badge>
               </div>
               <p className="text-xs text-zinc-500 hidden sm:block">
-                Portal Oficial de Afiliación & Mandato de Corretaje Comercial
+                Portal Oficial de Proveedores & Mandato de Corretaje Comercial
               </p>
             </div>
           </div>
@@ -815,14 +782,14 @@ export default function ProviderRegistrationPage({
                     variant="outline"
                     size="sm"
                     onClick={handleLoadDemoData}
-                    className="text-xs border-zinc-300 hover:bg-zinc-100 text-zinc-700 h-8 gap-1.5"
+                    className="text-xs border-zinc-300 hover:bg-zinc-100 text-zinc-700 h-8 gap-1.5 rounded-xl"
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                    <span className="hidden sm:inline">Cargar Demo</span>
+                    <RefreshCw className="h-3.5 w-3.5 text-zinc-500" />
+                    <span className="hidden sm:inline">Cargar Ejemplo</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">Rellena automáticamente con datos empresariales de prueba</p>
+                  <p className="text-xs">Rellena con datos de ejemplo para pruebas</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
