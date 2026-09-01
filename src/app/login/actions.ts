@@ -10,8 +10,10 @@ export async function login(formData: FormData) {
   // Valid credentials for agency and executives
   const validUsers: Record<string, string> = {
     'neurolabstechsolutions@gmail.com': 'admin2026',
+    'dondeblanca15@gmail.com': 'admin2026',
     'superadmin@neurolabs.ai': 'admin123',
     'admin@jytrinova.com': 'trinova2026',
+    'admin@yjdtrinova.com': 'trinova2026',
     'admin@automotriz.com': 'password123'
   }
 
