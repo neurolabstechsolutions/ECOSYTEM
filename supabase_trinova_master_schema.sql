@@ -251,6 +251,8 @@ CREATE POLICY "Allow all on knowledge_base" ON public.knowledge_base FOR ALL USI
 -- ==============================================================================
 -- 📋 REGISTRO OFICIAL DE LA EMPRESA YJD TRINOVA S.A.S.
 -- ==============================================================================
+DELETE FROM public.tenants WHERE slug = 'yjdtrinova' OR name ILIKE '%Trinova%';
+
 INSERT INTO public.tenants (name, legal_name, nit, slug, phone, whatsapp, email, address, city, plan)
 VALUES (
     'YJD Trinova S.A.S.',
@@ -263,23 +265,15 @@ VALUES (
     'Calle 82 # 21 Sur 06 Esquina',
     'Barranquilla, Atlántico',
     'ENTERPRISE'
-)
-ON CONFLICT (slug) DO UPDATE SET
-    name = EXCLUDED.name,
-    legal_name = EXCLUDED.legal_name,
-    nit = EXCLUDED.nit,
-    phone = EXCLUDED.phone,
-    whatsapp = EXCLUDED.whatsapp,
-    email = EXCLUDED.email,
-    address = EXCLUDED.address,
-    city = EXCLUDED.city;
+);
 
 -- Conocimiento base para el Agente IA de YJD Trinova
+DELETE FROM public.knowledge_base WHERE category = 'POLITICAS_CORRETAJE_YJD_TRINOVA';
+
 INSERT INTO public.knowledge_base (title, content, category)
 VALUES (
     'Políticas Oficiales de Corretaje y Consignación YJD TRINOVA S.A.S.',
     'YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla) ofrece intermediación mercantil para personas naturales y jurídicas en vehículos (carros y camionetas), motos de alto cilindraje y urbanas, e inmuebles tanto en venta como en arriendo/renta. Los contratos se firman digitalmente con validez notarial y sellado de tiempo criptográfico.',
     'POLITICAS_CORRETAJE_YJD_TRINOVA'
-)
-ON CONFLICT DO NOTHING;
+);
 
