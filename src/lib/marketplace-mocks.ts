@@ -120,11 +120,13 @@ export const REAL_ESTATE_REGIONS = [
 
 export const PROPERTY_TYPES = [
   "Todos",
+  "Casa",
   "Apartamento",
-  "Casa de Lujo",
   "Penthouse",
   "Casa Campestre",
   "Oficina / Local",
+  "Lote / Terreno",
+  "Bodega / Industrial",
 ];
 
 export const OPERATION_TYPES = [
@@ -136,35 +138,47 @@ export const OPERATION_TYPES = [
 
 export const REGIONS_LIST = [
   "Todas las Regiones",
+  "Barranquilla (Atlántico)",
   "Bogotá D.C.",
   "Medellín (Antioquia)",
+  "Cartagena (Bolívar)",
   "Cali (Valle)",
-  "Barranquilla (Atlántico)",
   "Bucaramanga (Santander)",
   "Eje Cafetero",
+  "Santa Marta (Magdalena)",
 ];
 
 export const BRANDS_LIST = [
   "Todas las Marcas",
-  "Porsche",
+  "Toyota",
+  "Mazda",
+  "Chevrolet",
+  "Renault",
+  "Yamaha",
+  "Honda",
+  "Suzuki",
+  "Kawasaki",
   "BMW",
   "Mercedes-Benz",
+  "Porsche",
   "Audi",
-  "Toyota",
-  "Tesla",
-  "Land Rover",
-  "Volvo",
   "Ford",
-  "Lexus",
+  "Kia",
+  "Hyundai",
+  "Nissan",
+  "Volkswagen",
 ];
 
 export const BODY_TYPES = [
   "Todos",
-  "SUV",
-  "Sedan",
+  "SUV / Camioneta",
+  "Sedán",
+  "Moto / Motocicleta",
+  "Pickup",
+  "Hatchback",
   "Coupe",
   "Convertible",
-  "Pickup",
+  "Camión / Utilitario",
 ];
 
 export const FUEL_TYPES = [
@@ -206,7 +220,11 @@ export const DEFAULT_DEALER: DealershipInfo = {
   badges: ["NIT 902.095.222-8", "Inspección 150 Puntos", "Garantía Mecánica", "Barranquilla - Atlántico"],
 };
 
-export const MOCK_INVENTORY: Vehicle[] = [
+// Base de datos de Inventario Vacía (Lista para datos reales de la empresa)
+export const MOCK_INVENTORY: Vehicle[] = [];
+
+// Plantillas de demostración
+export const SAMPLE_DEMO_VEHICLES: Vehicle[] = [
   {
     id: "car-001",
     brand: "Porsche",
@@ -794,10 +812,14 @@ export const MOCK_INVENTORY: Vehicle[] = [
     ],
     inspectionScore: 99,
     dealer: DEFAULT_DEALER,
-  }
+  },
 ];
 
-export const MOCK_REAL_ESTATE_PROPERTIES: Property[] = [
+// Base de datos de Inmuebles Vacía (Lista para datos reales de la empresa)
+export const MOCK_REAL_ESTATE_PROPERTIES: Property[] = [];
+
+// Plantillas de demostración de Inmuebles
+export const SAMPLE_DEMO_PROPERTIES: Property[] = [
   {
     id: "prop-001",
     title: "Penthouse Dúplex con Terraza 360° & Vista a los Cerros",
@@ -1222,4 +1244,56 @@ export function getDealershipByDomain(domain: string): DealershipInfo {
   }
 
   return DEFAULT_DEALER;
+}
+
+// ─────────────────────────────────────────────────────────────
+// STORAGE PERSISTENCE & INVENTORY HELPERS
+// ─────────────────────────────────────────────────────────────
+
+export function getStoredVehicles(): Vehicle[] {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("neurolabs_vehicles_inventory");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Error reading stored vehicles:", e);
+    }
+  }
+  return MOCK_INVENTORY;
+}
+
+export function saveStoredVehicles(vehicles: Vehicle[]): void {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("neurolabs_vehicles_inventory", JSON.stringify(vehicles));
+    } catch (e) {
+      console.error("Error saving vehicles:", e);
+    }
+  }
+}
+
+export function getStoredProperties(): Property[] {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("neurolabs_realestate_inventory");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Error reading stored properties:", e);
+    }
+  }
+  return MOCK_REAL_ESTATE_PROPERTIES;
+}
+
+export function saveStoredProperties(properties: Property[]): void {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("neurolabs_realestate_inventory", JSON.stringify(properties));
+    } catch (e) {
+      console.error("Error saving properties:", e);
+    }
+  }
 }

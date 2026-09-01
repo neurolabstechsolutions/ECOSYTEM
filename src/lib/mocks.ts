@@ -59,57 +59,19 @@ export const MOCK_LEADS = [
   { id: 'l5', contactId: '2', name: 'Ana Sofía', status: 'WON', score: 100, productInterest: 'Sedán Eléctrico', budget: '$950,000 MXN', intent: 'Cerrada', assignedTo: 'Admin Piloto' },
 ]
 
-// FASE 4: INVENTORY MOCKS
-export const MOCK_INVENTORY = [
-  { 
-    id: 'v1', 
-    sku: 'SUV-2026-X', 
-    name: 'SUV Familiar Premium 2026', 
-    description: 'Camioneta deportiva utilitaria de lujo con asientos de piel y tecnología híbrida.',
-    price: 850000, 
-    category: 'SUV', 
-    stock: 4, 
-    status: 'AVAILABLE',
-    metadata: { year: 2026, color: 'Rojo Carmesí', mileage: 0, fuel: 'Híbrido' },
-    images: ['https://picsum.photos/seed/suvred/800/500']
-  },
-  { 
-    id: 'v2', 
-    sku: 'SED-ELC-Z', 
-    name: 'Sedán Eléctrico Z-Type', 
-    description: 'Sedán 100% eléctrico con autonomía extendida de 500km.',
-    price: 950000, 
-    category: 'Sedán', 
-    stock: 2, 
-    status: 'AVAILABLE',
-    metadata: { year: 2025, color: 'Blanco Perla', mileage: 15, fuel: 'Eléctrico' },
-    images: ['https://picsum.photos/seed/sedanwhite/800/500']
-  },
-  { 
-    id: 'v3', 
-    sku: 'PKP-4X4-T', 
-    name: 'Pickup 4x4 Todo Terreno', 
-    description: 'Camioneta de carga doble cabina ideal para trabajo pesado.',
-    price: 650000, 
-    category: 'Pickup', 
-    stock: 0, 
-    status: 'OUT_OF_STOCK',
-    metadata: { year: 2024, color: 'Plata Metálico', mileage: 0, fuel: 'Diesel' },
-    images: ['https://picsum.photos/seed/pickup/800/500']
-  },
-  { 
-    id: 'v4', 
-    sku: 'HTB-ECO-B', 
-    name: 'Hatchback Eco-City', 
-    description: 'Compacto ideal para la ciudad. Excelente rendimiento de combustible.',
-    price: 320000, 
-    category: 'Hatchback', 
-    stock: 12, 
-    status: 'AVAILABLE',
-    metadata: { year: 2026, color: 'Azul Marino', mileage: 0, fuel: 'Gasolina' },
-    images: ['https://picsum.photos/seed/hatchback/800/500']
-  },
-]
+// FASE 4: INVENTORY MOCKS (Base vacía lista para datos reales)
+export const MOCK_INVENTORY: Array<{
+  id: string;
+  sku: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  stock: number;
+  status: string;
+  metadata: { year: number; color: string; mileage: number; fuel: string };
+  images: string[];
+}> = [];
 
 // MEGA SPRINT: MOCKS (Fases 6, 7, 8) - ADVANCED
 

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   MOCK_REAL_ESTATE_PROPERTIES,
+  getStoredProperties,
   REAL_ESTATE_REGIONS,
   PROPERTY_TYPES,
   OPERATION_TYPES,
@@ -92,6 +93,16 @@ interface RealEstateMarketplaceProps {
 }
 
 export function RealEstateMarketplace({ agency = DEFAULT_AGENCY }: RealEstateMarketplaceProps) {
+  // Dynamic Real Estate Properties State (Synchronized with Dashboard / LocalStorage)
+  const [propertiesList, setPropertiesList] = useState<Property[]>([]);
+
+  useEffect(() => {
+    setPropertiesList(getStoredProperties());
+    const handleStorage = () => setPropertiesList(getStoredProperties());
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("Todas las Regiones");
@@ -221,7 +232,7 @@ Estoy interesado en la siguiente propiedad:
 
   // Filtered & Sorted Properties
   const filteredProperties = useMemo(() => {
-    const list = MOCK_REAL_ESTATE_PROPERTIES.filter((prop) => {
+    const list = propertiesList.filter((prop) => {
       // Search query (title, neighborhood, city, code, description)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -271,6 +282,7 @@ Estoy interesado en la siguiente propiedad:
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
   }, [
+    propertiesList,
     searchQuery,
     selectedRegion,
     selectedPropertyType,

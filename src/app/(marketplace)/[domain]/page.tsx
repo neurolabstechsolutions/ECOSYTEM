@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   MOCK_INVENTORY,
+  getStoredVehicles,
   getDealershipByDomain,
   REGIONS_LIST,
   BRANDS_LIST,
@@ -110,6 +111,16 @@ export default function MarketplacePage(props: MarketplacePageProps) {
 
   // Active Category Switcher: Real Estate vs Vehicles
   const [activeMarketplaceTab, setActiveMarketplaceTab] = useState<"real_estate" | "vehicles">("real_estate");
+
+  // Dynamic Vehicles Inventory State (Synchronized with Dashboard / LocalStorage)
+  const [vehiclesList, setVehiclesList] = useState<Vehicle[]>([]);
+
+  useEffect(() => {
+    setVehiclesList(getStoredVehicles());
+    const handleStorage = () => setVehiclesList(getStoredVehicles());
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   // Search and filter states (Vehicles)
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,7 +243,7 @@ Estoy interesado en el siguiente vehículo:
 
   // Filtered & Sorted Inventory
   const filteredVehicles = useMemo(() => {
-    return MOCK_INVENTORY.filter((car) => {
+    return vehiclesList.filter((car) => {
       // Search query (brand, model, trim, vin, city)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -296,6 +307,7 @@ Estoy interesado en el siguiente vehículo:
       return b.year - a.year;
     });
   }, [
+    vehiclesList,
     searchQuery,
     selectedRegion,
     selectedBrand,
