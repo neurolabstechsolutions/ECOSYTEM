@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { GlobalAICopilot } from "@/components/global-ai-copilot"
+import { WhatsAppQRButton } from "@/components/whatsapp-qr-button"
 
 export default function DashboardLayout({
   children,
@@ -17,9 +18,15 @@ export default function DashboardLayout({
             <div className="w-px h-4 bg-zinc-200 mx-1.5 hidden sm:block" />
             <span className="text-xs font-semibold text-zinc-600 tracking-wide uppercase">Panel Central</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="hidden sm:inline font-medium">Sistema Activo</span>
+
+          <div className="flex items-center gap-2.5">
+            {/* WhatsApp QR scanner button accessible to the admin on all pages */}
+            <WhatsAppQRButton variant="header" />
+
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 pl-2 border-l border-zinc-200">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-medium">Sistema Activo</span>
+            </div>
           </div>
         </header>
         <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 max-w-7xl w-full mx-auto">
@@ -30,5 +37,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   )
 }
-
-
