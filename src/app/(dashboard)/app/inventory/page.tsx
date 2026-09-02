@@ -173,15 +173,6 @@ export default function InventoryManagementPage() {
       toast.error("Error al conectar con el servidor.");
     }
   };
-        setFormPriceCop(0);
-        setFormImages("");
-        setFormVideoUrl("");
-        setFormDesc("");
-      }
-    } catch (err: any) {
-      toast.error("Error al conectar con la base de datos");
-    }
-  };
 
   const handleDeleteItem = async (id: string) => {
     if (!window.confirm("¿Seguro que deseas eliminar este bien del inventario central de la base de datos?")) return;
