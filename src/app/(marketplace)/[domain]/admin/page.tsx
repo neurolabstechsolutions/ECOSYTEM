@@ -10,7 +10,8 @@ import {
   Receipt, Scale, ArrowUpRight, Check, Copy, SlidersHorizontal,
   ChevronRight, ArrowRight, Briefcase, Layers, QrCode,
   Smartphone, RefreshCw, MessageSquare, Unplug, Shield, Menu,
-  X, Database, Activity, Terminal
+  X, Database, Activity, Terminal, Award, HelpCircle, Megaphone,
+  FileCheck2, Compass
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { YjdTrinovaLogo } from '@/components/yjd-trinova-logo'
 
 interface BrokerageContract {
   id: string
@@ -171,7 +173,7 @@ const MOCK_SALES: ClientSaleContract[] = [
 export default function TrinovaDedicatedAdminPage() {
   const params = useParams()
   const domain = (params?.domain as string) || 'yjdtrinova'
-  const [activeTab, setActiveTab] = useState<'whatsapp' | 'brokerage' | 'sales' | 'inventory' | 'clients'>('whatsapp')
+  const [activeTab, setActiveTab] = useState<'presentation' | 'whatsapp' | 'brokerage' | 'sales' | 'inventory' | 'clients'>('presentation')
   const [selectedSale, setSelectedSale] = useState<ClientSaleContract | null>(null)
   const [selectedBrokerage, setSelectedBrokerage] = useState<BrokerageContract | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -256,6 +258,7 @@ export default function TrinovaDedicatedAdminPage() {
   const totalAssetsConsignedCop = MOCK_BROKERAGE.reduce((acc, b) => acc + b.totalAssetValueCop, 0)
 
   const navMenuItems = [
+    { id: 'presentation', label: 'Presentación Oficial', icon: Award },
     { id: 'whatsapp', label: 'WhatsApp & Socket Render', icon: QrCode, badge: connectionStatus === 'CONNECTED' ? 'Online' : 'Scan' },
     { id: 'brokerage', label: 'Mandatos de Corretaje', icon: FileText, count: MOCK_BROKERAGE.length },
     { id: 'sales', label: 'Promesas de Compraventa', icon: Receipt, count: MOCK_SALES.length },
@@ -265,20 +268,14 @@ export default function TrinovaDedicatedAdminPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 flex font-sans">
-      {/* ─── Left Sidebar (Clean & Minimal) ─── */}
+      {/* ─── Left Sidebar (Official YJD TRINOVA Branding) ─── */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-60 bg-zinc-50 border-r border-zinc-200/80 flex flex-col transition-transform duration-200 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-64 bg-zinc-50 border-r border-zinc-200/80 flex flex-col transition-transform duration-200 ease-in-out
         md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        {/* Sidebar Header */}
+        {/* Sidebar Header with Official Logo */}
         <div className="p-4 border-b border-zinc-200/80 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-zinc-900 text-xs tracking-tight">YJD TRINOVA S.A.S.</span>
-            </div>
-            <span className="text-[10px] text-zinc-400 font-mono">NIT 902.095.222-8</span>
-          </div>
-
+          <YjdTrinovaLogo size="md" />
           <button 
             type="button"
             onClick={() => setMobileMenuOpen(false)}
@@ -288,7 +285,7 @@ export default function TrinovaDedicatedAdminPage() {
           </button>
         </div>
 
-        {/* Sidebar Navigation Links (Flat & Clean) */}
+        {/* Sidebar Navigation Links */}
         <div className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navMenuItems.map(item => {
             const Icon = item.icon
@@ -367,8 +364,8 @@ export default function TrinovaDedicatedAdminPage() {
         />
       )}
 
-      {/* ─── Main Content Area on the Right (Flat & Cardless) ─── */}
-      <div className="flex-1 md:pl-60 flex flex-col min-w-0">
+      {/* ─── Main Content Area on the Right ─── */}
+      <div className="flex-1 md:pl-64 flex flex-col min-w-0">
         {/* Top Header */}
         <header className="h-12 border-b border-zinc-200/80 sticky top-0 bg-white/90 backdrop-blur-md z-30 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -392,7 +389,7 @@ export default function TrinovaDedicatedAdminPage() {
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
               <span className="hidden sm:inline">
-                {connectionStatus === 'CONNECTED' ? `WhatsApp Online (+${connectedNumber || 'Trinova'})` : 'WhatsApp Pendiente'}
+                {connectionStatus === 'CONNECTED' ? `WhatsApp Online (+${connectedNumber || '3235845145'})` : 'WhatsApp Pendiente'}
               </span>
               <span className="sm:hidden">
                 {connectionStatus === 'CONNECTED' ? 'Online' : 'Scan'}
@@ -401,12 +398,12 @@ export default function TrinovaDedicatedAdminPage() {
           </div>
         </header>
 
-        {/* Page Body (Invisible Flat Canvas) */}
+        {/* Page Body (Flat Canvas) */}
         <main className="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto space-y-6">
-          {/* Flat Micro-Metrics Ribbon (Zero Boxes, Zero Cards) */}
+          {/* Flat Micro-Metrics Ribbon */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4 border-b border-zinc-200/80">
             <div>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Socket WhatsApp</span>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Línea Oficial WhatsApp</span>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className={`text-base font-black font-mono ${connectionStatus === 'CONNECTED' ? 'text-emerald-700' : 'text-amber-600'}`}>
                   {connectionStatus === 'CONNECTED' ? 'ONLINE 24/7' : 'ESPERANDO QR'}
@@ -442,6 +439,132 @@ export default function TrinovaDedicatedAdminPage() {
               <p className="text-[10px] text-zinc-400">3.0% a 4.0% corretaje</p>
             </div>
           </div>
+
+          {/* ════ SECTION 0: PRESENTACIÓN OFICIAL YJD TRINOVA S.A.S. ════ */}
+          {activeTab === 'presentation' && (
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row items-start gap-8">
+                {/* Official Presentation Poster Embed */}
+                <div className="w-full lg:w-80 shrink-0">
+                  <div className="rounded-2xl overflow-hidden border border-zinc-200 shadow-sm bg-zinc-900">
+                    <img 
+                      src="/yjd-trinova-poster.jpg" 
+                      alt="Presentación Oficial YJD Trinova S.A.S." 
+                      className="w-full h-auto object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 text-center text-xs text-zinc-500 font-mono">
+                    📍 Barranquilla, Atlántico · 📞 323 584 5145
+                  </div>
+                </div>
+
+                {/* Corporate Details & Services Grid */}
+                <div className="flex-1 space-y-6">
+                  <div>
+                    <YjdTrinovaLogo size="lg" />
+                    <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-2">
+                      Conectamos oportunidades, construimos futuro.
+                    </h1>
+                    <p className="text-xs text-zinc-500 mt-1 max-w-xl leading-relaxed">
+                      Empresa líder en intermediación comercial, corretaje mercantil notarial, peritaje automotriz y gestión inmobiliaria en Barranquilla y la Región Caribe.
+                    </p>
+                  </div>
+
+                  {/* 6 Official Services */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                      Portafolio de Servicios Corporativos
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <Car className="w-4 h-4 text-amber-600" />
+                          <span>Venta de Vehículos</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Asesoría en compra, venta y permuta de vehículos nuevos y usados garantizados.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <Building2 className="w-4 h-4 text-amber-600" />
+                          <span>Bienes Raíces</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Asesoría en compra, venta y arriendo de lotes, casas, penthouses y propiedades comerciales.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <FileCheck2 className="w-4 h-4 text-amber-600" />
+                          <span>Peritajes y Evaluaciones</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Peritaje automotriz de 150 puntos, peritaje de documentos e historial de siniestros.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <FileText className="w-4 h-4 text-amber-600" />
+                          <span>Trámites y Consultas</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Impuestos, fotomultas, comparendos, traspasos y saneamiento notarial.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <Megaphone className="w-4 h-4 text-amber-600" />
+                          <span>Publicidad y Marketing Digital</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Estrategias efectivas para impulsar tu vehículo o propiedad en el mercado nacional.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-zinc-900">
+                          <Compass className="w-4 h-4 text-amber-600" />
+                          <span>Asesoría y Broker</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500">
+                          Acompañamiento profesional personalizado en todo el proceso de compra y venta.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 Pillars Banner */}
+                  <div className="p-4 bg-zinc-900 text-white rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+                    <div>
+                      <ShieldCheck className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                      <span className="font-bold block text-[11px]">SEGURIDAD</span>
+                      <span className="text-[9.5px] text-zinc-400">Estrategias seguras</span>
+                    </div>
+                    <div>
+                      <FileText className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                      <span className="font-bold block text-[11px]">CONTRATOS</span>
+                      <span className="text-[9.5px] text-zinc-400">Acuerdos claros y justos</span>
+                    </div>
+                    <div>
+                      <Search className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                      <span className="font-bold block text-[11px]">PERITAJES</span>
+                      <span className="text-[9.5px] text-zinc-400">Evaluaciones confiables</span>
+                    </div>
+                    <div>
+                      <Users className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                      <span className="font-bold block text-[11px]">CONFIANZA</span>
+                      <span className="text-[9.5px] text-zinc-400">Nuestra prioridad</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ════ SECTION 1: WHATSAPP QR (FLAT & CLEAN) ════ */}
           {activeTab === 'whatsapp' && (
@@ -612,13 +735,13 @@ export default function TrinovaDedicatedAdminPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
-                      <th className="py-2 px-1">Nº Contrato</th>
-                      <th className="py-2 px-1">Comprador</th>
-                      <th className="py-2 px-1">Bien Negociado</th>
-                      <th className="py-2 px-1">Precio Acordado COP</th>
-                      <th className="py-2 px-1">Comisión Trinova</th>
-                      <th className="py-2 px-1">Estado</th>
-                      <th className="py-2 px-1 text-right">Acción</th>
+                      <th className="py-2.5 px-1">Nº Contrato</th>
+                      <th className="py-2.5 px-1">Comprador</th>
+                      <th className="py-2.5 px-1">Bien Negociado</th>
+                      <th className="py-2.5 px-1">Precio Acordado COP</th>
+                      <th className="py-2.5 px-1">Comisión Trinova</th>
+                      <th className="py-2.5 px-1">Estado</th>
+                      <th className="py-2.5 px-1 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">

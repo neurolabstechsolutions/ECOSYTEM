@@ -93,6 +93,8 @@ import {
 } from "lucide-react";
 
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import { YjdTrinovaLogo } from "@/components/yjd-trinova-logo";
 
 interface MarketplacePageProps {
   params: Promise<{
@@ -369,32 +371,9 @@ Estoy interesado en el siguiente vehículo:
         <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
           {/* Brand & Dealership Identity */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm ring-1 ring-slate-900/10">
-              {activeMarketplaceTab === "real_estate" ? (
-                <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
-              ) : (
-                <CarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <span className="text-sm sm:text-base lg:text-lg font-bold tracking-tight text-slate-950 font-heading truncate">
-                  {dealer.legalName || "YJD TRINOVA S.A.S."}
-                </span>
-                <Badge
-                  variant="outline"
-                  className="hidden items-center gap-1 border-slate-300 bg-slate-100 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-slate-800 md:inline-flex shadow-xs shrink-0"
-                >
-                  <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                  NIT {dealer.taxId || "902.095.222-8"}
-                </Badge>
-              </div>
-              <p className="hidden text-[11px] sm:text-xs text-slate-500 md:block font-medium truncate">
-                {activeMarketplaceTab === "real_estate"
-                  ? "División de Bienes Raíces Prime & Inversiones • Barranquilla, Atlántico"
-                  : "Marketplace Oficial & Corretaje Vehicular Certificado • Barranquilla, Atlántico"}
-              </p>
-            </div>
+            <Link href="/" className="hover:opacity-90 transition-opacity">
+              <YjdTrinovaLogo size="md" />
+            </Link>
           </div>
 
           {/* Central Category Switcher Tabs */}
@@ -427,33 +406,34 @@ Estoy interesado en el siguiente vehículo:
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
-            {/* Saved Favorites Pill */}
-            {favorites.length > 0 && (
-              <Badge
-                variant="secondary"
-                className="hidden items-center gap-1 bg-red-50 text-red-700 border-red-200 px-2.5 py-1 text-xs font-medium lg:inline-flex"
-              >
-                <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
-                <span>{favorites.length} Guardados</span>
-              </Badge>
-            )}
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+            <Link
+              href="/admin"
+              className="hidden md:inline-flex items-center gap-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 text-xs font-semibold border border-slate-200 transition"
+            >
+              <span>Portal Admin</span>
+            </Link>
+
+            <Link
+              href="/proveedores/registro"
+              className="hidden lg:inline-flex items-center gap-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 text-xs font-semibold shadow-xs transition"
+            >
+              <span>Consignar con Nosotros</span>
+            </Link>
 
             {/* Direct WhatsApp Callout in Header */}
             <a
-              href={`https://wa.me/${
-                activeMarketplaceTab === "real_estate" ? DEFAULT_AGENCY.whatsappPhone : dealer.whatsappPhone
-              }?text=${encodeURIComponent(
+              href={`https://wa.me/573235845145?text=${encodeURIComponent(
                 activeMarketplaceTab === "real_estate"
-                  ? `Hola ${DEFAULT_AGENCY.name}, me gustaría recibir información sobre su catálogo de inmuebles y proyectos disponibles.`
-                  : `Hola ${dealer.name}, me gustaría recibir información sobre su catálogo de vehículos disponibles.`
+                  ? "Hola YJD Trinova S.A.S., me gustaría recibir información sobre su catálogo de inmuebles y proyectos disponibles."
+                  : "Hola YJD Trinova S.A.S., me gustaría recibir información sobre su catálogo de vehículos disponibles."
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
             >
               <MessageCircle className="h-3.5 w-3.5 fill-white text-emerald-600" />
-              <span className="hidden sm:inline">WhatsApp Directo</span>
+              <span className="hidden sm:inline">WhatsApp (323 584 5145)</span>
               <span className="sm:hidden">WhatsApp</span>
             </a>
           </div>
@@ -1512,9 +1492,125 @@ Estoy interesado en el siguiente vehículo:
       )}
 
       {/* ────────────────────────────────────────────────────── */}
+      {/* SECCIÓN OFICIAL: YJD TRINOVA S.A.S. (PRESENTACIÓN & SERVICIOS) */}
+      {/* ────────────────────────────────────────────────────── */}
+      <section className="bg-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8 mt-12 border-t border-slate-800">
+        <div className="mx-auto max-w-[1400px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Poster Image */}
+            <div className="lg:col-span-4 flex justify-center">
+              <div className="rounded-2xl overflow-hidden border border-slate-700 shadow-2xl max-w-xs w-full bg-slate-950">
+                <img 
+                  src="/yjd-trinova-poster.jpg" 
+                  alt="Presentación Oficial YJD Trinova S.A.S." 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Content & 6 Services */}
+            <div className="lg:col-span-8 space-y-6">
+              <div>
+                <YjdTrinovaLogo size="lg" className="[&_span]:text-white [&_.text-zinc-900]:text-white" />
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-3 font-heading">
+                  Conectamos oportunidades, construimos futuro.
+                </h2>
+                <p className="text-slate-300 text-sm mt-2 max-w-2xl leading-relaxed">
+                  Intermediación de confianza, corretaje mercantil notarial, peritaje automotriz y gestión inmobiliaria integral en Barranquilla y toda Colombia.
+                </p>
+              </div>
+
+              {/* 6 Services Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <CarIcon className="w-4 h-4" />
+                    <span>Venta de Vehículos</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Compra, venta y permuta de vehículos nuevos y usados garantizados.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <Building2 className="w-4 h-4" />
+                    <span>Bienes Raíces</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Compra, venta y arriendo de lotes, casas, apartamentos y locales.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Peritajes y Evaluaciones</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Peritaje de 150 puntos, historial de siniestros y estudio de títulos.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <Award className="w-4 h-4" />
+                    <span>Trámites y Consultas</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Impuestos, fotomultas, comparendos, traspasos y saneamiento.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <Zap className="w-4 h-4" />
+                    <span>Marketing Digital</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Estrategias de alto impacto para impulsar tu vehículo o propiedad.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-400">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Asesoría y Broker</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Acompañamiento profesional en todo el proceso de negociación.
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Pillars & Contact Banner */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800">
+                <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-amber-400" /> Seguridad</span>
+                  <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-amber-400" /> Contratos</span>
+                  <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-amber-400" /> Peritajes</span>
+                  <span className="flex items-center gap-1.5"><Heart className="w-4 h-4 text-amber-400" /> Confianza</span>
+                </div>
+
+                <a
+                  href="https://wa.me/573235845145?text=Hola%20YJD%20Trinova%2C%20deseo%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20servicios."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-bold transition shadow-lg shrink-0"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                  <span>Hablar con un Asesor (323 584 5145)</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ────────────────────────────────────────────────────── */}
       {/* CORPORATE TRUST FOOTER */}
       {/* ────────────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 bg-white py-12 mt-16">
+      <footer className="border-t border-slate-200 bg-white py-12">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div className="space-y-3">
