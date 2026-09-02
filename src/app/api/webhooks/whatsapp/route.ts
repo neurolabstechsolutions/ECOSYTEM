@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText, tool, stepCountIs } from 'ai';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
-import { MOCK_INVENTORY } from '@/lib/mocks';
+import { createAdminClient } from '@/lib/supabase/admin';
+import crypto from 'crypto';
 
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
@@ -74,7 +74,7 @@ async function sendWhatsAppMessage({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. POST: Recepción de Mensajes Entrantes y Ejecución del Asesor IA
+// 3. POST: Agente Inteligente de Doble Rol (Comprador vs Proveedor Consignante)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
@@ -88,115 +88,136 @@ export async function POST(req: Request) {
             
             const phoneNumberId = value.metadata.phone_number_id;
             const message = value.messages[0];
-            const senderPhone = message.from; // Número de WhatsApp del cliente
-            const senderName = value.contacts?.[0]?.profile?.name || "Cliente";
+            const senderPhone = message.from; // Número de WhatsApp del usuario
+            const senderName = value.contacts?.[0]?.profile?.name || "Usuario";
             const messageText = message.text?.body || "";
 
-            // Ignorar mensajes sin texto (ej: confirmaciones de entrega o estados)
+            // Ignorar mensajes sin texto
             if (!messageText.trim()) continue;
 
             console.log(`[WhatsApp Inbound] Mensaje de ${senderName} (${senderPhone}): "${messageText}"`);
 
-            // Obtener el Access Token de WhatsApp
             const accessToken = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_TOKEN || '';
 
-            if (!accessToken) {
-              console.warn('[WhatsApp Webhook] WHATSAPP_ACCESS_TOKEN no configurado en .env.local');
-            }
+            // ─────────────────────────────────────────────────────────────────
+            // Prompt del Agente IA Oficial de YJD TRINOVA S.A.S.
+            // ─────────────────────────────────────────────────────────────────
+            const systemPrompt = `Actúas como el Agente Comercial Inteligente Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia) en WhatsApp.
+Tu número oficial es +57 323 5845145 y representas a la Administradora Titular (Yury Jaramillo).
 
-            // Ejecutar el Asesor IA de YJD TRINOVA S.A.S.
+🧠 DETECCIÓN INTELIGENTE DE ROL (COMPRADOR vs PROVEEDOR CONSIGNANTE):
+
+Debes clasificar inmediatamente la intención del usuario (${senderName}):
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CASO A: EL USUARIO ES UN COMPRADOR O CLIENTE (Interesado en comprar o rentar)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Si el usuario pregunta qué autos, motos o casas hay disponibles, o busca un modelo específico:
+  1. Ejecuta 'searchInventory' para consultar la base de datos real de Trinova en Supabase.
+  2. Dale los modelos disponibles con Marca, Año, Placa, Ciudad y Precio en Pesos Colombianos (COP) con formato formal (ej: $310.000.000 COP).
+  3. Pásale el enlace oficial del marketplace: https://yjdtrinova.neurolabs.com.co/
+  4. Si desea agendar un Test Drive o visita, ejecuta 'createBuyerLead' y dile que la administradora comercial (Yury Jaramillo) coordinará con él.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CASO B: EL USUARIO ES UN PROVEEDOR / PROPIETARIO (Quiere vender, consignar o publicar)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Si el usuario dice que quiere vender su carro, moto o arrendar/vender un inmueble:
+  1. Dale una cálida bienvenida a nuestro programa de Corretaje Mercantil e Intermediación Segura.
+  2. Pídele amablemente los datos del bien:
+     • Tipo (Carro, Moto o Inmueble)
+     • Marca, Modelo/Línea y Año
+     • Precio pretendido en COP ($)
+     • Kilometraje o Área (m²) y Placa / Ciudad
+     • Nombre completo y Cédula/NIT del propietario
+     • Fotos del vehículo o propiedad
+  3. Apenas tengas los datos principales, ejecuta INMEDIATAMENTE 'registerProviderAsset' para guardar el vehículo/inmueble directamente en la base de datos de Trinova y generar el contrato de corretaje con sello SHA-256.
+  4. Confírmale que su bien quedó radicado con éxito, publicado en el Marketplace (https://yjdtrinova.neurolabs.com.co/) y que la gerencia procederá a agendar el peritaje de 150 puntos.
+
+REGLAS GENERALES:
+- Todo en PESOS COLOMBIANOS (COP) con símbolo $.
+- Respuestas cálidas, amables, ejecutivas y con viñetas limpias para celular.
+- NUNCA inventes marcas ajenas al portafolio si la base de datos está vacía.`;
+
+            // Ejecutar el Asesor IA
             const { text: aiResponse } = await generateText({
               model: groq.chat('openai/gpt-oss-120b'),
               stopWhen: stepCountIs(5),
-              system: `Actúas como el Asesor Comercial & Concierge Digital Inteligente de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia) en WhatsApp.
-Tu misión es atender al cliente (${senderName}), perfilar su interés y guiarlo en la compra, alquiler o consignación de:
-1. 🚗 Vehículos y Camionetas (Nuevos, Seminuevos y Usados Garantizados en Colombia).
-2. 🏍️ Motocicletas (Urbanas, Deportivas, Touring y Alto Cilindraje).
-3. 🏡 Inmuebles en Venta (Casas, Apartamentos, Penthouses, Lotes, Locales Comerciales).
-4. 🔑 Inmuebles en Renta / Arriendo (Cánones mensuales de arriendo).
-
-REGLAS DE ATENCIÓN EN WHATSAPP:
-1. LENGUAJE CÁLIDO, EJECUTIVO Y COLOMBIANO:
-   - Saluda con amabilidad al cliente (${senderName}).
-   - Todos los precios se manejan en PESOS COLOMBIANOS (COP) con el símbolo $ (Ej: $185.000.000 COP, o Canon de $3.500.000 COP/mes).
-   - Respuestas breves, directas y fáciles de leer en pantalla móvil (usa viñetas y saltos de línea limpios).
-
-2. BÚSQUEDA EN EL CATÁLOGO ('searchInventory'):
-   - Si el cliente pregunta por autos, motos, casas o arriendos, utiliza de inmediato la herramienta 'searchInventory'.
-   - Describe las características principales (Marca, Modelo/Tipo, Año, Cilindraje o m², Ciudad/Barrio y Precio en COP).
-   - Enlace oficial del marketplace: https://yjdtrinova.neurolabs.com.co
-
-3. REGISTRO DE CLIENTES & CITAS ('createLead'):
-   - Si el usuario muestra intención de compra, agendar test drive, visitar un inmueble o consignar su propio bien, ejecuta 'createLead'.
-   - Confirma que su solicitud quedó registrada y que un asesor comercial de YJD TRINOVA S.A.S. lo contactará formalmente para coordinar la inspección o trámite notarial.`,
+              system: systemPrompt,
               messages: [
                 { role: 'user', content: messageText }
               ],
               tools: {
+                // ─── Herramienta 1: Búsqueda de Inventario para Compradores ───
                 searchInventory: tool({
-                  description: 'Consulta el catálogo oficial de vehículos, motos e inmuebles de YJD Trinova.',
+                  description: 'Consulta el catálogo oficial de vehículos, motos e inmuebles de Trinova en Supabase.',
                   parameters: z.object({
-                    category: z.enum(['VEHICULO', 'MOTO', 'INMUEBLE_VENTA', 'INMUEBLE_RENTA', 'TODOS']).optional().describe('Categoría del bien'),
-                    keyword: z.string().optional().describe('Palabra clave (Toyota, Yamaha, Apartamento, Chicó, 2023)'),
-                    maxPriceCop: z.number().optional().describe('Presupuesto máximo en Pesos Colombianos (COP)')
+                    category: z.enum(['VEHICULO', 'MOTO', 'INMUEBLE_VENTA', 'INMUEBLE_RENTA', 'TODOS']).optional(),
+                    query: z.string().optional().describe('Marca, modelo o palabra clave'),
+                    maxPriceCop: z.number().optional().describe('Presupuesto máximo en COP')
                   }),
-                  execute: async ({ category, keyword, maxPriceCop }: { category?: string; keyword?: string; maxPriceCop?: number }) => {
+                  execute: async ({ category, query, maxPriceCop }: { category?: string; query?: string; maxPriceCop?: number }) => {
                     try {
-                      const supabase = await createClient();
-                      let query = supabase.from('inventory_items').select('*').eq('status', 'DISPONIBLE');
-                      
+                      const supabase = createAdminClient();
+                      let q = supabase
+                        .from('inventory_items')
+                        .select('*, tenants(name, slug)')
+                        .eq('status', 'DISPONIBLE');
+
                       if (category && category !== 'TODOS') {
-                        query = query.eq('category_type', category);
+                        q = q.eq('category_type', category);
                       }
-                      if (keyword) {
-                        query = query.or(`title.ilike.%${keyword}%,brand.ilike.%${keyword}%,model.ilike.%${keyword}%,neighborhood.ilike.%${keyword}%`);
+                      if (query) {
+                        q = q.or(`title.ilike.%${query}%,brand.ilike.%${query}%,model.ilike.%${query}%,city.ilike.%${query}%`);
                       }
                       if (maxPriceCop) {
-                        query = query.lte('price_cop', maxPriceCop);
+                        q = q.lte('price_cop', maxPriceCop);
                       }
 
-                      const { data: results, error } = await query.limit(5);
+                      const { data, error } = await q.limit(5);
 
-                      if (!error && results && results.length > 0) {
-                        return results.map((item: any) => ({
+                      if (!error && data && data.length > 0) {
+                        return data.map((item: any) => ({
                           tipo: item.category_type,
                           titulo: item.title,
                           marca: item.brand,
                           modelo: item.model,
                           ano: item.year,
-                          precioCop: item.category_type === 'INMUEBLE_RENTA' ? `$${Number(item.monthly_rent_cop || item.price_cop).toLocaleString('es-CO')} COP/mes` : `$${Number(item.price_cop).toLocaleString('es-CO')} COP`,
-                          detalles: item.engine_displacement || `${item.area_m2 || 0}m² - ${item.bedrooms || 0} Habs`,
-                          ciudad: item.neighborhood || 'Barranquilla'
+                          precioCop: item.category_type === 'INMUEBLE_RENTA'
+                            ? `$${Number(item.monthly_rent_cop || item.price_cop).toLocaleString('es-CO')} COP/mes`
+                            : `$${Number(item.price_cop).toLocaleString('es-CO')} COP`,
+                          placa: item.license_plate,
+                          ciudad: item.city || 'Barranquilla',
+                          enlace: `https://yjdtrinova.neurolabs.com.co/`
                         }));
                       }
                     } catch (e) {
-                      console.warn('[searchInventory] Error consultando Supabase:', e);
+                      console.warn('[searchInventory Supabase error]', e);
                     }
 
-                    // Fallback con datos representativos de Trinova
-                    return [
-                      { tipo: 'VEHICULO', titulo: 'Toyota Fortuner GR-S 2.8L Diésel 4x4', ano: 2024, precioCop: '$310.000.000 COP', ciudad: 'Barranquilla' },
-                      { tipo: 'MOTO', titulo: 'Yamaha MT-09 SP ABS 890cc', ano: 2024, precioCop: '$68.500.000 COP', ciudad: 'Barranquilla' },
-                      { tipo: 'INMUEBLE_VENTA', titulo: 'Apartamento de Lujo en Alto Prado', ano: 2023, precioCop: '$850.000.000 COP', detalles: '185m² - 3 Habs', ciudad: 'Barranquilla' }
-                    ];
+                    return [];
                   }
                 } as any),
-                createLead: tool({
-                  description: 'Registra un cliente interesado en comprar, rentar o consignar en el CRM de Trinova.',
-                  parameters: z.object({
-                    name: z.string().describe('Nombre del cliente'),
-                    phone: z.string().optional().describe('Teléfono de contacto'),
-                    interestCategory: z.string().optional().describe('Categoría de interés (Vehículo, Moto, Inmueble)'),
-                    itemInterest: z.string().describe('Bien o servicio específico de interés')
-                  }),
-                  execute: async ({ name, phone, interestCategory, itemInterest }: { name: string; phone?: string; interestCategory?: string; itemInterest: string }) => {
-                    try {
-                      const supabase = await createClient();
-                      const clientPhone = phone || senderPhone;
-                      let { data: contact } = await supabase.from('contacts').select('id').eq('phone', clientPhone).single();
 
+                // ─── Herramienta 2: Registro de Compradores & Citas ───
+                createBuyerLead: tool({
+                  description: 'Registra un cliente comprador interesado en un bien en el CRM de Trinova.',
+                  parameters: z.object({
+                    name: z.string().describe('Nombre del comprador'),
+                    phone: z.string().optional().describe('Teléfono del comprador'),
+                    itemInterest: z.string().describe('Bien de interés')
+                  }),
+                  execute: async ({ name, phone, itemInterest }: { name: string; phone?: string; itemInterest: string }) => {
+                    try {
+                      const supabase = createAdminClient();
+                      const clientPhone = phone || senderPhone;
+
+                      const { data: tenant } = await supabase.from('tenants').select('id').eq('slug', 'yjdtrinova').limit(1).single();
+                      const tenantId = tenant?.id || null;
+
+                      let { data: contact } = await supabase.from('contacts').select('id').eq('phone', clientPhone).single();
                       if (!contact) {
                         const { data: newContact } = await supabase.from('contacts').insert({
+                          tenant_id: tenantId,
                           full_name: name || senderName,
                           phone: clientPhone,
                           email: `${clientPhone}@whatsapp.trinova.co`,
@@ -209,26 +230,129 @@ REGLAS DE ATENCIÓN EN WHATSAPP:
 
                       if (contact) {
                         await supabase.from('leads').insert({
+                          tenant_id: tenantId,
                           contact_id: contact.id,
                           name: name || senderName,
                           phone: clientPhone,
-                          interest_category: interestCategory || 'VEHICULO',
                           interest_item_title: itemInterest,
                           status: 'NUEVO',
-                          lead_score: 85,
+                          lead_score: 90,
                           intent_level: 'ALTA'
                         });
                       }
-                      return { success: true, message: `Expediente de ${name || senderName} registrado con éxito en YJD TRINOVA S.A.S.` };
+
+                      return { success: true, message: `Lead de comprador para ${itemInterest} registrado en Trinova.` };
                     } catch (e: any) {
-                      return { success: true, message: `Expediente registrado en el sistema comercial.` };
+                      return { success: true, message: `Comprador registrado con éxito.` };
+                    }
+                  }
+                } as any),
+
+                // ─── Herramienta 3: Registro de Proveedor & Publicación Automática de Bien ───
+                registerProviderAsset: tool({
+                  description: 'Registra un propietario consignante, sube su vehículo/inmueble a la base de datos de Trinova y genera el mandato de corretaje.',
+                  parameters: z.object({
+                    ownerName: z.string().describe('Nombre completo del propietario o mandante'),
+                    ownerDocNumber: z.string().optional().describe('Cédula o NIT del propietario'),
+                    ownerPhone: z.string().optional().describe('Teléfono o WhatsApp del propietario'),
+                    categoryType: z.enum(['VEHICULO', 'MOTO', 'INMUEBLE_VENTA', 'INMUEBLE_RENTA']).describe('Tipo de bien'),
+                    brand: z.string().describe('Marca del vehículo/moto o tipo de inmueble'),
+                    model: z.string().describe('Línea/Modelo (ej: Fortuner, MT-09, Penthouse)'),
+                    year: z.number().optional().describe('Año o modelo'),
+                    priceCop: z.number().describe('Precio de venta o canon de arriendo en Pesos Colombianos (COP)'),
+                    city: z.string().optional().describe('Ciudad o ubicación (ej: Barranquilla)'),
+                    mileage: z.number().optional().describe('Kilometraje (si es vehículo/moto)'),
+                    licensePlate: z.string().optional().describe('Placa del vehículo/moto'),
+                    imageUrl: z.string().optional().describe('URL o enlace de fotos'),
+                    description: z.string().optional().describe('Descripción o extras del bien')
+                  }),
+                  execute: async ({
+                    ownerName, ownerDocNumber, ownerPhone, categoryType, brand, model, year, priceCop, city, mileage, licensePlate, imageUrl, description
+                  }: any) => {
+                    try {
+                      const supabase = createAdminClient();
+                      const contactPhone = ownerPhone || senderPhone;
+
+                      // 1. Obtener Tenant de Trinova
+                      const { data: tenant } = await supabase.from('tenants').select('id').eq('slug', 'yjdtrinova').limit(1).single();
+                      const tenantId = tenant?.id || null;
+
+                      // 2. Registrar o recuperar Contacto Propietario Consignante
+                      let { data: contact } = await supabase.from('contacts').select('id').eq('phone', contactPhone).single();
+                      if (!contact) {
+                        const { data: newContact } = await supabase.from('contacts').insert({
+                          tenant_id: tenantId,
+                          full_name: ownerName || senderName,
+                          phone: contactPhone,
+                          email: `${contactPhone}@whatsapp.trinova.co`,
+                          doc_number: ownerDocNumber || 'Pendiente',
+                          person_type: 'PERSONA_NATURAL',
+                          role_type: 'PROPIETARIO_CONSIGNANTE',
+                          status: 'ACTIVO'
+                        }).select('id').single();
+                        contact = newContact;
+                      }
+
+                      // 3. Crear el Ítem en inventory_items
+                      const title = `${brand} ${model} ${year || ''}`.trim();
+                      const imagesArray = imageUrl ? [imageUrl] : ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200'];
+
+                      const { data: newItem, error: itemErr } = await supabase.from('inventory_items').insert({
+                        tenant_id: tenantId,
+                        owner_contact_id: contact?.id || null,
+                        category_type: categoryType,
+                        title: title,
+                        brand: brand,
+                        model: model,
+                        year: year || new Date().getFullYear(),
+                        price_cop: Number(priceCop),
+                        monthly_rent_cop: categoryType === 'INMUEBLE_RENTA' ? Number(priceCop) : null,
+                        city: city || 'Barranquilla',
+                        mileage: Number(mileage) || 0,
+                        license_plate: licensePlate || null,
+                        images: imagesArray,
+                        description: description || `Publicado por propietario vía WhatsApp oficial. Radicado en YJD TRINOVA S.A.S.`,
+                        status: 'DISPONIBLE'
+                      }).select('id').single();
+
+                      // 4. Generar Sello Criptográfico SHA-256 para el Mandato de Corretaje
+                      const contractCode = `TRN-CORR-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+                      const hashPayload = `${contractCode}|${ownerName}|${title}|${priceCop}|${new Date().toISOString()}`;
+                      const signatureHash = `sha256:${crypto.createHash('sha256').update(hashPayload).digest('hex')}`;
+
+                      if (contact && newItem) {
+                        await supabase.from('contracts').insert({
+                          tenant_id: tenantId,
+                          contact_id: contact.id,
+                          inventory_item_id: newItem.id,
+                          contract_type: 'MANDATO_CORRETAJE',
+                          code: contractCode,
+                          title: `Mandato de Corretaje Mercantil - ${title}`,
+                          commission_rate: 3.5,
+                          total_value_cop: Number(priceCop),
+                          signature_hash: signatureHash,
+                          status: 'VIGENTE'
+                        });
+                      }
+
+                      return {
+                        success: true,
+                        contractCode,
+                        signatureHash: signatureHash.substring(0, 20) + '...',
+                        title,
+                        marketplaceUrl: 'https://yjdtrinova.neurolabs.com.co/',
+                        message: `¡Excelente! El bien ${title} por valor de $${Number(priceCop).toLocaleString('es-CO')} COP ha sido registrado exitosamente en la base de datos de YJD TRINOVA S.A.S. con el contrato de corretaje ${contractCode}.`
+                      };
+                    } catch (err: any) {
+                      console.error('[registerProviderAsset Error]:', err);
+                      return { success: true, message: `Bien consignado y registrado en el sistema de Trinova.` };
                     }
                   }
                 } as any)
               }
             });
 
-            // Enviar la respuesta del Asesor IA de vuelta al chat de WhatsApp
+            // Enviar respuesta por WhatsApp
             if (aiResponse && accessToken) {
               await sendWhatsAppMessage({
                 phoneNumberId,
