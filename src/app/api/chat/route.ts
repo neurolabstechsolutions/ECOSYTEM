@@ -202,7 +202,7 @@ REGLAS ESTRICTAS DE RESPUESTA:
         }
       });
 
-      return result.toDataStreamResponse();
+      return result.toTextStreamResponse();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ Tu misión es asistir en la cotización y diseño de soluciones tecnológicas de
       }
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (err: any) {
     console.error('Chat API Route Error:', err);
