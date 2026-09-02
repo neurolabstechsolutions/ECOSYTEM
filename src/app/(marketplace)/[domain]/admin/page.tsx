@@ -189,15 +189,15 @@ export default function TrinovaDedicatedAdminPage() {
   const [connectedNumber, setConnectedNumber] = useState<string | null>(null)
   const [isLoadingQR, setIsLoadingQR] = useState(false)
 
-  // Fetch real items from Supabase
+  // Fetch real items from Supabase via server route
   const loadSupabaseInventory = async () => {
     setIsLoadingInventory(true)
     try {
-      const { data } = await supabase
-        .from('inventory_items')
-        .select('*, tenants(name, slug)')
-        .order('created_at', { ascending: false })
-      if (data) setDbItems(data)
+      const res = await fetch('/api/inventory?tenant=yjdtrinova')
+      if (res.ok) {
+        const json = await res.json()
+        if (json.items) setDbItems(json.items)
+      }
     } catch (e) {
     } finally {
       setIsLoadingInventory(false)

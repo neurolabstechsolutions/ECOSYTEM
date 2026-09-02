@@ -80,26 +80,19 @@ export default function InventoryManagementPage() {
   const [formVideoUrl, setFormVideoUrl] = useState("");
   const [formDesc, setFormDesc] = useState("");
 
-  // Fetch real items from Supabase Cloud DB
+  // Fetch real items from Supabase via server API route
   const fetchInventory = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .select(`
-          *,
-          tenants (name, slug),
-          contacts (full_name, phone)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Supabase inventory fetch error:", error);
-      } else if (data) {
-        setItems(data as DBInventoryItem[]);
+      const res = await fetch("/api/inventory");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.items) {
+          setItems(json.items as DBInventoryItem[]);
+        }
       }
     } catch (err) {
-      console.error("Error fetching inventory from Supabase:", err);
+      console.error("Error fetching inventory:", err);
     } finally {
       setIsLoading(false);
     }
@@ -133,25 +126,16 @@ export default function InventoryManagementPage() {
     }
 
     try {
-      // 1. Get Trinova Tenant ID
-      const { data: tenantData } = await supabase
-        .from("tenants")
-        .select("id")
-        .eq("slug", "yjdtrinova")
-        .single();
-
-      const tenantId = tenantData?.id || null;
       const parsedImages = formImages.split(",").map(s => s.trim()).filter(Boolean);
 
       const newItemPayload = {
-        tenant_id: tenantId,
+        tenant_slug: "yjdtrinova",
         category_type: formCategory,
         title: formTitle,
         brand: formBrand || "Trinova",
         model: formModel || "General",
         year: Number(formYear) || new Date().getFullYear(),
         price_cop: Number(formPriceCop),
-        monthly_rent_cop: formCategory === "INMUEBLE_RENTA" ? Number(formPriceCop) : null,
         city: formCity,
         mileage: Number(formMileage) || 0,
         license_plate: formPlate || null,
@@ -161,23 +145,34 @@ export default function InventoryManagementPage() {
         status: "DISPONIBLE"
       };
 
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .insert([newItemPayload])
-        .select(`
-          *,
-          tenants (name, slug),
-          contacts (full_name, phone)
-        `)
-        .single();
+      const res = await fetch("/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newItemPayload),
+      });
 
-      if (error) {
-        toast.error(`Error guardando en base de datos: ${error.message}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        toast.error(`Error guardando en base de datos: ${json.error || "Error desconocido"}`);
       } else {
         toast.success("Bien guardado exitosamente en la base de datos de Trinova");
-        if (data) setItems([data as DBInventoryItem, ...items]);
+        if (json.item) setItems([json.item as DBInventoryItem, ...items]);
         setIsCreateModalOpen(false);
         setFormTitle("");
+        setFormBrand("");
+        setFormModel("");
+        setFormPriceCop(0);
+        setFormPlate("");
+        setFormImages("");
+        setFormVideoUrl("");
+        setFormDesc("");
+        fetchInventory();
+      }
+    } catch (err: any) {
+      toast.error("Error al conectar con el servidor.");
+    }
+  };
         setFormPriceCop(0);
         setFormImages("");
         setFormVideoUrl("");
