@@ -35,12 +35,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Rutas públicas (Marketplace, Registro de Proveedores, Admin de JY Trinova)
-  let tenant = 'jjtrinova'
+  // Determinar el tenant (por defecto yjdtrinova)
+  let tenant = 'yjdtrinova'
   if (hostname.includes('.') && !hostname.includes('vercel.app') && !hostname.includes('localhost')) {
-    tenant = hostname.split('.')[0]
+    const sub = hostname.split('.')[0]
+    if (sub && sub !== 'www') {
+      tenant = sub
+    }
   }
 
+  // Si la ruta ya incluye el slug del tenant o /api, dejar pasar
+  if (url.pathname.startsWith(`/${tenant}`) || url.pathname.startsWith('/api')) {
+    return NextResponse.next()
+  }
+
+  // Rutas públicas (Marketplace, Registro de Proveedores, Admin de Trinova)
   return NextResponse.rewrite(new URL(`/${tenant}${url.pathname}`, request.url))
 }
 
