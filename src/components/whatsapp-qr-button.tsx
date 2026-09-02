@@ -25,72 +25,54 @@ export function WhatsAppQRButton({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"SCAN_QR" | "CONNECTED" | "LOADING">("LOADING");
+  const [connectionStatus, setConnectionStatus] = useState<"SCAN_QR" | "CONNECTED" | "LOADING" | "WAKING_UP">("LOADING");
   const [connectedNumber, setConnectedNumber] = useState<string | null>(null);
   const [isLoadingQR, setIsLoadingQR] = useState(false);
 
-  const RENDER_SERVICE_URL = "https://ecosytem.onrender.com";
-
-  const checkStatusAndQR = async () => {
+  const fetchLiveStatusAndQR = async () => {
     try {
-      // 1. Direct Render status check
-      const statusRes = await fetch(`${RENDER_SERVICE_URL}/status`, { cache: 'no-store' });
-      if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        if (statusData.connected) {
+      setIsLoadingQR(true);
+      const res = await fetch('/api/whatsapp/qr', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (data.phone || data.status === 'CONNECTED') {
           setConnectionStatus("CONNECTED");
-          setConnectedNumber(statusData.number || "573235845145");
+          setConnectedNumber(data.phone || "573235845145");
           return;
         }
-      }
 
-      // 2. Fetch QR if open
-      if (isOpen) {
-        setIsLoadingQR(true);
-        const qrRes = await fetch(`${RENDER_SERVICE_URL}/qr`, { cache: 'no-store' });
-        if (qrRes.ok) {
-          const qrData = await qrRes.json();
-          if (qrData.qr) {
-            setQrDataUrl(qrData.qr.startsWith('data:') ? qrData.qr : `data:image/png;base64,${qrData.qr}`);
-            setConnectionStatus("SCAN_QR");
-          }
+        if (data.qr) {
+          setQrDataUrl(data.qr.startsWith('data:') ? data.qr : `data:image/png;base64,${data.qr}`);
+          setConnectionStatus("SCAN_QR");
+        } else if (data.status === 'WAKING_UP' || data.status === 'CONNECTING') {
+          setConnectionStatus("WAKING_UP");
+        } else {
+          setConnectionStatus("SCAN_QR");
         }
       }
     } catch (err) {
-      // Fallback to internal API route
-      try {
-        const proxyRes = await fetch('/api/whatsapp/qr', { cache: 'no-store' });
-        if (proxyRes.ok) {
-          const proxyData = await proxyRes.json();
-          if (proxyData.phone) {
-            setConnectedNumber(proxyData.phone);
-            setConnectionStatus("CONNECTED");
-          } else if (proxyData.qr) {
-            setQrDataUrl(proxyData.qr.startsWith('data:') ? proxyData.qr : `data:image/png;base64,${proxyData.qr}`);
-            setConnectionStatus("SCAN_QR");
-          }
-        }
-      } catch (e) {}
+      setConnectionStatus("SCAN_QR");
     } finally {
       setIsLoadingQR(false);
     }
   };
 
   useEffect(() => {
-    checkStatusAndQR();
-    const interval = setInterval(checkStatusAndQR, 6000);
+    fetchLiveStatusAndQR();
+    const interval = setInterval(fetchLiveStatusAndQR, 6000);
     return () => clearInterval(interval);
   }, [isOpen]);
 
   const handleDisconnect = async () => {
     if (!window.confirm("¿Deseas desvincular la línea actual de WhatsApp de Render?")) return;
     try {
-      await fetch(`${RENDER_SERVICE_URL}/disconnect`, { method: "POST" });
+      await fetch('https://ecosytem.onrender.com/disconnect', { method: "POST" });
       setConnectionStatus("SCAN_QR");
       setConnectedNumber(null);
       setQrDataUrl(null);
       toast.success("WhatsApp desvinculado. Puedes escanear un nuevo código.");
-      checkStatusAndQR();
+      fetchLiveStatusAndQR();
     } catch (e) {
       toast.error("Error al desvincular");
     }
@@ -192,7 +174,9 @@ export function WhatsAppQRButton({
                   ) : (
                     <div className="w-48 h-48 bg-zinc-50 rounded-xl flex flex-col items-center justify-center space-y-2">
                       <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
-                      <p className="text-xs text-zinc-500 font-medium">Generando QR en Render...</p>
+                      <p className="text-xs text-zinc-500 font-medium">
+                        {connectionStatus === 'WAKING_UP' ? 'Despertando microservicio en Render...' : 'Generando QR en Render...'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -212,12 +196,12 @@ export function WhatsAppQRButton({
 
                 <div className="flex justify-center gap-2 pt-1">
                   <Button 
-                    onClick={checkStatusAndQR}
+                    onClick={fetchLiveStatusAndQR}
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs border-zinc-200 gap-1"
                   >
-                    <RefreshCw className="h-3 w-3" />
+                    <RefreshCw className={`h-3 w-3 ${isLoadingQR ? 'animate-spin' : ''}`} />
                     <span>Actualizar QR</span>
                   </Button>
                 </div>

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { WhatsAppQRButton } from '@/components/whatsapp-qr-button'
 
 interface BrokerageContract {
   id: string
@@ -182,11 +183,9 @@ export default function TrinovaDedicatedAdminPage() {
 
   // WhatsApp Live QR State from Render Service
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-  const [connectionStatus, setConnectionStatus] = useState<'SCAN_QR' | 'CONNECTED' | 'LOADING'>('LOADING')
+  const [connectionStatus, setConnectionStatus] = useState<'SCAN_QR' | 'CONNECTED' | 'LOADING' | 'WAKING_UP'>('LOADING')
   const [connectedNumber, setConnectedNumber] = useState<string | null>(null)
   const [isLoadingQR, setIsLoadingQR] = useState(false)
-
-  const RENDER_SERVICE_URL = "https://ecosytem.onrender.com"
 
   // Fetch real items from Supabase
   const loadSupabaseInventory = async () => {
@@ -203,42 +202,30 @@ export default function TrinovaDedicatedAdminPage() {
     }
   }
 
-  // Check WhatsApp Socket from Render
+  // Check WhatsApp Socket via Proxy Route
   const checkStatusAndQR = async () => {
     try {
-      const statusRes = await fetch(`${RENDER_SERVICE_URL}/status`, { cache: 'no-store' })
-      if (statusRes.ok) {
-        const statusData = await statusRes.json()
-        if (statusData.connected) {
+      setIsLoadingQR(true)
+      const res = await fetch('/api/whatsapp/qr', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.phone || data.status === 'CONNECTED') {
           setConnectionStatus("CONNECTED")
-          setConnectedNumber(statusData.number || "573235845145")
+          setConnectedNumber(data.phone || "573235845145")
           return
         }
-      }
 
-      setIsLoadingQR(true)
-      const qrRes = await fetch(`${RENDER_SERVICE_URL}/qr`, { cache: 'no-store' })
-      if (qrRes.ok) {
-        const qrData = await qrRes.json()
-        if (qrData.qr) {
-          setQrDataUrl(qrData.qr.startsWith('data:') ? qrData.qr : `data:image/png;base64,${qrData.qr}`)
+        if (data.qr) {
+          setQrDataUrl(data.qr.startsWith('data:') ? data.qr : `data:image/png;base64,${data.qr}`)
+          setConnectionStatus("SCAN_QR")
+        } else if (data.status === 'WAKING_UP' || data.status === 'CONNECTING') {
+          setConnectionStatus("WAKING_UP")
+        } else {
           setConnectionStatus("SCAN_QR")
         }
       }
     } catch (err) {
-      try {
-        const proxyRes = await fetch('/api/whatsapp/qr', { cache: 'no-store' })
-        if (proxyRes.ok) {
-          const proxyData = await proxyRes.json()
-          if (proxyData.phone) {
-            setConnectedNumber(proxyData.phone)
-            setConnectionStatus("CONNECTED")
-          } else if (proxyData.qr) {
-            setQrDataUrl(proxyData.qr.startsWith('data:') ? proxyData.qr : `data:image/png;base64,${proxyData.qr}`)
-            setConnectionStatus("SCAN_QR")
-          }
-        }
-      } catch (e) {}
+      setConnectionStatus("SCAN_QR")
     } finally {
       setIsLoadingQR(false)
     }
@@ -254,7 +241,7 @@ export default function TrinovaDedicatedAdminPage() {
   const handleDisconnect = async () => {
     if (!window.confirm("¿Seguro que deseas desvincular la línea de WhatsApp de Render?")) return
     try {
-      await fetch(`${RENDER_SERVICE_URL}/disconnect`, { method: "POST" })
+      await fetch('https://ecosytem.onrender.com/disconnect', { method: "POST" })
       setConnectionStatus("SCAN_QR")
       setConnectedNumber(null)
       setQrDataUrl(null)
@@ -423,7 +410,9 @@ export default function TrinovaDedicatedAdminPage() {
                     ) : (
                       <div className="w-52 h-52 bg-zinc-50 rounded-xl flex flex-col items-center justify-center space-y-2">
                         <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
-                        <p className="text-xs text-zinc-500 font-medium">Generando QR en Render...</p>
+                        <p className="text-xs text-zinc-500 font-medium">
+                          {connectionStatus === 'WAKING_UP' ? 'Conectando con Render...' : 'Generando QR en Render...'}
+                        </p>
                       </div>
                     )}
                     <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">Permanece fijo con Render Activo ($7/mes)</span>
