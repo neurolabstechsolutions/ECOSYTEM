@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -164,7 +164,7 @@ const MOCK_SALES: ClientSaleContract[] = [
     signedAt: '31/08/2026 16:45:10',
     status: 'EN_FIRMA',
     paymentMethod: 'Crédito Hipotecario Aprobado',
-    signatureHash: 'sha256:9281938a19283bc9192837192837192837bcda192837192837192837bcda1928'
+    signatureHash: 'sha256:9281938a19283bc9192837192837192837bcda192837192837bcda192837bcda1928'
   }
 ]
 
@@ -264,24 +264,19 @@ export default function TrinovaDedicatedAdminPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex font-sans">
-      {/* ─── Left Sidebar (Desktop & Mobile Slide-Over) ─── */}
+    <div className="min-h-screen bg-white text-zinc-900 flex font-sans">
+      {/* ─── Left Sidebar (Clean & Minimal) ─── */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-zinc-200 flex flex-col transition-transform duration-200 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-60 bg-zinc-50 border-r border-zinc-200/80 flex flex-col transition-transform duration-200 ease-in-out
         md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              YT
+        <div className="p-4 border-b border-zinc-200/80 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-zinc-900 text-xs tracking-tight">YJD TRINOVA S.A.S.</span>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-zinc-900 text-xs tracking-tight">YJD TRINOVA S.A.S.</span>
-              </div>
-              <span className="text-[10px] text-zinc-400 font-mono">NIT 902.095.222-8</span>
-            </div>
+            <span className="text-[10px] text-zinc-400 font-mono">NIT 902.095.222-8</span>
           </div>
 
           <button 
@@ -293,12 +288,8 @@ export default function TrinovaDedicatedAdminPage() {
           </button>
         </div>
 
-        {/* Sidebar Navigation Links */}
-        <div className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-2 block mb-2">
-            Módulos de Gestión
-          </span>
-
+        {/* Sidebar Navigation Links (Flat & Clean) */}
+        <div className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navMenuItems.map(item => {
             const Icon = item.icon
             const isActive = activeTab === item.id
@@ -312,12 +303,12 @@ export default function TrinovaDedicatedAdminPage() {
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-zinc-900 text-white shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
+                    ? 'bg-zinc-900 text-white'
+                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </div>
 
@@ -332,8 +323,8 @@ export default function TrinovaDedicatedAdminPage() {
                 )}
 
                 {item.count !== undefined && !item.badge && (
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                    isActive ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-500'
+                  <span className={`text-[10px] font-mono px-1 rounded ${
+                    isActive ? 'text-zinc-300' : 'text-zinc-400'
                   }`}>
                     {item.count}
                   </span>
@@ -344,10 +335,10 @@ export default function TrinovaDedicatedAdminPage() {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-zinc-200 space-y-1.5 bg-zinc-50/50">
+        <div className="p-3 border-t border-zinc-200/80 space-y-1 text-xs">
           <Link
             href="/"
-            className="flex items-center justify-between p-2 rounded-lg text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 font-medium transition-colors"
+            className="flex items-center justify-between p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 font-medium transition-colors"
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
@@ -357,7 +348,7 @@ export default function TrinovaDedicatedAdminPage() {
 
           <Link
             href="/app"
-            className="flex items-center justify-between p-2 rounded-lg text-xs bg-zinc-900 hover:bg-zinc-800 text-white font-semibold shadow-xs transition-colors"
+            className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-colors"
           >
             <div className="flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
@@ -372,54 +363,51 @@ export default function TrinovaDedicatedAdminPage() {
       {mobileMenuOpen && (
         <div 
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-black/30 z-40 md:hidden backdrop-blur-xs" 
+          className="fixed inset-0 bg-black/20 z-40 md:hidden" 
         />
       )}
 
-      {/* ─── Main Content Area on the Right (Offset on Desktop) ─── */}
-      <div className="flex-1 md:pl-64 flex flex-col min-w-0">
+      {/* ─── Main Content Area on the Right (Flat & Cardless) ─── */}
+      <div className="flex-1 md:pl-60 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-14 bg-white border-b border-zinc-200 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <header className="h-12 border-b border-zinc-200/80 sticky top-0 bg-white/90 backdrop-blur-md z-30 px-4 sm:px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg"
+              className="md:hidden p-1 text-zinc-600 hover:text-zinc-900 rounded"
               title="Abrir Menú"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div>
-              <span className="font-bold text-xs sm:text-sm text-zinc-900">
-                {navMenuItems.find(m => m.id === activeTab)?.label}
-              </span>
-              <p className="text-[10px] text-zinc-400 hidden sm:block">Panel de Administración Trinova</p>
-            </div>
+            <span className="font-bold text-xs sm:text-sm text-zinc-900">
+              {navMenuItems.find(m => m.id === activeTab)?.label}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${
-              connectionStatus === 'CONNECTED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold ${
+              connectionStatus === 'CONNECTED' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
             }`}>
-              <span className={`w-2 h-2 rounded-full ${connectionStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
               <span className="hidden sm:inline">
                 {connectionStatus === 'CONNECTED' ? `WhatsApp Online (+${connectedNumber || 'Trinova'})` : 'WhatsApp Pendiente'}
               </span>
               <span className="sm:hidden">
-                {connectionStatus === 'CONNECTED' ? 'Online' : 'QR'}
+                {connectionStatus === 'CONNECTED' ? 'Online' : 'Scan'}
               </span>
-            </div>
+            </span>
           </div>
         </header>
 
-        {/* Page Body */}
-        <main className="flex-1 p-3 sm:p-5 max-w-6xl w-full mx-auto space-y-4">
-          {/* Micro-Metrics Bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-            <div className="bg-white border border-zinc-200/90 rounded-xl p-3 shadow-xs space-y-1">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Socket WhatsApp</span>
-              <div className="flex items-baseline justify-between">
+        {/* Page Body (Invisible Flat Canvas) */}
+        <main className="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto space-y-6">
+          {/* Flat Micro-Metrics Ribbon (Zero Boxes, Zero Cards) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4 border-b border-zinc-200/80">
+            <div>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Socket WhatsApp</span>
+              <div className="flex items-baseline gap-2 mt-0.5">
                 <span className={`text-base font-black font-mono ${connectionStatus === 'CONNECTED' ? 'text-emerald-700' : 'text-amber-600'}`}>
                   {connectionStatus === 'CONNECTED' ? 'ONLINE 24/7' : 'ESPERANDO QR'}
                 </span>
@@ -427,27 +415,27 @@ export default function TrinovaDedicatedAdminPage() {
               <p className="text-[10px] text-zinc-400 font-mono">+{connectedNumber || '573235845145'}</p>
             </div>
 
-            <div className="bg-white border border-zinc-200/90 rounded-xl p-3 shadow-xs space-y-1">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Mandatos Corretaje</span>
-              <div className="flex items-baseline justify-between">
+            <div>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Mandatos Corretaje</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
                 <span className="text-xl font-black text-zinc-900 font-mono">{MOCK_BROKERAGE.length}</span>
                 <span className="text-[11px] font-semibold text-emerald-600">Firmados</span>
               </div>
               <p className="text-[10px] text-zinc-400">Sello SHA-256</p>
             </div>
 
-            <div className="bg-white border border-zinc-200/90 rounded-xl p-3 shadow-xs space-y-1">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Portafolio Consignado</span>
-              <div className="flex items-baseline justify-between">
+            <div>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Portafolio Consignado</span>
+              <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-xl font-black text-zinc-900 font-mono">${(totalAssetsConsignedCop / 1000000).toFixed(0)}M</span>
-                <span className="text-[11px] font-semibold text-zinc-500 font-mono">COP</span>
+                <span className="text-[11px] text-zinc-500 font-mono">COP</span>
               </div>
               <p className="text-[10px] text-zinc-400">Autos, motos e inmuebles</p>
             </div>
 
-            <div className="bg-white border border-zinc-200/90 rounded-xl p-3 shadow-xs space-y-1">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Comisiones Pactadas</span>
-              <div className="flex items-baseline justify-between">
+            <div>
+              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Comisiones Pactadas</span>
+              <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-xl font-black text-emerald-700 font-mono">${(totalCommissionsCop / 1000000).toFixed(1)}M</span>
                 <span className="text-[11px] font-semibold text-emerald-600 font-mono">COP</span>
               </div>
@@ -455,23 +443,16 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           </div>
 
-          {/* ════ SECTION 1: WHATSAPP QR FIJO (RENDER SOCKET) ════ */}
+          {/* ════ SECTION 1: WHATSAPP QR (FLAT & CLEAN) ════ */}
           {activeTab === 'whatsapp' && (
-            <div className="bg-white border border-zinc-200/90 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-100">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-zinc-100">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">
-                      Línea Oficial WhatsApp Trinova · Socket Render 24/7
-                    </h2>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      connectionStatus === 'CONNECTED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}>
-                      {connectionStatus === 'CONNECTED' ? 'ONLINE 24/7' : 'ESPERANDO ESCANEO'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    Conectado directamente a la Torre de Control de NeuroLabs. Las consultas de los clientes se atienden con el inventario real en Pesos COP ($).
+                  <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">
+                    Línea Oficial WhatsApp Trinova · Socket Render 24/7
+                  </h2>
+                  <p className="text-xs text-zinc-500">
+                    Conectado directamente a la Torre de Control. Las consultas de clientes se atienden con el inventario real en COP ($).
                   </p>
                 </div>
 
@@ -479,80 +460,72 @@ export default function TrinovaDedicatedAdminPage() {
                   onClick={checkStatusAndQR}
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs border-zinc-200 gap-1.5 shrink-0"
+                  className="h-7 text-xs border-zinc-200 gap-1 shrink-0"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingQR ? 'animate-spin' : ''}`} />
-                  <span>Actualizar Conexión</span>
+                  <RefreshCw className={`w-3 h-3 ${isLoadingQR ? 'animate-spin' : ''}`} />
+                  <span>Actualizar</span>
                 </Button>
               </div>
 
-              {/* QR Scanner Display Area */}
-              <div className="py-4 flex flex-col md:flex-row items-center justify-center gap-6">
+              {/* QR Scanner Display Area (Seamless & Flat) */}
+              <div className="py-2 flex flex-col md:flex-row items-center justify-start gap-6">
                 {connectionStatus !== 'CONNECTED' ? (
                   <>
-                    <div className="p-3 bg-white border-2 border-emerald-500 rounded-2xl shadow-sm text-center">
+                    <div className="p-2 bg-white border border-zinc-200 rounded-xl text-center">
                       {qrDataUrl ? (
                         <img 
                           src={qrDataUrl} 
                           alt="Código QR WhatsApp" 
-                          className="w-52 h-52 rounded-xl mx-auto"
+                          className="w-48 h-48 rounded-lg mx-auto"
                         />
                       ) : (
-                        <div className="w-52 h-52 bg-zinc-50 rounded-xl flex flex-col items-center justify-center space-y-2">
-                          <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
+                        <div className="w-48 h-48 bg-zinc-50 rounded-lg flex flex-col items-center justify-center space-y-2">
+                          <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
                           <p className="text-xs text-zinc-500 font-medium">
                             {connectionStatus === 'WAKING_UP' ? 'Conectando con Render...' : 'Generando QR en Render...'}
                           </p>
                         </div>
                       )}
-                      <span className="text-[10px] text-zinc-400 font-mono mt-1.5 block">Permanece fijo con Render Activo ($7/mes)</span>
+                      <span className="text-[10px] text-zinc-400 font-mono mt-1 block">Render Activo ($7/mes)</span>
                     </div>
 
-                    <div className="max-w-md space-y-2.5 text-xs">
-                      <div className="bg-zinc-50 p-3.5 rounded-xl border border-zinc-200 space-y-1.5">
-                        <p className="font-bold text-zinc-900 flex items-center gap-1.5 text-xs">
-                          <Smartphone className="w-4 h-4 text-emerald-600" />
-                          Pasos para escanear desde tu WhatsApp:
-                        </p>
-                        <ol className="list-decimal pl-4 space-y-1 text-zinc-600 leading-relaxed text-[11px]">
-                          <li>Abre WhatsApp en tu teléfono celular corporativo.</li>
-                          <li>Ve a <strong>Ajustes / Configuración ⚙️</strong> (o menú ⋮).</li>
-                          <li>Toca en <strong>Dispositivos vinculados</strong>.</li>
-                          <li>Selecciona <strong>Vincular un dispositivo</strong> y apunta tu cámara al código QR.</li>
-                        </ol>
-                      </div>
+                    <div className="max-w-md space-y-2 text-xs">
+                      <p className="font-bold text-zinc-900 flex items-center gap-1.5 text-xs">
+                        <Smartphone className="w-4 h-4 text-emerald-600" />
+                        Pasos para escanear desde tu WhatsApp:
+                      </p>
+                      <ol className="list-decimal pl-4 space-y-1 text-zinc-600 leading-relaxed text-[11px]">
+                        <li>Abre WhatsApp en tu teléfono celular corporativo.</li>
+                        <li>Ve a <strong>Ajustes / Configuración ⚙️</strong> (o menú ⋮).</li>
+                        <li>Toca en <strong>Dispositivos vinculados</strong>.</li>
+                        <li>Selecciona <strong>Vincular un dispositivo</strong> y apunta tu cámara al código QR.</li>
+                      </ol>
 
-                      <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px] flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Al vincular, todos los chats entrarán a la Torre de Control y el Agente responderá cotizaciones y fotos automáticamente.</span>
+                      <div className="pt-2 text-[11px] text-emerald-800 flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Al vincular, todos los chats entrarán a la Torre de Control y el Agente responderá automáticamente.</span>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="max-w-md w-full bg-zinc-50 p-5 rounded-2xl border border-zinc-200 text-center space-y-3">
-                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
-                      <CheckCircle2 className="w-7 h-7" />
+                  <div className="max-w-md w-full py-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      <h3 className="text-sm font-bold text-zinc-900">Línea Oficial WhatsApp Conectada</h3>
                     </div>
 
-                    <div>
-                      <h3 className="text-sm font-bold text-zinc-900">¡Línea Oficial WhatsApp Conectada!</h3>
-                      <p className="text-xs text-zinc-500">El Agente IA de Trinova está operando 24/7 sin interrupciones.</p>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-xl border border-zinc-200 text-left text-xs space-y-1 font-mono text-[11px]">
+                    <div className="text-xs space-y-1 font-mono text-[11px] text-zinc-600">
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Línea Vinculada:</span>
+                        <span>Línea Vinculada:</span>
                         <span className="font-bold text-zinc-900">+{connectedNumber}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Servidor Render:</span>
+                        <span>Servidor Render:</span>
                         <span className="text-zinc-800 font-semibold">ecosytem.onrender.com ($7/mes)</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Estado de Socket:</span>
-                        <span className="text-emerald-700 font-bold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online 24/7
-                        </span>
+                        <span>Estado:</span>
+                        <span className="text-emerald-700 font-bold">Online 24/7</span>
                       </div>
                     </div>
 
@@ -560,10 +533,10 @@ export default function TrinovaDedicatedAdminPage() {
                       onClick={handleDisconnect}
                       variant="outline"
                       size="sm"
-                      className="w-full h-8 border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold gap-1.5"
+                      className="h-7 border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold gap-1"
                     >
-                      <Unplug className="w-3.5 h-3.5" />
-                      <span>Desvincular y Escanear Otra Línea</span>
+                      <Unplug className="w-3 h-3" />
+                      <span>Desvincular</span>
                     </Button>
                   </div>
                 )}
@@ -571,45 +544,45 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           )}
 
-          {/* ════ SECTION 2: MANDATOS DE CORRETAJE ════ */}
+          {/* ════ SECTION 2: MANDATOS DE CORRETAJE (FLAT TABLE) ════ */}
           {activeTab === 'brokerage' && (
-            <div className="bg-white border border-zinc-200/90 rounded-xl overflow-hidden shadow-xs">
-              <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between text-xs">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
                 <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Mandatos de Corretaje Firmados Digitalmente (SHA-256)</h2>
-                <span className="font-semibold text-zinc-500">{MOCK_BROKERAGE.length} Registros</span>
+                <span className="font-semibold text-zinc-400">{MOCK_BROKERAGE.length} Registros</span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-50/60 border-b border-zinc-200 text-zinc-500 font-semibold">
+                  <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
-                      <th className="py-2.5 px-3">Código</th>
-                      <th className="py-2.5 px-3">Propietario / Mandante</th>
-                      <th className="py-2.5 px-3">Identificación</th>
-                      <th className="py-2.5 px-3">Valor del Bien (COP)</th>
-                      <th className="py-2.5 px-3">Comisión</th>
-                      <th className="py-2.5 px-3">Sello SHA-256</th>
-                      <th className="py-2.5 px-3 text-right">Acción</th>
+                      <th className="py-2 px-1">Código</th>
+                      <th className="py-2 px-1">Propietario / Mandante</th>
+                      <th className="py-2 px-1">Identificación</th>
+                      <th className="py-2 px-1">Valor del Bien (COP)</th>
+                      <th className="py-2 px-1">Comisión</th>
+                      <th className="py-2 px-1">Sello SHA-256</th>
+                      <th className="py-2 px-1 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {MOCK_BROKERAGE.map(b => (
-                      <tr key={b.id} className="hover:bg-zinc-50/80 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">{b.code}</td>
-                        <td className="py-2.5 px-3 font-semibold text-zinc-800">{b.providerName}</td>
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-zinc-500">{b.taxId}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-zinc-900 text-[11px]">
+                      <tr key={b.id} className="hover:bg-zinc-50 transition-colors">
+                        <td className="py-2.5 px-1 font-mono font-bold text-zinc-900">{b.code}</td>
+                        <td className="py-2.5 px-1 font-semibold text-zinc-800">{b.providerName}</td>
+                        <td className="py-2.5 px-1 font-mono text-[11px] text-zinc-500">{b.taxId}</td>
+                        <td className="py-2.5 px-1 font-mono font-bold text-zinc-900 text-[11px]">
                           ${b.totalAssetValueCop.toLocaleString('es-CO')} COP
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-emerald-700 font-bold">
+                        <td className="py-2.5 px-1 font-mono text-[11px] text-emerald-700 font-bold">
                           {b.commissionRate}%
                         </td>
-                        <td className="py-2.5 px-3">
-                          <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                        <td className="py-2.5 px-1">
+                          <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">
                             {b.signatureHash.substring(0, 16)}...
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right">
+                        <td className="py-2.5 px-1 text-right">
                           <Button 
                             onClick={() => setSelectedBrokerage(b)}
                             variant="outline" 
@@ -627,45 +600,45 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           )}
 
-          {/* ════ SECTION 3: PROMESAS DE COMPRAVENTA ════ */}
+          {/* ════ SECTION 3: PROMESAS DE COMPRAVENTA (FLAT TABLE) ════ */}
           {activeTab === 'sales' && (
-            <div className="bg-white border border-zinc-200/90 rounded-xl overflow-hidden shadow-xs">
-              <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between text-xs">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
                 <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Promesas de Compraventa & Anticipos en Custodia</h2>
-                <span className="font-semibold text-zinc-500">{MOCK_SALES.length} Registros</span>
+                <span className="font-semibold text-zinc-400">{MOCK_SALES.length} Registros</span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-50/60 border-b border-zinc-200 text-zinc-500 font-semibold">
+                  <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
-                      <th className="py-2.5 px-3">Nº Contrato</th>
-                      <th className="py-2.5 px-3">Comprador</th>
-                      <th className="py-2.5 px-3">Bien Negociado</th>
-                      <th className="py-2.5 px-3">Precio Acordado COP</th>
-                      <th className="py-2.5 px-3">Comisión Trinova</th>
-                      <th className="py-2.5 px-3">Estado</th>
-                      <th className="py-2.5 px-3 text-right">Acción</th>
+                      <th className="py-2 px-1">Nº Contrato</th>
+                      <th className="py-2 px-1">Comprador</th>
+                      <th className="py-2 px-1">Bien Negociado</th>
+                      <th className="py-2 px-1">Precio Acordado COP</th>
+                      <th className="py-2 px-1">Comisión Trinova</th>
+                      <th className="py-2 px-1">Estado</th>
+                      <th className="py-2 px-1 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {MOCK_SALES.map(s => (
-                      <tr key={s.id} className="hover:bg-zinc-50/80 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">{s.code}</td>
-                        <td className="py-2.5 px-3 font-semibold text-zinc-800">{s.buyerName}</td>
-                        <td className="py-2.5 px-3 text-zinc-700">{s.vehicleName}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-zinc-900 text-[11px]">
+                      <tr key={s.id} className="hover:bg-zinc-50 transition-colors">
+                        <td className="py-2.5 px-1 font-mono font-bold text-zinc-900">{s.code}</td>
+                        <td className="py-2.5 px-1 font-semibold text-zinc-800">{s.buyerName}</td>
+                        <td className="py-2.5 px-1 text-zinc-700">{s.vehicleName}</td>
+                        <td className="py-2.5 px-1 font-mono font-bold text-zinc-900 text-[11px]">
                           ${s.agreedPriceCop.toLocaleString('es-CO')} COP
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-emerald-700 font-bold">
+                        <td className="py-2.5 px-1 font-mono text-[11px] text-emerald-700 font-bold">
                           ${s.commissionAmountCop.toLocaleString('es-CO')} COP ({s.commissionPercentage}%)
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-2.5 px-1">
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                             {s.status}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right">
+                        <td className="py-2.5 px-1 text-right">
                           <Button 
                             onClick={() => setSelectedSale(s)}
                             variant="outline" 
@@ -683,37 +656,37 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           )}
 
-          {/* ════ SECTION 4: INVENTARIO CENTRAL SUPABASE ════ */}
+          {/* ════ SECTION 4: INVENTARIO CENTRAL SUPABASE (FLAT TABLE) ════ */}
           {activeTab === 'inventory' && (
-            <div className="bg-white border border-zinc-200/90 rounded-xl overflow-hidden shadow-xs">
-              <div className="p-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between text-xs">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
                 <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Inventario Activo en Base de Datos Real (Supabase Cloud)</h2>
                 <Link href="/app/inventory" className="text-xs font-semibold text-zinc-700 hover:text-black flex items-center gap-1">
-                  <span>Ir al Módulo Central</span>
+                  <span>Módulo Maestro</span>
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-50/60 border-b border-zinc-200 text-zinc-500 font-semibold">
+                  <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
-                      <th className="py-2.5 px-3">Título / Bien</th>
-                      <th className="py-2.5 px-3">Categoría</th>
-                      <th className="py-2.5 px-3">Precio COP</th>
-                      <th className="py-2.5 px-3">Ciudad / Placa</th>
-                      <th className="py-2.5 px-3">Estado</th>
+                      <th className="py-2 px-1">Título / Bien</th>
+                      <th className="py-2 px-1">Categoría</th>
+                      <th className="py-2 px-1">Precio COP</th>
+                      <th className="py-2 px-1">Ciudad / Placa</th>
+                      <th className="py-2 px-1">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {dbItems.length > 0 ? (
                       dbItems.map(item => (
-                        <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                          <td className="py-2.5 px-3 font-semibold text-zinc-900">{item.title}</td>
-                          <td className="py-2.5 px-3"><Badge variant="outline" className="text-[10px]">{item.category_type}</Badge></td>
-                          <td className="py-2.5 px-3 font-mono font-bold">${Number(item.price_cop || 0).toLocaleString('es-CO')} COP</td>
-                          <td className="py-2.5 px-3 text-zinc-600">{item.city} {item.license_plate ? `· Placa: ${item.license_plate}` : ''}</td>
-                          <td className="py-2.5 px-3"><span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">{item.status}</span></td>
+                        <tr key={item.id} className="hover:bg-zinc-50 transition-colors">
+                          <td className="py-2.5 px-1 font-semibold text-zinc-900">{item.title}</td>
+                          <td className="py-2.5 px-1"><Badge variant="outline" className="text-[10px]">{item.category_type}</Badge></td>
+                          <td className="py-2.5 px-1 font-mono font-bold">${Number(item.price_cop || 0).toLocaleString('es-CO')} COP</td>
+                          <td className="py-2.5 px-1 text-zinc-600">{item.city} {item.license_plate ? `· Placa: ${item.license_plate}` : ''}</td>
+                          <td className="py-2.5 px-1"><span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">{item.status}</span></td>
                         </tr>
                       ))
                     ) : (
@@ -729,37 +702,38 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           )}
 
-          {/* ════ SECTION 5: CLIENTES & CONTACTOS ════ */}
+          {/* ════ SECTION 5: CLIENTES & CONTACTOS (FLAT TABLE) ════ */}
           {activeTab === 'clients' && (
-            <div className="bg-white border border-zinc-200/90 rounded-xl overflow-hidden shadow-xs">
-              <div className="p-3 bg-zinc-50 border-b border-zinc-200">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
                 <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Directorio de Clientes & Contactos de WhatsApp</h2>
               </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-50/60 border-b border-zinc-200 text-zinc-500 font-semibold">
+                  <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
-                      <th className="py-2.5 px-3">Nombre</th>
-                      <th className="py-2.5 px-3">Cédula / NIT</th>
-                      <th className="py-2.5 px-3">Teléfono / WhatsApp</th>
-                      <th className="py-2.5 px-3">Correo</th>
-                      <th className="py-2.5 px-3">Interés Principal</th>
+                      <th className="py-2 px-1">Nombre</th>
+                      <th className="py-2 px-1">Cédula / NIT</th>
+                      <th className="py-2 px-1">Teléfono / WhatsApp</th>
+                      <th className="py-2 px-1">Correo</th>
+                      <th className="py-2 px-1">Interés Principal</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
-                    <tr className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="py-2.5 px-3 font-semibold text-zinc-900">Ing. Mauricio Cantillo</td>
-                      <td className="py-2.5 px-3 font-mono text-zinc-500">CC 1.140.892.110</td>
-                      <td className="py-2.5 px-3 font-mono text-emerald-600">+57 300 5765530</td>
-                      <td className="py-2.5 px-3 text-zinc-600">mauricio.cantillo@constructora.co</td>
-                      <td className="py-2.5 px-3">Toyota Fortuner 2024</td>
+                    <tr className="hover:bg-zinc-50 transition-colors">
+                      <td className="py-2.5 px-1 font-semibold text-zinc-900">Ing. Mauricio Cantillo</td>
+                      <td className="py-2.5 px-1 font-mono text-zinc-500">CC 1.140.892.110</td>
+                      <td className="py-2.5 px-1 font-mono text-emerald-600">+57 300 5765530</td>
+                      <td className="py-2.5 px-1 text-zinc-600">mauricio.cantillo@constructora.co</td>
+                      <td className="py-2.5 px-1">Toyota Fortuner 2024</td>
                     </tr>
-                    <tr className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="py-2.5 px-3 font-semibold text-zinc-900">Dra. Patricia Ortiz</td>
-                      <td className="py-2.5 px-3 font-mono text-zinc-500">CC 55.491.233</td>
-                      <td className="py-2.5 px-3 font-mono text-emerald-600">+57 310 4492011</td>
-                      <td className="py-2.5 px-3 text-zinc-600">patricia.ortiz@salud.org</td>
-                      <td className="py-2.5 px-3">Penthouse Alto Prado</td>
+                    <tr className="hover:bg-zinc-50 transition-colors">
+                      <td className="py-2.5 px-1 font-semibold text-zinc-900">Dra. Patricia Ortiz</td>
+                      <td className="py-2.5 px-1 font-mono text-zinc-500">CC 55.491.233</td>
+                      <td className="py-2.5 px-1 font-mono text-emerald-600">+57 310 4492011</td>
+                      <td className="py-2.5 px-1 text-zinc-600">patricia.ortiz@salud.org</td>
+                      <td className="py-2.5 px-1">Penthouse Alto Prado</td>
                     </tr>
                   </tbody>
                 </table>
