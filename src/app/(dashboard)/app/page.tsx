@@ -72,7 +72,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-baseline justify-between pt-0.5">
-            <span className="text-xl font-black text-zinc-900 font-mono">{MOCK_METRICS.closingRate}%</span>
+            <span className="text-xl font-black text-zinc-900 font-mono">{MOCK_METRICS.conversionRate}</span>
             <span className="text-[11px] font-semibold text-emerald-600 flex items-center">
               +3.1% <TrendingUp className="h-2.5 w-2.5 ml-0.5" />
             </span>
