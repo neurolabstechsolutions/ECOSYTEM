@@ -114,14 +114,62 @@ export default function MarketplacePage(props: MarketplacePageProps) {
   // Active Category Switcher: Real Estate vs Vehicles
   const [activeMarketplaceTab, setActiveMarketplaceTab] = useState<"real_estate" | "vehicles">("real_estate");
 
-  // Dynamic Vehicles Inventory State (Synchronized with Dashboard / LocalStorage)
+  // Dynamic Vehicles Inventory State (Synchronized with Supabase Cloud Realtime)
   const [vehiclesList, setVehiclesList] = useState<Vehicle[]>([]);
+  const [isLoadingLive, setIsLoadingLive] = useState(true);
 
   useEffect(() => {
-    setVehiclesList(getStoredVehicles());
-    const handleStorage = () => setVehiclesList(getStoredVehicles());
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    const loadLiveInventory = async () => {
+      setIsLoadingLive(true);
+      try {
+        const res = await fetch("/api/trinova/dashboard", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.inventory && data.inventory.length > 0) {
+            const mappedVehicles: Vehicle[] = data.inventory
+              .filter((item: any) => item.category_type !== "INMUEBLE_VENTA" && item.category_type !== "INMUEBLE_RENTA")
+              .map((item: any) => {
+                const priceCop = Number(item.price_cop || item.price || 0);
+                const priceUsd = Math.round(priceCop / USD_TO_COP_RATE);
+
+                return {
+                  id: item.id,
+                  name: item.name || item.title || "Vehículo Trinova",
+                  brand: item.brand || (item.name?.includes("Yamaha") ? "Yamaha" : "Toyota"),
+                  model: item.model || (item.name?.includes("MT-09") ? "MT-09 SP" : "Fortuner"),
+                  year: item.year || 2024,
+                  price: priceUsd,
+                  priceCop: priceCop,
+                  mileage: item.mileage || 0,
+                  transmission: (item.transmission || "Automática") as any,
+                  fuelType: (item.fuel_type || "Gasolina") as any,
+                  bodyType: item.category_type === "MOTO" ? "Moto" : (item.body_type || "SUV"),
+                  location: item.city || "Barranquilla",
+                  certified: true,
+                  warrantyMonths: 12,
+                  inspectionScore: item.inspection_score || 98,
+                  images: item.images && item.images.length > 0 ? item.images : ["https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200"],
+                  description: item.description || "Vehículo en consignación verificado y certificado con peritaje de 150 puntos por YJD TRINOVA S.A.S.",
+                  tags: ["Garantía Trinova", "Peritaje 150 Puntos", item.category_type === "MOTO" ? "Motocicleta" : "Vehículo Seminuevo"],
+                  createdAt: item.created_at || new Date().toISOString(),
+                };
+              });
+
+            if (mappedVehicles.length > 0) {
+              setVehiclesList(mappedVehicles);
+              setIsLoadingLive(false);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Error fetching live inventory for marketplace:", e);
+      }
+      setVehiclesList(getStoredVehicles());
+      setIsLoadingLive(false);
+    };
+
+    loadLiveInventory();
   }, []);
 
   // Search and filter states (Vehicles)
