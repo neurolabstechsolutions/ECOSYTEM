@@ -117,23 +117,33 @@ export function RealEstateMarketplace({ agency = DEFAULT_AGENCY }: RealEstateMar
                   code: item.sku || `TRN-PROP-00${idx + 1}`,
                   title: item.name || item.title || "Penthouse Dúplex Alto Prado 240m²",
                   propertyType: "Penthouse" as any,
-                  operationType: isRent ? "Renta" : "Venta",
-                  priceCOP: priceCop,
-                  areaM2: item.area_m2 || 240,
-                  bedrooms: item.bedrooms || 3,
-                  bathrooms: item.bathrooms || 4,
-                  parkingSpots: item.parking_spots || 2,
-                  stratum: item.stratum || 6,
-                  region: "Caribe (Barranquilla / Cartagena / Santa Marta)",
+                  operationType: isRent ? "Arriendo" : "Venta",
+                  priceCop: priceCop,
+                  region: "Barranquilla (Atlántico)",
                   city: item.city || "Barranquilla",
                   neighborhood: item.neighborhood || "Alto Prado",
+                  addressBrief: "Calle 82 # 21 Sur 06, Barranquilla",
                   images: item.images && item.images.length > 0 ? item.images : ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200"],
-                  description: item.description || "Exclusivo penthouse con vista panorámica a la ciudad y al río Magdalena.",
-                  features: ["Vista Panorámica", "Piscina Privada", "Seguridad 24/7", "Acabados de Lujo"],
+                  description: item.description || "Exclusivo inmueble verificado y respaldado por YJD TRINOVA S.A.S.",
+                  amenities: ["Vista Panorámica", "Piscina Privada", "Seguridad 24/7", "Acabados de Lujo"],
                   featured: true,
-                  verifiedNotary: true,
-                  constructionYear: item.year || 2024,
-                  createdAt: item.created_at || new Date().toISOString(),
+                  specs: {
+                    areaM2: item.area_m2 || 240,
+                    bedrooms: item.bedrooms || 3,
+                    bathrooms: item.bathrooms || 4,
+                    parkingSpots: item.parking_spots || 2,
+                    stratum: item.stratum || 6,
+                    builtYear: item.year || 2024,
+                  },
+                  agency: {
+                    name: "YJD TRINOVA S.A.S.",
+                    phone: "+57 (605) 322-5918",
+                    whatsappPhone: "573235845145",
+                    rating: 4.9,
+                    verified: true,
+                    address: "Barranquilla, Atlántico",
+                    city: "Barranquilla"
+                  }
                 };
               });
 
@@ -310,12 +320,12 @@ Estoy interesado en la siguiente propiedad:
       }
 
       // Minimum Bedrooms
-      if (minBedrooms > 0 && prop.specs.bedrooms < minBedrooms) {
+      if (minBedrooms > 0 && (prop.specs?.bedrooms || 0) < minBedrooms) {
         return false;
       }
 
       // Minimum Area
-      if (minAreaM2 > 0 && prop.specs.areaM2 < minAreaM2) {
+      if (minAreaM2 > 0 && (prop.specs?.areaM2 || 0) < minAreaM2) {
         return false;
       }
 
@@ -326,7 +336,7 @@ Estoy interesado en la siguiente propiedad:
     return list.sort((a, b) => {
       if (sortBy === "price_asc") return a.priceCop - b.priceCop;
       if (sortBy === "price_desc") return b.priceCop - a.priceCop;
-      if (sortBy === "area_desc") return b.specs.areaM2 - a.specs.areaM2;
+      if (sortBy === "area_desc") return (b.specs?.areaM2 || 0) - (a.specs?.areaM2 || 0);
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
   }, [
@@ -940,19 +950,19 @@ Estoy interesado en la siguiente propiedad:
                         <div className="grid grid-cols-4 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center text-xs">
                           <div>
                             <span className="text-[10px] text-slate-400 block font-bold uppercase">Área</span>
-                            <span className="font-bold text-slate-900">{prop.specs.areaM2} m²</span>
+                            <span className="font-bold text-slate-900">{prop.specs?.areaM2 || 240} m²</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block font-bold uppercase">Hab.</span>
-                            <span className="font-bold text-slate-900">{prop.specs.bedrooms}</span>
+                            <span className="font-bold text-slate-900">{prop.specs?.bedrooms || 3}</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block font-bold uppercase">Baños</span>
-                            <span className="font-bold text-slate-900">{prop.specs.bathrooms}</span>
+                            <span className="font-bold text-slate-900">{prop.specs?.bathrooms || 4}</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block font-bold uppercase">Estrato</span>
-                            <span className="font-bold text-slate-900">{prop.specs.stratum}</span>
+                            <span className="font-bold text-slate-900">{prop.specs?.stratum || 6}</span>
                           </div>
                         </div>
 
@@ -1083,9 +1093,9 @@ Estoy interesado en la siguiente propiedad:
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Área Construida</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.areaM2} m²</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.areaM2 || 240} m²</span>
                     </div>
-                    {selectedPropertyForModal.specs.lotAreaM2 && (
+                    {selectedPropertyForModal.specs?.lotAreaM2 && (
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Área de Lote</span>
                         <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.lotAreaM2} m²</span>
@@ -1093,25 +1103,25 @@ Estoy interesado en la siguiente propiedad:
                     )}
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Habitaciones</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.bedrooms}</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.bedrooms || 3}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Baños</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.bathrooms}</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.bathrooms || 4}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Parqueaderos</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.parkingSpots} Privados</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.parkingSpots || 2} Privados</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Estrato</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.stratum}</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.stratum || 6}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase block">Año Entrega</span>
-                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs.builtYear}</span>
+                      <span className="font-extrabold text-sm text-slate-900">{selectedPropertyForModal.specs?.builtYear || 2024}</span>
                     </div>
-                    {selectedPropertyForModal.specs.adminFeeCop && (
+                    {selectedPropertyForModal.specs?.adminFeeCop && (
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Administración</span>
                         <span className="font-extrabold text-sm text-slate-900">{formatCop(selectedPropertyForModal.specs.adminFeeCop)}</span>
