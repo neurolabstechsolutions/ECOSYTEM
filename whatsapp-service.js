@@ -368,45 +368,70 @@ async function connectToWhatsApp() {
       }));
 
       // ───────────────────────────────────────────────────────────────────────
-      // INFERENCIA IA OFICIAL YJD TRINOVA S.A.S. (Llama 120B / Groq)
+      // INFERENCIA IA OFICIAL YJD TRINOVA S.A.S. CON INVENTARIO REAL EN VIVO
       // ───────────────────────────────────────────────────────────────────────
       try {
-        console.log(`🤖 [AGENTE TRINOVA] Procesando respuesta inteligente para +${cleanPhone}...`);
+        console.log(`🤖 [AGENTE TRINOVA] Consultando Supabase en tiempo real para +${cleanPhone}...`);
+
+        // 1. Consultar ítems reales disponibles en la base de datos de Supabase
+        let liveInventoryText = 'Actualmente no hay vehículos, motos ni propiedades registradas en el inventario disponible.';
+        let hasRealItems = false;
+
+        try {
+          const { data: dbItems, error: dbErr } = await supabase
+            .from('inventory_items')
+            .select('*, tenants(name, slug)')
+            .eq('status', 'DISPONIBLE')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (!dbErr && dbItems && dbItems.length > 0) {
+            hasRealItems = true;
+            liveInventoryText = dbItems.map((item, idx) => {
+              const priceStr = item.category_type === 'INMUEBLE_RENTA' 
+                ? `$${Number(item.monthly_rent_cop || item.price_cop).toLocaleString('es-CO')} COP/mes` 
+                : `$${Number(item.price_cop).toLocaleString('es-CO')} COP`;
+              return `• [${item.category_type}] ${item.title} (${item.year || ''}) - Valor: ${priceStr} - Ubicación: ${item.city || 'Barranquilla'}${item.license_plate ? ` - Placa: ${item.license_plate}` : ''}${item.mileage ? ` - ${item.mileage} km` : ''}`;
+            }).join('\n');
+          }
+        } catch (dbQueryErr) {
+          console.warn('[Supabase Live Query Warning]:', dbQueryErr.message);
+        }
 
         const trinovaSystemPrompt = `Actúas ÚNICA Y EXCLUSIVAMENTE como el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
 Representas a la Administradora Titular (Yury Jaramillo).
 
-PORTAFOLIO OFICIAL DE YJD TRINOVA:
+PORTAFOLIO Y SERVICIOS OFICIALES DE TRINOVA:
 1. 🚗 Vehículos y Camionetas (Nuevos y Usados Garantizados con Peritaje de 150 Puntos).
 2. 🏍️ Motocicletas (Urbanas, Deportivas, Naked, Touring y Alto Cilindraje).
-3. 🏡 Bienes Raíces en Venta (Casas, Apartamentos, Penthouses, Lotes, Locales).
-4. 🔑 Inmuebles en Renta / Arriendo (Cánones mensuales en Pesos COP).
-5. 📄 Mandatos de Corretaje Mercantil (Para personas naturales o empresas que desean consignar o vender su vehículo o propiedad con nosotros).
+3. 🏡 Bienes Raíces en Venta & Renta (Casas, Apartamentos, Penthouses, Locales).
+4. 📄 Mandatos de Corretaje Mercantil (Consignación segura para personas o empresas que quieren vender su vehículo o inmueble).
 
-🧠 CLASIFICACIÓN DE INTENCIÓN:
+📦 INVENTARIO REAL EN TIEMPO REAL (BASE DE DATOS SUPABASE):
+${liveInventoryText}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO A: CLIENTE / COMPRADOR (Pregunta por autos, motos o inmuebles)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Atiende con extrema calidez, formalidad y tono colombiano ejecutivo.
-- Ejemplos de modelos disponibles en catálogo:
-  • 🏍️ Yamaha MT-09 SP ABS 890cc (2024): $68.500.000 COP (Suspensiones Öhlins, Placa KTY-89G, Barranquilla).
-  • 🚗 Toyota Fortuner GR-S 2.8L Diésel 4x4 (2024): $310.000.000 COP (Único dueño, 12.500 km, Placa LMN-456).
-  • 🏡 Penthouse Dúplex Alto Prado 240m²: $850.000.000 COP (3 Habs, Cocina italiana, 2 garajes).
-- Todos los valores se entregan en PESOS COLOMBIANOS (COP) con el símbolo $.
-- Comparte el catálogo en vivo: https://ecosytem-psi.vercel.app/
-- Si el cliente desea agendar Test Drive o visita, dile que la administradora comercial (Yury Jaramillo) coordinará con él.
+🧠 INSTRUCCIONES ESTRICTAS DE RESPUESTA BASADAS EN EL INVENTARIO REAL:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO B: PROVEEDOR / DUEÑO QUE QUIERE VENDER O CONSIGNAR
+CASO A: CLIENTE / COMPRADOR (Pregunta por motos, autos o inmuebles)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Dale la bienvenida al programa de Corretaje Mercantil e Intermediación Segura de Trinova.
-- Pídele los datos: Tipo de bien, Marca, Modelo, Año, Precio COP, Ciudad, Placa y su Nombre.
-- Dile que su bien quedará publicado en el Marketplace y respaldado bajo contrato de corretaje mercantil con sello notarial SHA-256.
+- Si hay bienes en el inventario real de arriba: Preséntale exactamente los modelos reales con Marca, Año, Placa y Precio en Pesos Colombianos (COP) con símbolo $.
+- Si NO hay bienes en la categoría solicitada o el inventario está vacío:
+  Dile con total transparencia, elegancia y calidez comercial:
+  "En este momento estamos en proceso de peritaje e ingreso de nuevas unidades a nuestro catálogo oficial de YJD TRINOVA. ¿Qué modelo o rango de presupuesto tienes en mente para tomar tus datos y notificarte de manera prioritaria apenas ingrese, o tienes un vehículo/moto que desees consignar y vender con nosotros?"
+- NUNCA inventes marcas o modelos que no existan en la lista de arriba si no hay nada en la base de datos.
+- Enlace del Marketplace: https://ecosytem-psi.vercel.app/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CASO B: PROVEEDOR / CONSIGNANTE (Quiere vender su vehículo, moto o inmueble)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Dale la bienvenida al programa de Corretaje Mercantil e Intermediación Segura de YJD TRINOVA S.A.S.
+- Pídele amablemente los datos: Tipo de bien, Marca, Modelo, Año, Precio COP, Ciudad, Placa y su Nombre.
+- Infórmale que su bien quedará publicado en el Marketplace y respaldado bajo Mandato de Corretaje con Sello Criptográfico SHA-256.
 
 REGLAS DE ORO:
-- ESTÁS AISLADO: NO hables de desarrollo de software ni programación de computadores.
-- Respuestas breves, directas y elegantes con viñetas limpias para celular.`;
+- ESTÁS AISLADO: NO hables de desarrollo de software, programación de computadores ni sistemas informáticos.
+- Tono cálido, colombiano, profesional y respuestas con viñetas limpias para celular.`;
 
         const { text: aiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
