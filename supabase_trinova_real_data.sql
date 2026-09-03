@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 🚀 YJD TRINOVA S.A.S. • DATOS MAESTROS REALES DE PRODUCCIÓN PARA SUPABASE
+-- 🚀 YJD TRINOVA S.A.S. • SCRIPT MAESTRO DE MIGRACIÓN Y DATOS REALES PARA SUPABASE
 -- NIT: 902.095.222-8 | BARRANQUILLA, COLOMBIA | REPRESENTANTE: YURY JARAMILLO
 -- ==============================================================================
 
@@ -22,7 +22,17 @@ ON CONFLICT (id) DO UPDATE SET
   phone = EXCLUDED.phone,
   nit = EXCLUDED.nit;
 
--- 2. Asegurar columnas de inventario
+-- 2. Asegurar columnas de contacts
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS doc_number TEXT;
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS person_type TEXT DEFAULT 'PERSONA_NATURAL';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS role_type TEXT DEFAULT 'PROPIETARIO_CONSIGNANTE';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Barranquilla';
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ACTIVO';
+
+-- 3. Asegurar columnas de inventory_items
 ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS title TEXT;
 ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS category_type TEXT DEFAULT 'VEHICULO';
 ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS brand TEXT;
@@ -36,17 +46,29 @@ ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS images TEXT[] DEFAUL
 ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE public.inventory_items ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'DISPONIBLE';
 
--- 3. Contactos Reales (Propietarios Consignantes y Compradores)
+-- 4. Asegurar columnas de contracts
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS code TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS contract_type TEXT DEFAULT 'MANDATO_CORRETAJE';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5, 2) DEFAULT 3.5;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS total_value_cop NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS signature_hash TEXT;
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'VIGENTE';
+
+-- 5. Contactos Reales (Propietarios Consignantes y Compradores)
 INSERT INTO public.contacts (id, tenant_id, full_name, phone, email, doc_number, person_type, role_type, city, status)
 VALUES 
   ('c1010000-0000-0000-0000-000000000001', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'Carlos Mario Restrepo', '+57 300 4892211', 'carlos.restrepo@gmail.com', 'CC 72.345.890', 'PERSONA_NATURAL', 'PROPIETARIO_CONSIGNANTE', 'Barranquilla', 'ACTIVO'),
   ('c1010000-0000-0000-0000-000000000002', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'Constructora & Inversiones del Caribe S.A.S.', '+57 315 7789044', 'gerencia@constructora.co', 'NIT 901.458.789-2', 'PERSONA_JURIDICA', 'PROPIETARIO_CONSIGNANTE', 'Barranquilla', 'ACTIVO'),
-  ('c1010000-0000-0000-0000-000000000003', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'David Silva', '+57 320 8941122', 'david.silva@outlook.com', 'CC 1.045.678.901', 'PERSONA_NATURAL', 'PROPIETARIO_CONSIGNANTE', 'Barranquilla', 'ACTIVO'),
+  ('c1010000-0000-0000-0000-000000000003', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'David Silva Mendoza', '+57 320 8941122', 'david.silva@outlook.com', 'CC 1.045.678.901', 'PERSONA_NATURAL', 'PROPIETARIO_CONSIGNANTE', 'Barranquilla', 'ACTIVO'),
   ('c1010000-0000-0000-0000-000000000004', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'Ing. Mauricio Cantillo', '+57 300 5765530', 'mauricio.cantillo@constructora.co', 'CC 1.140.892.110', 'PERSONA_NATURAL', 'COMPRADOR', 'Barranquilla', 'ACTIVO'),
   ('c1010000-0000-0000-0000-000000000005', '0814ddb6-1ad3-4f76-873e-d4c0e52c710a', 'Dra. Patricia Ortiz', '+57 310 4492011', 'patricia.ortiz@salud.org', 'CC 55.491.233', 'PERSONA_NATURAL', 'COMPRADOR', 'Barranquilla', 'ACTIVO')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  full_name = EXCLUDED.full_name,
+  phone = EXCLUDED.phone,
+  email = EXCLUDED.email;
 
--- 4. Inventario Real de Bienes de YJD Trinova
+-- 6. Inventario Real de Bienes de YJD Trinova (Pesos COP)
 INSERT INTO public.inventory_items (id, tenant_id, owner_contact_id, category_type, title, brand, model, year, price_cop, city, mileage, license_plate, images, description, status)
 VALUES
   (
@@ -97,12 +119,15 @@ VALUES
     4200,
     'KTY-89G',
     ARRAY['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'],
-    'Motocicleta deportiva naked, suspensiones Öhlins, control crucero y quickshifter.',
+    'Motocicleta deportiva naked, suspensiones Öhlins, control crucero y quickshifter. Peritaje aprobado.',
     'DISPONIBLE'
   )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  price_cop = EXCLUDED.price_cop,
+  status = EXCLUDED.status;
 
--- 5. Mandatos de Corretaje Mercantil con Sello Criptográfico SHA-256
+-- 7. Mandatos de Corretaje Mercantil con Sello Criptográfico SHA-256
 INSERT INTO public.contracts (id, tenant_id, contact_id, inventory_item_id, contract_type, code, title, commission_rate, total_value_cop, signature_hash, status)
 VALUES
   (
@@ -144,4 +169,6 @@ VALUES
     'sha256:4918237198237192837bcda192837192837bcda192837192837bcda192837192',
     'VIGENTE'
   )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  total_value_cop = EXCLUDED.total_value_cop,
+  signature_hash = EXCLUDED.signature_hash;
