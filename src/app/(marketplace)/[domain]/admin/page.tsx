@@ -11,7 +11,7 @@ import {
   ChevronRight, ArrowRight, Briefcase, Layers, QrCode,
   Smartphone, RefreshCw, MessageSquare, Unplug, Shield, Menu,
   X, Database, Activity, Terminal, Award, HelpCircle, Megaphone,
-  FileCheck2, Compass
+  FileCheck2, Compass, Lock, LogOut, EyeOff
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -178,6 +178,47 @@ export default function TrinovaDedicatedAdminPage() {
   const [selectedBrokerage, setSelectedBrokerage] = useState<BrokerageContract | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  // ─── Security Login Gate for Titular Administrator ───
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [authChecking, setAuthChecking] = useState<boolean>(true)
+  const [loginEmail, setLoginEmail] = useState('dondeblanca15@gmail.com')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('yjd_trinova_admin_session') : null
+    if (saved === 'yjd_trinova_authenticated_admin') {
+      setIsAuthenticated(true)
+    }
+    setAuthChecking(false)
+  }, [])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    const cleanEmail = loginEmail.trim().toLowerCase()
+    const cleanPass = loginPassword.trim()
+
+    if (
+      (cleanEmail === 'dondeblanca15@gmail.com' && (cleanPass === 'trinova2026' || cleanPass === 'admin2026')) ||
+      (cleanEmail === 'admin@yjdtrinova.com' && cleanPass === 'trinova2026') ||
+      (cleanEmail === 'neurolabstechsolutions@gmail.com' && cleanPass === 'admin2026')
+    ) {
+      localStorage.setItem('yjd_trinova_admin_session', 'yjd_trinova_authenticated_admin')
+      setIsAuthenticated(true)
+      toast.success("Bienvenida, Administradora Yury Jaramillo")
+    } else {
+      setLoginError('Credenciales incorrectas. Verifique su correo o contraseña.')
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('yjd_trinova_admin_session')
+    setIsAuthenticated(false)
+    toast.info("Sesión cerrada correctamente")
+  }
+
   // Real Supabase Inventory
   const supabase = createClient()
   const [dbItems, setDbItems] = useState<any[]>([])
@@ -234,11 +275,13 @@ export default function TrinovaDedicatedAdminPage() {
   }
 
   useEffect(() => {
-    checkStatusAndQR()
-    loadSupabaseInventory()
-    const interval = setInterval(checkStatusAndQR, 6000)
-    return () => clearInterval(interval)
-  }, [])
+    if (isAuthenticated) {
+      checkStatusAndQR()
+      loadSupabaseInventory()
+      const interval = setInterval(checkStatusAndQR, 6000)
+      return () => clearInterval(interval)
+    }
+  }, [isAuthenticated])
 
   const handleDisconnect = async () => {
     if (!window.confirm("¿Seguro que deseas desvincular la línea de WhatsApp de Render?")) return
@@ -265,6 +308,94 @@ export default function TrinovaDedicatedAdminPage() {
     { id: 'inventory', label: 'Inventario en Consignación', icon: Car, count: dbItems.length || 3 },
     { id: 'clients', label: 'Clientes & Compradores', icon: Users, count: 2 },
   ]
+
+  // ─── Render Security Login Screen if Unauthenticated ───
+  if (!isAuthenticated && !authChecking) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 px-4 py-12">
+        <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-8 sm:p-10 shadow-2xl space-y-8">
+          <div className="text-center space-y-3">
+            <div className="flex justify-center">
+              <YjdTrinovaLogo size="lg" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-zinc-950 tracking-tight mt-2">Portal de Administración Exclusivo</h1>
+              <p className="text-xs text-amber-600 font-serif italic mt-0.5">&quot;Conectamos oportunidades, construimos futuro.&quot;</p>
+              <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mt-1">Acceso Restringido • Representación Legal</p>
+            </div>
+          </div>
+
+          {loginError && (
+            <div className="rounded-2xl bg-red-50 p-4 text-xs font-medium text-red-700 border border-red-200 flex items-center gap-2">
+              <Lock className="w-4 h-4 text-red-500 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700">
+                Correo de la Administradora
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="dondeblanca15@gmail.com"
+                  required
+                  className="w-full pl-10 pr-3 h-11 bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-900 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700">
+                Contraseña / Clave de Acceso
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-10 pr-10 h-11 bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-900 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-zinc-400 hover:text-zinc-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full h-11 bg-zinc-950 hover:bg-black text-white font-bold rounded-xl text-sm transition-all shadow-md mt-2 flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Ingresar al Panel Administrativo</span>
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-zinc-100 text-center space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Titular: Yury Jaramillo • Barranquilla, Atlántico</span>
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              Línea Directa: <strong>+57 323 5845145</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 flex font-sans">
@@ -331,8 +462,22 @@ export default function TrinovaDedicatedAdminPage() {
           })}
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="p-3 border-t border-zinc-200/80 space-y-1 text-xs">
+        {/* Sidebar Footer with User Identity & Logout */}
+        <div className="p-3 border-t border-zinc-200/80 space-y-1.5 text-xs">
+          <div className="px-2 py-1.5 bg-zinc-100 rounded-lg flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-zinc-900 truncate">Yury Jaramillo</p>
+              <p className="text-[10px] text-zinc-500 truncate">dondeblanca15@gmail.com</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Cerrar Sesión"
+              className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           <Link
             href="/"
             className="flex items-center justify-between p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50 font-medium transition-colors"
