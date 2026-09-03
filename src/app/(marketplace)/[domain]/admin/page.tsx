@@ -175,7 +175,7 @@ export default function TrinovaDedicatedAdminPage() {
   const domain = (params?.domain as string) || 'yjdtrinova'
   const [activeTab, setActiveTab] = useState<'presentation' | 'whatsapp' | 'brokerage' | 'sales' | 'inventory' | 'clients'>('presentation')
   const [selectedSale, setSelectedSale] = useState<ClientSaleContract | null>(null)
-  const [selectedBrokerage, setSelectedBrokerage] = useState<BrokerageContract | null>(null)
+  const [selectedBrokerage, setSelectedBrokerage] = useState<any | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // ─── Security Login Gate for Titular Administrator ───
