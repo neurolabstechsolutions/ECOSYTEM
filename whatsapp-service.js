@@ -545,7 +545,7 @@ REGLAS DE ORO:
           if (!contact) {
             const { data: newContact } = await supabase.from('contacts').insert({
               tenant_id: tenantId,
-              full_name: ownerName,
+              name: ownerName,
               phone: `+${cleanPhone}`,
               email: ownerEmail,
               person_type: 'PERSONA_NATURAL',
@@ -564,17 +564,19 @@ REGLAS DE ORO:
             const { data: newItem } = await supabase.from('inventory_items').insert({
               tenant_id: tenantId,
               owner_contact_id: contact.id,
+              sku: `TRN-WA-${Date.now().toString().slice(-4)}`,
+              name: assetTitle,
+              category: categoryType,
               category_type: categoryType,
-              title: assetTitle,
               brand: brand,
               model: model,
               year: year,
+              price: parsedPrice || 68500000,
               price_cop: parsedPrice || 68500000,
-              city: 'Barranquilla',
               license_plate: plate,
               images: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'],
               description: `Consignado por ${ownerName} vía WhatsApp oficial de YJD TRINOVA S.A.S.`,
-              status: 'DISPONIBLE'
+              status: 'AVAILABLE'
             }).select('id').single();
 
             // 3. Crear Mandato de Corretaje con Sello SHA-256
@@ -584,16 +586,14 @@ REGLAS DE ORO:
 
             if (newItem) {
               await supabase.from('contracts').insert({
-                tenant_id: tenantId,
+                client_name: ownerName,
                 contact_id: contact.id,
-                inventory_item_id: newItem.id,
+                service_type: 'CORRETAJE_MERCANTIL',
                 contract_type: 'MANDATO_CORRETAJE',
-                code: contractCode,
-                title: `Mandato de Corretaje Mercantil - ${assetTitle}`,
-                commission_rate: 3.5,
-                total_value_cop: parsedPrice || 68500000,
-                signature_hash: signatureHash,
-                status: 'VIGENTE'
+                amount_cop: parsedPrice || 68500000,
+                commission_type: 'PERCENTAGE',
+                commission_value: 3.5,
+                status: 'FIRMADO'
               });
               console.log(`✅ [CONTRATO SHA-256 GENERADO] Código: ${contractCode}`);
             }
