@@ -181,7 +181,7 @@ export default function TrinovaDedicatedAdminPage() {
   // ─── Security Login Gate for Titular Administrator ───
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [authChecking, setAuthChecking] = useState<boolean>(true)
-  const [loginEmail, setLoginEmail] = useState('dondeblanca15@gmail.com')
+  const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -343,7 +343,7 @@ export default function TrinovaDedicatedAdminPage() {
                   type="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="dondeblanca15@gmail.com"
+                  placeholder="administradora@empresa.com"
                   required
                   className="w-full pl-10 pr-3 h-11 bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-900 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
                 />
@@ -389,7 +389,7 @@ export default function TrinovaDedicatedAdminPage() {
               <span>Titular: Yury Jaramillo • Barranquilla, Atlántico</span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Línea Directa: <strong>+57 323 5845145</strong>
+              Canal Oficial WhatsApp Protegido
             </p>
           </div>
         </div>
@@ -467,7 +467,7 @@ export default function TrinovaDedicatedAdminPage() {
           <div className="px-2 py-1.5 bg-zinc-100 rounded-lg flex items-center justify-between">
             <div className="min-w-0">
               <p className="text-[11px] font-bold text-zinc-900 truncate">Yury Jaramillo</p>
-              <p className="text-[10px] text-zinc-500 truncate">dondeblanca15@gmail.com</p>
+              <p className="text-[10px] text-zinc-500 truncate">Administradora Titular</p>
             </div>
             <button
               onClick={handleLogout}
@@ -534,7 +534,7 @@ export default function TrinovaDedicatedAdminPage() {
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${connectionStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
               <span className="hidden sm:inline">
-                {connectionStatus === 'CONNECTED' ? `WhatsApp Online (+${connectedNumber || '3235845145'})` : 'WhatsApp Pendiente'}
+                {connectionStatus === 'CONNECTED' ? 'WhatsApp Online 24/7' : 'WhatsApp Pendiente'}
               </span>
               <span className="sm:hidden">
                 {connectionStatus === 'CONNECTED' ? 'Online' : 'Scan'}
@@ -554,7 +554,7 @@ export default function TrinovaDedicatedAdminPage() {
                   {connectionStatus === 'CONNECTED' ? 'ONLINE 24/7' : 'ESPERANDO QR'}
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 font-mono">+{connectedNumber || '573235845145'}</p>
+              <p className="text-[10px] text-zinc-400 font-medium">Canal Seguro Verificado</p>
             </div>
 
             <div>
@@ -598,8 +598,8 @@ export default function TrinovaDedicatedAdminPage() {
                       className="w-full h-auto object-cover"
                     />
                   </div>
-                  <div className="mt-2 text-center text-xs text-zinc-500 font-mono">
-                    📍 Barranquilla, Atlántico · 📞 323 584 5145
+                  <div className="mt-2 text-center text-xs text-zinc-500 font-medium">
+                    📍 Barranquilla, Atlántico · 💬 Canal Oficial WhatsApp
                   </div>
                 </div>
 

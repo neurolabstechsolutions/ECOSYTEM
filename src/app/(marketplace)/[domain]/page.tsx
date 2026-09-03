@@ -433,7 +433,7 @@ Estoy interesado en el siguiente vehículo:
               className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
             >
               <MessageCircle className="h-3.5 w-3.5 fill-white text-emerald-600" />
-              <span className="hidden sm:inline">WhatsApp (323 584 5145)</span>
+              <span className="hidden sm:inline">WhatsApp Oficial</span>
               <span className="sm:hidden">WhatsApp</span>
             </a>
           </div>
@@ -1599,7 +1599,7 @@ Estoy interesado en el siguiente vehículo:
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-bold transition shadow-lg shrink-0"
                 >
                   <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
-                  <span>Hablar con un Asesor (323 584 5145)</span>
+                  <span>Chatear por WhatsApp Oficial</span>
                 </a>
               </div>
             </div>
@@ -1638,8 +1638,8 @@ Estoy interesado en el siguiente vehículo:
               </p>
               <div className="text-xs text-slate-500 space-y-1 pt-1 font-medium">
                 <p>📍 {dealer.address}, Barranquilla (Atlántico)</p>
-                <p>📞 Tel: {dealer.phone}</p>
-                <p>✉️ {dealer.email || "dondeblanca15@gmail.com"}</p>
+                <p>💬 Canal Oficial WhatsApp 24/7</p>
+                <p>✉️ {dealer.email || "contacto@yjdtrinova.com"}</p>
               </div>
             </div>
 
