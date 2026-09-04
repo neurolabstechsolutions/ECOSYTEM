@@ -590,10 +590,14 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           const yearMatch = text.match(/a[ñn]o[:\s*]+(\d{4})/i);
           const priceMatch = text.match(/precio[^:]*[:\s*]+\$?([\d\.,]+)/i);
           const plateMatch = text.match(/placa[:\s*]+([A-Za-z0-9-]+)/i);
-          const nameMatch = text.match(/nombre[^:]*[:\s*]+([^\n\r,]+)/i);
-          const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/i);
+          // Extracción Inteligente de Nombre Real
+          let extractedName = null;
+          const nameMatch = text.match(/(?:mi nombre es|me llamo|soy|nombre[:\s*]+)\s*([A-Za-zÀ-ÿ\s]{3,35})/i);
+          if (nameMatch) {
+            extractedName = nameMatch[1].replace(/(?:y mi|con|cedula|cc|telefono|mi cc).*/i, '').trim();
+          }
 
-          const ownerName = nameMatch ? nameMatch[1].trim() : (pushName || `Propietario +${cleanPhone}`);
+          const ownerName = extractedName || (pushName && pushName !== 'Cliente' ? pushName : `Cliente (+${cleanPhone.slice(-4)})`);
           const ownerEmail = emailMatch ? emailMatch[1].trim() : `${cleanPhone}@whatsapp.trinova.co`;
           const brand = brandMatch ? brandMatch[1].trim() : (text.toLowerCase().includes('yamaha') ? 'Yamaha' : 'Trinova');
           const model = modelMatch ? modelMatch[1].trim() : (text.toLowerCase().includes('mt-09') ? 'MT-09 SP ABS' : 'General');
@@ -610,10 +614,16 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           const isMoto = text.toLowerCase().includes('moto') || brand.toLowerCase().includes('yamaha');
           const categoryType = isMoto ? 'MOTO' : 'VEHICULO';
 
-          const docMatch = text.match(/(?:c[eé]dula|cc|nit|documento|identificaci[oó]n|c\.c\.)[:\s*]+([A-Za-z0-9\.\s-]+)/i);
-          const docNumber = docMatch ? docMatch[1].trim() : (text.match(/CC\s*[\d\.]+/i)?.[0] || 'CC 1.045.678.901');
+          // Extracción Inteligente de Cédula Real
+          let extractedDoc = null;
+          const docMatch = text.match(/(?:c[eé]dula|cc|c\.c\.|nit|documento|identificaci[oó]n)[:\s*]+([0-9\.\s-]+)/i) ||
+                           text.match(/\b([1-9][0-9]{6,9})\b/);
+          if (docMatch) {
+            extractedDoc = docMatch[1].trim();
+          }
+          const docNumber = extractedDoc ? `CC ${extractedDoc.replace(/[^0-9]/g, '')}` : 'CC En Validación';
 
-          // 1. Guardar o actualizar contacto
+          // 1. Guardar o actualizar contacto con Teléfono Real (+cleanPhone)
           let { data: contact } = await supabase.from('contacts').select('id').eq('phone', `+${cleanPhone}`).single();
           if (!contact) {
             const { data: newContact } = await supabase.from('contacts').insert({
