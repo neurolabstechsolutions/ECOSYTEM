@@ -386,19 +386,21 @@ async function connectToWhatsApp() {
         try {
           const { data: dbItems, error: dbErr } = await supabase
             .from('inventory_items')
-            .select('*, tenants(name, slug)')
-            .eq('status', 'DISPONIBLE')
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(10);
 
           if (!dbErr && dbItems && dbItems.length > 0) {
             hasRealItems = true;
-            liveInventoryText = dbItems.map((item, idx) => {
+            liveInventoryText = dbItems.map((item) => {
+              const title = item.name || item.title || `${item.brand || ''} ${item.model || ''}`.trim() || 'Vehículo Trinova';
+              const priceNum = Number(item.price_cop || item.price || 0);
               const priceStr = item.category_type === 'INMUEBLE_RENTA' 
-                ? `$${Number(item.monthly_rent_cop || item.price_cop).toLocaleString('es-CO')} COP/mes` 
-                : `$${Number(item.price_cop).toLocaleString('es-CO')} COP`;
-              return `• [${item.category_type}] ${item.title} (${item.year || ''}) - Valor: ${priceStr} - Ubicación: ${item.city || 'Barranquilla'}${item.license_plate ? ` - Placa: ${item.license_plate}` : ''}${item.mileage ? ` - ${item.mileage} km` : ''}`;
+                ? `$${Number(item.monthly_rent_cop || priceNum).toLocaleString('es-CO')} COP/mes` 
+                : `$${priceNum.toLocaleString('es-CO')} COP`;
+              return `• [${item.category_type || item.category || 'VEHICULO'}] ${title} (${item.year || 2024}) - Valor: ${priceStr} - Ubicación: ${item.city || 'Barranquilla'}${item.license_plate ? ` - Placa: ${item.license_plate}` : ''}${item.mileage ? ` - ${item.mileage} km` : ''}`;
             }).join('\n');
+            console.log(`📦 [INVENTARIO REAL CARGADO (${dbItems.length} ÍTEMS)]:\n${liveInventoryText}`);
           }
         } catch (dbQueryErr) {
           console.warn('[Supabase Live Query Warning]:', dbQueryErr.message);
