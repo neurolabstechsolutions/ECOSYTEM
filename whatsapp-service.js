@@ -741,7 +741,7 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
             await supabase.from('contacts').update({
               name: finalContactName,
               doc_number: finalContactDoc,
-              status: leadStatus,
+              status: 'ACTIVO',
               role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR'
             }).eq('id', contact.id);
 
