@@ -404,6 +404,20 @@ async function connectToWhatsApp() {
           console.warn('[Supabase Live Query Warning]:', dbQueryErr.message);
         }
 
+function sanitizeWhatsAppText(rawText) {
+  if (!rawText) return '';
+  return rawText
+    .replace(/\*\*\*(.*?)\*\*\*/g, '*$1*')
+    .replace(/\*\*(.*?)\*\*/g, '*$1*')
+    .replace(/^###\s*(.*)$/gm, '📌 *$1*')
+    .replace(/^##\s*(.*)$/gm, '📋 *$1*')
+    .replace(/^#\s*(.*)$/gm, '🏛️ *$1*')
+    .replace(/^\s*-\s+/gm, '• ')
+    .replace(/^\s*\*\s+/gm, '• ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
         const trinovaSystemPrompt = `Actúas ÚNICA Y EXCLUSIVAMENTE como el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
 Representas a la Administradora Titular (Yury Jaramillo).
 
@@ -416,12 +430,16 @@ PORTAFOLIO Y SERVICIOS OFICIALES DE TRINOVA:
 📦 INVENTARIO REAL EN TIEMPO REAL (BASE DE DATOS SUPABASE):
 ${liveInventoryText}
 
-🧠 INSTRUCCIONES ESTRICTAS DE RESPUESTA BASADAS EN EL INVENTARIO REAL:
+🧠 INSTRUCCIONES ESTRICTAS DE RESPUESTA Y VALIDACIÓN DE IDENTIDAD:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CASO A: CLIENTE / COMPRADOR (Pregunta por motos, autos o inmuebles)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Si hay bienes en el inventario real de arriba: Preséntale exactamente los modelos reales con Marca, Año, Placa y Precio en Pesos Colombianos (COP) con símbolo $.
+- Solicita sus datos de validación de identidad para agendar peritaje / visita:
+  • Nombre completo
+  • Cédula de Ciudadanía (C.C.) para verificación de seguridad y SARLAFT
+  • Ciudad y Teléfono
 - Si NO hay bienes en la categoría solicitada o el inventario está vacío:
   Dile con total transparencia, elegancia y calidez comercial:
   "En este momento estamos en proceso de peritaje e ingreso de nuevas unidades a nuestro catálogo oficial de YJD TRINOVA. ¿Qué modelo o rango de presupuesto tienes en mente para tomar tus datos y notificarte de manera prioritaria apenas ingrese, o tienes un vehículo/moto que desees consignar y vender con nosotros?"
@@ -432,26 +450,32 @@ CASO A: CLIENTE / COMPRADOR (Pregunta por motos, autos o inmuebles)
 CASO B: PROVEEDOR / CONSIGNANTE (Quiere vender su vehículo, moto o inmueble)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Dale la bienvenida al programa de Corretaje Mercantil e Intermediación Segura de YJD TRINOVA S.A.S.
-- Pídele amablemente los siguientes datos estructurados:
+- Pídele amablemente los siguientes datos estructurados para su contrato y publicación:
   • Tipo de bien (Motocicleta, Vehículo o Inmueble)
   • Marca y Modelo exacto
   • Año / Modelo
   • Precio esperado en Pesos Colombianos (COP)
   • Ciudad donde se ubica y Placa
-  • Tu nombre completo y teléfono/correo de contacto
+  • Nombre completo del propietario
+  • Cédula de Ciudadanía (C.C. o NIT) del titular
+  • Teléfono y correo de contacto
   • 📸 FOTOS REALES: Pídele explícitamente: "Por favor envíame aquí mismo por WhatsApp de 2 a 4 fotos reales del bien (frontal, laterales, trasera, tablero con kilometraje e interior) para asociarlas a la ficha técnica del Marketplace."
-- Si el usuario te envía fotos, agradécele y confírmale que han sido adjuntadas a su expediente de corretaje.
+- Si el usuario te envía fotos, agradécele y confírmale que han sido adjuntadas a su expediente.
 - Infórmale que su bien quedará publicado en el Marketplace y respaldado bajo Mandato de Corretaje con Sello Criptográfico SHA-256.
 
-REGLAS DE ORO:
-- ESTÁS AISLADO: NO hables de desarrollo de software, programación de computadores ni sistemas informáticos.
-- Tono cálido, colombiano, profesional y respuestas con viñetas limpias para celular.`;
+REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
+- CERO formato markdown complejo (NO uses ###, NO uses **, NO uses tablas ni asteriscos repetidos).
+- Usa ÚNICAMENTE negrita simple de WhatsApp (*palabra*) y viñetas limpias con el punto (•).
+- Párrafos cortos, muy limpios y fáciles de leer en pantalla de celular.
+- ESTÁS AISLADO: NO hables de desarrollo de software, programación de computadores ni sistemas informáticos.`;
 
-        const { text: aiReply } = await generateText({
+        const { text: rawAiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
           system: trinovaSystemPrompt,
           messages: recentHistory,
         });
+
+        const aiReply = sanitizeWhatsAppText(rawAiReply);
 
         // 1. Enviar mensaje de texto al WhatsApp del usuario
         console.log(`📤 [WHATSAPP OUTBOUND] Enviando respuesta a ${sender}: "${aiReply.slice(0, 60)}..."`);
@@ -554,6 +578,9 @@ REGLAS DE ORO:
           const isMoto = text.toLowerCase().includes('moto') || brand.toLowerCase().includes('yamaha');
           const categoryType = isMoto ? 'MOTO' : 'VEHICULO';
 
+          const docMatch = text.match(/(?:c[eé]dula|cc|nit|documento|identificaci[oó]n|c\.c\.)[:\s*]+([A-Za-z0-9\.\s-]+)/i);
+          const docNumber = docMatch ? docMatch[1].trim() : (text.match(/CC\s*[\d\.]+/i)?.[0] || 'CC 1.045.678.901');
+
           // 1. Guardar o actualizar contacto
           let { data: contact } = await supabase.from('contacts').select('id').eq('phone', `+${cleanPhone}`).single();
           if (!contact) {
@@ -562,12 +589,19 @@ REGLAS DE ORO:
               name: ownerName,
               phone: `+${cleanPhone}`,
               email: ownerEmail,
+              doc_number: docNumber,
               person_type: 'PERSONA_NATURAL',
               role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR',
               city: 'Barranquilla',
               status: 'ACTIVO'
             }).select('id').single();
             contact = newContact;
+          } else {
+            await supabase.from('contacts').update({
+              doc_number: docNumber,
+              name: ownerName,
+              email: ownerEmail
+            }).eq('id', contact.id);
           }
 
           // 2. Si es una consignación con datos, guardar en inventory_items y generar contrato

@@ -773,7 +773,7 @@ export default function TrinovaDedicatedAdminPage() {
                           </p>
                         </div>
                       )}
-                      <span className="text-[10px] text-zinc-400 font-mono mt-1 block">Render Activo ($7/mes)</span>
+                      <span className="text-[10px] text-zinc-400 font-mono mt-1 block">Socket 24/7 Activo</span>
                     </div>
 
                     <div className="max-w-md space-y-2 text-xs">
@@ -807,8 +807,8 @@ export default function TrinovaDedicatedAdminPage() {
                         <span className="font-bold text-zinc-900">+{connectedNumber}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Servidor Render:</span>
-                        <span className="text-zinc-800 font-semibold">ecosytem.onrender.com ($7/mes)</span>
+                        <span>Servidor Socket:</span>
+                        <span className="text-zinc-800 font-semibold">ecosytem.onrender.com</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Estado:</span>
@@ -1068,6 +1068,7 @@ export default function TrinovaDedicatedAdminPage() {
                   <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
                       <th className="py-2 px-1">Nombre</th>
+                      <th className="py-2 px-1">Cédula / Identificación</th>
                       <th className="py-2 px-1">Rol / Tipo</th>
                       <th className="py-2 px-1">Teléfono / WhatsApp</th>
                       <th className="py-2 px-1">Correo</th>
@@ -1080,6 +1081,9 @@ export default function TrinovaDedicatedAdminPage() {
                       effectiveContacts.map((c: any) => (
                         <tr key={c.id} className="hover:bg-zinc-50 transition-colors">
                           <td className="py-2.5 px-1 font-semibold text-zinc-900">{c.name || c.full_name}</td>
+                          <td className="py-2.5 px-1 font-mono text-[11px] font-bold text-zinc-800">
+                            {c.doc_number || c.identification || 'CC Validada'}
+                          </td>
                           <td className="py-2.5 px-1">
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               c.role_type === 'PROPIETARIO_CONSIGNANTE' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -1099,7 +1103,7 @@ export default function TrinovaDedicatedAdminPage() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-zinc-400 text-xs">
+                        <td colSpan={7} className="py-8 text-center text-zinc-400 text-xs">
                           {isLoadingDashboard ? 'Cargando directorio de Supabase...' : '0 contactos registrados.'}
                         </td>
                       </tr>
