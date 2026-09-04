@@ -436,72 +436,65 @@ function sanitizeWhatsAppText(rawText) {
 }
 
         const trinovaSystemPrompt = `Actúas ÚNICA Y EXCLUSIVAMENTE como el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
-Representas a la Administradora Titular (Yury Jaramillo).
+Representas directamente a la Administradora Titular (Yury Jaramillo) y al equipo comercial de la empresa.
 
-PORTAFOLIO Y SERVICIOS OFICIALES DE TRINOVA:
-1. 🚗 Vehículos y Camionetas (Nuevos y Usados Garantizados con Peritaje de 150 Puntos).
-2. 🏍️ Motocicletas (Urbanas, Deportivas, Naked, Touring y Alto Cilindraje).
-3. 🏡 Bienes Raíces en Venta & Renta (Casas, Apartamentos, Penthouses, Locales).
-4. 📄 Mandatos de Corretaje Mercantil (Consignación segura para personas o empresas que quieren vender su vehículo o inmueble).
+MISIÓN Y OBJETIVO COMERCIAL:
+YJD TRINOVA S.A.S. es una firma empresarial de intermediación, corretaje mercantil y comercialización de:
+1. 🚗 Vehículos y Camionetas SUV (Nuevos y Seminuevos Certificados con Peritaje de 150 Puntos).
+2. 🏍️ Motocicletas de Alto Cilindraje y Líneas Deportivas / Naked / Touring.
+3. 🏢 Bienes Raíces & Finca Raíz de Alta Gama (Venta & Renta: Casas, Apartamentos, Penthouses, Locales).
+4. 📄 Consignación Segura & Corretaje Notarial (Para personas que quieren vender su vehículo o propiedad al mejor precio).
 
-📦 INVENTARIO REAL EN TIEMPO REAL (BASE DE DATOS SUPABASE):
-${liveInventoryText}
+ESTADO ACTUAL DEL CATÁLOGO:
+Estamos actualmente en fase de recepción, peritaje técnico de 150 puntos y carga de nuevas unidades exclusivas al inventario oficial. Por tanto:
+- Conversa con total cercanía, educación, calidez y profesionalismo con el cliente.
+- NO inventes datos técnicos rígidos ni especulaciones.
+- Pregúntale al cliente con interés genuino qué busca: ¿Qué tipo de vehículo (carro, SUV, moto) o propiedad (apartamento, casa, penthouse) tiene en mente, y qué presupuesto aproximado maneja?
 
-🧠 INSTRUCCIONES ESTRICTAS DE RESPUESTA Y VALIDACIÓN DE IDENTIDAD:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO A: CLIENTE / COMPRADOR PROVENIENTE DE ANUNCIOS EN REDES SOCIALES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Si el cliente pregunta por un vehículo, moto o inmueble (aunque solo pregunte precio, kilometraje, estado, ubicación o disponibilidad):
-  1. Responde su duda con precisión comercial, destacando el valor en Pesos COP ($) y el Peritaje de 150 Puntos.
-  2. 🎯 REGLA DE ORO DE CIERRE PROACTIVO: En TODA respuesta a un comprador interesado, SIEMPRE pregúntale al final si desea agendar una cita para verlo en persona y hacer la prueba de manejo:
-  3. Si el cliente muestra interés en la cita (ej: "sí", "el sábado", "mañana", "a qué hora atienden"):
-     Pídele amablemente sus datos oficiales:
-     • Nombre completo
-     • Cédula de Ciudadanía (C.C.)
-     • Correo electrónico real (para enviarle la confirmación y ficha técnica en PDF)
-     • Día y hora de preferencia
-  4. Una vez recibas los datos y el horario, CONFIRMA la cita inmediatamente con este formato limpio:
-     "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
-
-     • *Cliente:* [Nombre]
-     • *Cédula:* [CC]
-     • *Correo:* [Correo electrónico real del cliente]
-     • *Vehículo / Bien:* [Marca Modelo Año]
-     • *Fecha y Hora:* [Día y Hora acordada]
-     • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
-     • *Asesora Asignada:* Yury Jaramillo (Titular)
-
-     Nuestra asesora titular Yury Jaramillo te estará esperando puntualmente para la inspección y prueba de manejo. ¡Te esperamos!"
-- Si NO hay bienes en la categoría solicitada o el inventario está vacío:
-  Dile con total transparencia, elegancia y calidez comercial:
-  "En este momento estamos en proceso de peritaje e ingreso de nuevas unidades a nuestro catálogo oficial de YJD TRINOVA. ¿Qué modelo o rango de presupuesto tienes en mente para tomar tus datos y notificarte de manera prioritaria apenas ingrese, o tienes un vehículo/moto que desees consignar y vender con nosotros?"
-- NUNCA inventes marcas o modelos que no existan en la lista de arriba si no hay nada en la base de datos.
-- Enlace del Marketplace: https://ecosytem-psi.vercel.app/
+PROTOCOLO DE ATENCIÓN Y AGENDAMIENTO DE CITAS:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO B: PROVEEDOR / CONSIGNANTE (Quiere vender su vehículo, moto o inmueble)
+CASO 1: COMPRADORES & CLIENTES INTERESADOS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Dale la bienvenida al programa de Corretaje Mercantil e Intermediación Segura de YJD TRINOVA S.A.S.
-- Pídele amablemente los siguientes datos estructurados para su contrato y publicación:
-  • Tipo de bien (Motocicleta, Vehículo o Inmueble)
-  • Marca y Modelo exacto
-  • Año / Modelo
-  • Precio esperado en Pesos Colombianos (COP)
-  • Ciudad donde se ubica y Placa
-  • Nombre completo del propietario
-  • Cédula de Ciudadanía (C.C. o NIT) del titular
-  • Correo electrónico real (para expedición y firma del Mandato de Corretaje con Sello Notarial SHA-256)
-  • Teléfono de contacto
-  • 📸 FOTOS REALES: Pídele explícitamente: "Por favor envíame aquí mismo por WhatsApp de 2 a 4 fotos reales del bien (frontal, laterales, trasera, tablero con kilometraje e interior) para asociarlas a la ficha técnica del Marketplace."
-- Si el usuario te envía fotos, agradécele y confírmale que han sido adjuntadas a su expediente.
-- Infórmale que su bien quedará publicado en el Marketplace y respaldado bajo Mandato de Corretaje con Sello Criptográfico SHA-256.
+1. Saluda cordialmente y escucha la necesidad del cliente.
+2. Explícale que en YJD TRINOVA todas las unidades cuentan con peritaje certificado de 150 puntos (motor, caja, chasis, pintura) y garantía legal sin gravámenes.
+3. Pídele amablemente sus datos de contacto para registrar su solicitud en el sistema:
+   • Nombre completo
+   • WhatsApp / Teléfono
+   • Correo electrónico real (para enviarle el catálogo oficial, confirmaciones y cotizaciones)
+   • Ciudad donde se encuentra
+4. 🎯 CIERRE PROACTIVO: Ofrécele agendar una Cita Presencial en nuestra Sede Principal en Barranquilla o una Asesoría Telefónica Prioritaria con la titular Yury Jaramillo para revisar opciones que se ajusten a su presupuesto.
+5. Cuando el cliente te dé sus datos o fecha/hora de preferencia, CONFIRMA LA CITA con este formato limpio:
+   "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
 
-REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
-- CERO formato markdown complejo (NO uses ###, NO uses **, NO uses tablas ni asteriscos repetidos).
-- Usa ÚNICAMENTE negrita simple de WhatsApp (*palabra*) y viñetas limpias con el punto (•).
-- Párrafos cortos, muy limpios y fáciles de leer en pantalla de celular.
-- ESTÁS AISLADO: NO hables de desarrollo de software, programación de computadores ni sistemas informáticos.`;
+   • *Cliente:* [Nombre completo]
+   • *Teléfono / WhatsApp:* [Número del cliente]
+   • *Correo:* [Correo real del cliente]
+   • *Interés / Búsqueda:* [Qué vehículo o propiedad busca / presupuesto]
+   • *Fecha y Hora:* [Día y Hora acordada]
+   • *Lugar:* Sede Principal YJD Trinova (Barranquilla) o Asesoría Prioritaria
+   • *Asesora Asignada:* Yury Jaramillo (Titular)
+
+   Nuestro equipo comercial ha registrado tu cita y te estará esperando puntualmente para brindarte la mejor atención. ¡Te esperamos!"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CASO 2: PROPIETARIOS / CONSIGNANTES (Desean vender su carro, moto o inmueble)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Dale una cálida bienvenida al Programa de Corretaje Mercantil e Intermediación Segura de YJD TRINOVA S.A.S.
+2. Solicita los datos del bien:
+   • Tipo de bien (Carro, Moto o Propiedad)
+   • Marca, Modelo y Año
+   • Precio esperado en Pesos Colombianos (COP)
+   • Ciudad y Placa (si aplica)
+3. Solicita sus datos de contacto (Nombre completo, Teléfono, Correo real y Cédula/NIT).
+4. Invítale a enviar de 2 a 4 fotos por este mismo WhatsApp para iniciar la pre-evaluación y peritaje.
+5. Confírmale que su solicitud ha sido ingresada al sistema y que la titular Yury Jaramillo coordinará la revisión.
+
+REGLAS DE FORMATO PARA WHATSAPP:
+- CERO formato markdown complejo (NO uses ###, NO uses **, NO uses tablas).
+- Usa ÚNICAMENTE negrita simple de WhatsApp (*palabra*) y viñetas con punto (•).
+- Mensajes claros, elegantes, concisos y fáciles de leer en celular.
+- ESTÁS AISLADO: NO hables de desarrollo de software ni programación.`;
 
         const { text: rawAiReply } = await generateText({
           model: groq.chat('openai/gpt-oss-120b'),
@@ -522,7 +515,7 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           timestamp: new Date().toISOString(),
         });
 
-        // 2. Nota de voz inteligente con ElevenLabs
+        // 2. Nota de voz inteligente con ElevenLabs si aplica
         const shouldSendVoiceNote = isAudio || 
                                     text.toLowerCase().includes('audio') || 
                                     text.toLowerCase().includes('escuch') ||
@@ -530,21 +523,25 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
                                     text.toLowerCase().includes('llamada');
 
         if (shouldSendVoiceNote) {
-          console.log(`🎙️ [ELEVENLABS] Generando Nota de Voz para Trinova...`);
-          const voicePrompt = `¡Hola! Con el mayor gusto te atiendo desde YJD Trinova. Tenemos disponible un portafolio exclusivo de vehículos, motos e inmuebles garantizados. Cuéntame qué modelo buscas o si deseas consignar tu vehículo con nosotros.`;
+          try {
+            console.log(`🎙️ [ELEVENLABS] Generando Nota de Voz para Trinova...`);
+            const voicePrompt = `¡Hola! Con el mayor gusto te atiendo desde YJD Trinova. Cuéntame qué modelo o tipo de vehículo estás buscando, o si deseas consignar y vender tu vehículo con nosotros, para brindarte asesoría personalizada.`;
 
-          const voiceBuffer = await generateElevenLabsVoiceNote(voicePrompt);
-          if (voiceBuffer) {
-            await sock.sendMessage(sender, {
-              audio: voiceBuffer,
-              mimetype: 'audio/mp4',
-              ptt: true,
-            });
-            console.log(`✅ [VOZ ENVIADA] Nota de voz comercial entregada.`);
+            const voiceBuffer = await generateElevenLabsVoiceNote(voicePrompt);
+            if (voiceBuffer) {
+              await sock.sendMessage(sender, {
+                audio: voiceBuffer,
+                mimetype: 'audio/mp4',
+                ptt: true,
+              });
+              console.log(`✅ [VOZ ENVIADA] Nota de voz comercial entregada.`);
+            }
+          } catch (vErr) {
+            console.warn('Error enviando nota de voz:', vErr.message);
           }
         }
 
-        // 3. Ficha Comercial en PDF para Trinova
+        // 3. Ficha Comercial en PDF para Trinova si el usuario la pide
         const wantsQuotePDF = text.toLowerCase().includes('cotiz') || 
                               text.toLowerCase().includes('pdf') || 
                               text.toLowerCase().includes('ficha') ||
@@ -555,8 +552,8 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           try {
             const pdfBytes = await generateInstantPDFQuote(
               pushName || 'Cliente Interesado',
-              'Vehículo / Moto Certificada con Peritaje de 150 Puntos',
-              '$68.500.000 COP (o a convenir)',
+              'Portafolio Oficial Garantizado con Peritaje de 150 Puntos',
+              'A convenir según modelo seleccionado',
               `+${cleanPhone}`
             );
 
@@ -573,48 +570,22 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           }
         }
 
-        // 4. Registro Automático y Publicación en Supabase Cloud
+        // 4. Extracción de Datos, Registro en Supabase y Reporte de Cita a +57 323 5845145
         try {
           const { data: tenant } = await supabase.from('tenants').select('id').eq('slug', 'yjdtrinova').limit(1).single();
           const tenantId = tenant?.id || null;
 
-          // Detección de Ficha de Consignación enviada por Propietario
-          const isConsignmentData = text.toLowerCase().includes('marca') || 
-                                    text.toLowerCase().includes('modelo') || 
-                                    text.toLowerCase().includes('placa') ||
-                                    text.toLowerCase().includes('yamaha') ||
-                                    text.toLowerCase().includes('toyota') ||
-                                    text.toLowerCase().includes('precio');
-
-          // Extraer campos clave
-          const brandMatch = text.match(/marca[:\s*]+([^\n\r,]+)/i);
-          const modelMatch = text.match(/modelo[:\s*]+([^\n\r,]+)/i);
-          const yearMatch = text.match(/a[ñn]o[:\s*]+(\d{4})/i);
-          const priceMatch = text.match(/precio[^:]*[:\s*]+\$?([\d\.,]+)/i);
-          const plateMatch = text.match(/placa[:\s*]+([A-Za-z0-9-]+)/i);
           // Extracción Inteligente de Nombre Real
           let extractedName = null;
           const nameMatch = text.match(/(?:mi nombre es|me llamo|soy|nombre[:\s*]+)\s*([A-Za-zÀ-ÿ\s]{3,35})/i);
           if (nameMatch) {
             extractedName = nameMatch[1].replace(/(?:y mi|con|cedula|cc|telefono|mi cc).*/i, '').trim();
           }
-
           const ownerName = extractedName || (pushName && pushName !== 'Cliente' ? pushName : `Cliente (+${cleanPhone.slice(-4)})`);
-          const ownerEmail = emailMatch ? emailMatch[1].trim() : `${cleanPhone}@whatsapp.trinova.co`;
-          const brand = brandMatch ? brandMatch[1].trim() : (text.toLowerCase().includes('yamaha') ? 'Yamaha' : 'Trinova');
-          const model = modelMatch ? modelMatch[1].trim() : (text.toLowerCase().includes('mt-09') ? 'MT-09 SP ABS' : 'General');
-          const year = yearMatch ? parseInt(yearMatch[1]) : 2024;
-          
-          let parsedPrice = 0;
-          if (priceMatch) {
-            parsedPrice = parseFloat(priceMatch[1].replace(/[\.,]/g, ''));
-          } else if (text.includes('68.500.000') || text.includes('68500000')) {
-            parsedPrice = 68500000;
-          }
 
-          const plate = plateMatch ? plateMatch[1].trim().toUpperCase() : (text.includes('KTY-89G') ? 'KTY-89G' : null);
-          const isMoto = text.toLowerCase().includes('moto') || brand.toLowerCase().includes('yamaha');
-          const categoryType = isMoto ? 'MOTO' : 'VEHICULO';
+          // Extracción Inteligente de Correo Real
+          const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+          const ownerEmail = emailMatch ? emailMatch[1].trim().toLowerCase() : null;
 
           // Extracción Inteligente de Cédula Real
           let extractedDoc = null;
@@ -625,12 +596,18 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           }
           const docNumber = extractedDoc ? `CC ${extractedDoc.replace(/[^0-9]/g, '')}` : 'CC En Validación';
 
-          // Extracción Inteligente de Correo Real
-          const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
-          const ownerEmail = emailMatch ? emailMatch[1].trim().toLowerCase() : null;
+          // Detección de rol (Consignante vs Comprador)
+          const isConsignmentData = text.toLowerCase().includes('vender') || 
+                                    text.toLowerCase().includes('consignar') || 
+                                    text.toLowerCase().includes('mandato') ||
+                                    text.toLowerCase().includes('placa') ||
+                                    (text.toLowerCase().includes('marca') && text.toLowerCase().includes('modelo'));
+
+          const roleType = isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR';
 
           // 1. Guardar o actualizar contacto con Teléfono Real (+cleanPhone)
-          let { data: contact } = await supabase.from('contacts').select('id, email').eq('phone', `+${cleanPhone}`).single();
+          let { data: contact } = await supabase.from('contacts').select('id, email, doc_number, name').eq('phone', `+${cleanPhone}`).single();
+          
           if (!contact) {
             const { data: newContact } = await supabase.from('contacts').insert({
               tenant_id: tenantId,
@@ -639,94 +616,36 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
               email: ownerEmail || 'Pendiente por registrar',
               doc_number: docNumber,
               person_type: 'PERSONA_NATURAL',
-              role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR',
+              role_type: roleType,
               city: 'Barranquilla',
               status: 'ACTIVO'
-            }).select('id, email').single();
+            }).select('id, email, doc_number, name').single();
             contact = newContact;
           } else {
             const updatePayload = {
-              doc_number: docNumber,
-              name: ownerName
+              status: 'ACTIVO',
+              role_type: roleType
             };
+            if (ownerName && ownerName !== contact.name && !ownerName.includes('Cliente (+')) updatePayload.name = ownerName;
             if (ownerEmail) updatePayload.email = ownerEmail;
+            if (extractedDoc) updatePayload.doc_number = docNumber;
             await supabase.from('contacts').update(updatePayload).eq('id', contact.id);
           }
 
-          // 2. Si es una consignación con datos, guardar en inventory_items y generar contrato
-          if (isConsignmentData && contact) {
-            const assetTitle = `${brand} ${model} ${year}`.trim();
-            console.log(`🏍️ [AUTO-CONSIGNACIÓN SUPABASE] Guardando ${assetTitle} de ${ownerName}...`);
-
-            const { data: newItem } = await supabase.from('inventory_items').insert({
-              tenant_id: tenantId,
-              owner_contact_id: contact.id,
-              sku: `TRN-WA-${Date.now().toString().slice(-4)}`,
-              name: assetTitle,
-              category: categoryType,
-              category_type: categoryType,
-              brand: brand,
-              model: model,
-              year: year,
-              price: parsedPrice || 68500000,
-              price_cop: parsedPrice || 68500000,
-              license_plate: plate,
-              images: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'],
-              description: `Consignado por ${ownerName} vía WhatsApp oficial de YJD TRINOVA S.A.S.`,
-              status: 'AVAILABLE'
-            }).select('id').single();
-
-            // 3. Crear Mandato de Corretaje con Sello SHA-256
-            const contractCode = `TRN-CORR-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
-            const hashPayload = `${contractCode}|${ownerName}|${assetTitle}|${parsedPrice}|${new Date().toISOString()}`;
-            const signatureHash = `sha256:${crypto.createHash('sha256').update(hashPayload).digest('hex')}`;
-
-            if (newItem) {
-              await supabase.from('contracts').insert({
-                client_name: ownerName,
-                contact_id: contact.id,
-                service_type: 'CORRETAJE_MERCANTIL',
-                contract_type: 'MANDATO_CORRETAJE',
-                amount_cop: parsedPrice || 68500000,
-                commission_type: 'PERCENTAGE',
-                commission_value: 3.5,
-                status: 'FIRMADO'
-              });
-              console.log(`✅ [CONTRATO SHA-256 GENERADO] Código: ${contractCode}`);
-            }
-          }
-
-          // 5. Detección de Cita Presencial / Anuncios de Redes Sociales
-          const isAppointmentIntent = text.toLowerCase().includes('cita') || 
-                                      text.toLowerCase().includes('agend') || 
-                                      text.toLowerCase().includes('visita') || 
-                                      text.toLowerCase().includes('ver') || 
-                                      text.toLowerCase().includes('mirar') ||
-                                      text.toLowerCase().includes('probar') ||
-                                      text.toLowerCase().includes('mañana') ||
-                                      text.toLowerCase().includes('lunes') ||
-                                      text.toLowerCase().includes('martes') ||
-                                      text.toLowerCase().includes('miercoles') ||
-                                      text.toLowerCase().includes('jueves') ||
-                                      text.toLowerCase().includes('viernes') ||
-                                      text.toLowerCase().includes('sabado') ||
-                                      text.toLowerCase().includes('anuncio') ||
-                                      text.toLowerCase().includes('instagram') ||
-                                      text.toLowerCase().includes('facebook') ||
-                                      text.toLowerCase().includes('tiktok');
-
-          // Detección de Ticket Oficial Confirmado en la Respuesta de la IA
-          const hasConfirmedTicket = aiReply.includes('CITA AGENDADA') || aiReply.includes('CITA CONFIRMADA');
+          // Detección de Ticket de Cita Oficial en la Respuesta de la IA
+          const hasConfirmedTicket = aiReply.includes('CITA AGENDADA') || aiReply.includes('CITA CONFIRMADA') || aiReply.includes('¡CITA AGENDADA');
+          
           let ticketClientName = ownerName;
           let ticketDocNumber = docNumber;
-          let ticketItem = 'Yamaha MT-09 SP ABS 2024';
+          let ticketEmail = ownerEmail;
+          let ticketItem = 'Vehículo / Inmueble Trinova';
           let ticketSchedule = 'Horario acordado';
 
           if (hasConfirmedTicket) {
             const nameFromReply = aiReply.match(/Cliente:\s*([^\n\r*]+)/i);
             const docFromReply = aiReply.match(/C[eé]dula:\s*([^\n\r*]+)/i);
             const emailFromReply = aiReply.match(/Correo:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
-            const itemFromReply = aiReply.match(/(?:Bien|Veh[ií]culo):\s*([^\n\r*]+)/i);
+            const itemFromReply = aiReply.match(/(?:Bien|Veh[ií]culo|Inter[eé]s):\s*([^\n\r*]+)/i);
             const scheduleFromReply = aiReply.match(/Fecha y Hora:\s*([^\n\r*]+)/i);
 
             if (nameFromReply) ticketClientName = nameFromReply[1].trim();
@@ -741,22 +660,34 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
             console.log(`🎟️ [TICKET DE CITA CONFIRMADO]: ${ticketClientName} | ${ticketDocNumber} | ${ticketEmail || 'Sin correo'} | ${ticketSchedule}`);
           }
 
-          // Registrar o Actualizar Contacto y Lead en CRM
+          // Detección de intención general de cita o interés calificado
+          const isAppointmentIntent = text.toLowerCase().includes('cita') || 
+                                      text.toLowerCase().includes('agend') || 
+                                      text.toLowerCase().includes('visita') || 
+                                      text.toLowerCase().includes('ver') || 
+                                      text.toLowerCase().includes('probar') ||
+                                      text.toLowerCase().includes('mañana') ||
+                                      text.toLowerCase().includes('sábado') ||
+                                      text.toLowerCase().includes('sabado') ||
+                                      text.toLowerCase().includes('lunes');
+
+          // Registrar Lead en Supabase Cloud
           if (contact) {
             const finalContactName = hasConfirmedTicket ? ticketClientName : ownerName;
             const finalContactDoc = hasConfirmedTicket ? ticketDocNumber : docNumber;
             const finalContactEmail = hasConfirmedTicket ? (ticketEmail || ownerEmail) : ownerEmail;
-            const leadStatus = (hasConfirmedTicket || isAppointmentIntent) ? 'CITA_AGENDADA' : (isConsignmentData ? 'EN_PERITAJE' : 'NUEVO');
+            const leadStatus = (hasConfirmedTicket || isAppointmentIntent) ? 'CITA_AGENDADA' : 'NUEVO';
 
-            const contactUpdatePayload = {
-              name: finalContactName,
-              doc_number: finalContactDoc,
-              status: 'ACTIVO',
-              role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR'
-            };
-            if (finalContactEmail) contactUpdatePayload.email = finalContactEmail;
-
-            await supabase.from('contacts').update(contactUpdatePayload).eq('id', contact.id);
+            if (hasConfirmedTicket) {
+              const contactUpdatePayload = {
+                name: finalContactName,
+                doc_number: finalContactDoc,
+                status: 'ACTIVO',
+                role_type: roleType
+              };
+              if (finalContactEmail) contactUpdatePayload.email = finalContactEmail;
+              await supabase.from('contacts').update(contactUpdatePayload).eq('id', contact.id);
+            }
 
             await supabase.from('leads').insert({
               tenant_id: tenantId,
@@ -769,14 +700,37 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
               intent_level: 'ALTA'
             });
 
-            // Si hay cita agendada confirmada, alertar a la titular Yury Jaramillo
-            if ((hasConfirmedTicket || isAppointmentIntent) && text.length > 3) {
+            // ───────────────────────────────────────────────────────────────────
+            // 🚨 ENVIAR AVISO / REPORTE AL NÚMERO PROPIO DE LA EMPRESA (+57 323 5845145)
+            // ───────────────────────────────────────────────────────────────────
+            const isNotOwnAlert = !sender.includes('573235845145') || !text.includes('🚨');
+            
+            if (isNotOwnAlert && (hasConfirmedTicket || isAppointmentIntent || isConsignmentData || ownerEmail || extractedName)) {
               try {
-                const alertMsg = `🚨 *NUEVA CITA AGENDADA DESDE REDES SOCIALES* 📅✨\n\n• *Cliente:* ${finalContactName}\n• *Cédula:* ${finalContactDoc}\n• *Teléfono:* +${cleanPhone}\n• *Vehículo / Bien:* ${ticketItem}\n• *Fecha y Hora:* ${ticketSchedule}\n• *Canal:* Anuncios Meta (WhatsApp Ads)\n• *Asesora Asignada:* Yury Jaramillo (Titular)\n\n_El cliente fue registrado en la base de datos de Trinova para la prueba presencial._`;
+                const alertTitle = hasConfirmedTicket 
+                  ? '🚨 *NUEVA CITA AGENDADA EN YJD TRINOVA* 📅✨' 
+                  : (isConsignmentData 
+                      ? '🔑 *NUEVA SOLICITUD DE CONSIGNACIÓN* 📋' 
+                      : '🛒 *NUEVO CLIENTE INTERESADO REGISTRADO* 💬');
+
+                const alertMsg = `${alertTitle}
+
+• *Tipo:* ${roleType === 'PROPIETARIO_CONSIGNANTE' ? '🔑 Vendedor / Consignante' : '🛒 Comprador Interesado'}
+• *Cliente:* ${finalContactName}
+• *Teléfono / WhatsApp:* +${cleanPhone}
+• *Correo:* ${finalContactEmail || 'Pendiente por registrar'}
+• *Cédula:* ${finalContactDoc}
+• *Interés / Búsqueda:* ${ticketItem !== 'Vehículo / Inmueble Trinova' ? ticketItem : text.slice(0, 120)}
+• *Fecha y Hora de Cita:* ${hasConfirmedTicket ? ticketSchedule : (isAppointmentIntent ? 'Por coordinar' : 'No solicitada')}
+• *Ciudad:* Barranquilla
+• *Último Mensaje:* "${text.slice(0, 150)}"
+
+_Contacto sincronizado en tiempo real con el panel administrativo de Supabase._`;
+
                 await sock.sendMessage(OWNER_PHONE, { text: alertMsg });
-                console.log(`📲 [ALERTA DE CITA ENVIADA A YURY JARAMILLO (+57 323 5845145)]`);
+                console.log(`📲 [ALERTA DE CITA ENVIADA AL NÚMERO DE LA EMPRESA (+57 323 5845145)]`);
               } catch (alertErr) {
-                console.warn('Error enviando alerta de cita a titular:', alertErr.message);
+                console.warn('Error enviando alerta de cita a la empresa (+57 323 5845145):', alertErr.message);
               }
             }
           }
