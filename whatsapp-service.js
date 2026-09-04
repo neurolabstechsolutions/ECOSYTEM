@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const { createOpenAI } = require('@ai-sdk/openai');
 const { generateText } = require('ai');
@@ -329,11 +329,17 @@ async function connectToWhatsApp() {
         pushName = rawName.split(' ')[0];
       }
 
-      // Manejo de Notas de Voz
+      // Manejo de Notas de Voz e Imágenes
       const isAudio = Boolean(msg.message.audioMessage);
+      const isImage = Boolean(msg.message.imageMessage);
+
       if (isAudio) {
         console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de cliente (${cleanPhone})...`);
         text = 'Hola, te envié un audio solicitando información sobre sus vehículos, motos e inmuebles disponibles.';
+      } else if (isImage) {
+        console.log(`📸 [IMAGEN RECIBIDA] Fotografía entrante de cliente (${cleanPhone})...`);
+        const caption = msg.message.imageMessage.caption || '';
+        text = caption ? `${caption} [Foto adjunta]` : 'Te acabo de enviar una fotografía real del vehículo/bien para la ficha técnica del Marketplace.';
       }
 
       if (!text.trim()) continue;
@@ -426,7 +432,15 @@ CASO A: CLIENTE / COMPRADOR (Pregunta por motos, autos o inmuebles)
 CASO B: PROVEEDOR / CONSIGNANTE (Quiere vender su vehículo, moto o inmueble)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Dale la bienvenida al programa de Corretaje Mercantil e Intermediación Segura de YJD TRINOVA S.A.S.
-- Pídele amablemente los datos: Tipo de bien, Marca, Modelo, Año, Precio COP, Ciudad, Placa y su Nombre.
+- Pídele amablemente los siguientes datos estructurados:
+  • Tipo de bien (Motocicleta, Vehículo o Inmueble)
+  • Marca y Modelo exacto
+  • Año / Modelo
+  • Precio esperado en Pesos Colombianos (COP)
+  • Ciudad donde se ubica y Placa
+  • Tu nombre completo y teléfono/correo de contacto
+  • 📸 FOTOS REALES: Pídele explícitamente: "Por favor envíame aquí mismo por WhatsApp de 2 a 4 fotos reales del bien (frontal, laterales, trasera, tablero con kilometraje e interior) para asociarlas a la ficha técnica del Marketplace."
+- Si el usuario te envía fotos, agradécele y confírmale que han sido adjuntadas a su expediente de corretaje.
 - Infórmale que su bien quedará publicado en el Marketplace y respaldado bajo Mandato de Corretaje con Sello Criptográfico SHA-256.
 
 REGLAS DE ORO:
