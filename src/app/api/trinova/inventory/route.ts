@@ -15,12 +15,24 @@ export async function POST(req: Request) {
       year,
       priceCop,
       categoryType = 'VEHICULO',
+      subCategory,
       licensePlate,
       mileage,
       city = 'Barranquilla',
+      neighborhood,
+      areaM2,
+      bedrooms,
+      bathrooms,
+      parkingSpots,
+      stratum,
+      fuelType,
+      transmission,
+      engineDisplacement,
+      exteriorColor,
+      interiorColor,
+      features = [],
       description,
-      images = [],
-      specs = {}
+      images = []
     } = body;
 
     if (!name || !priceCop) {
@@ -37,26 +49,42 @@ export async function POST(req: Request) {
 
     const priceNum = Number(priceCop);
 
+    const insertPayload: Record<string, any> = {
+      tenant_id: tenantId,
+      sku,
+      name: name.trim(),
+      brand: brand ? brand.trim() : (categoryType.startsWith('INMUEBLE') ? 'Inmobiliaria Trinova' : 'Trinova'),
+      model: model ? model.trim() : 'Oficial',
+      year: year ? parseInt(year) : 2024,
+      price: priceNum,
+      price_cop: priceNum,
+      category: categoryType,
+      category_type: categoryType,
+      city: city.trim(),
+      description: description ? description.trim() : `Bien oficial garantizado por YJD TRINOVA S.A.S. con peritaje de 150 puntos.`,
+      images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'],
+      status: 'AVAILABLE'
+    };
+
+    if (subCategory) insertPayload.sub_category = subCategory;
+    if (licensePlate) insertPayload.license_plate = licensePlate.trim().toUpperCase();
+    if (mileage !== undefined && mileage !== null && mileage !== '') insertPayload.mileage = parseInt(mileage);
+    if (neighborhood) insertPayload.neighborhood = neighborhood.trim();
+    if (areaM2) insertPayload.area_m2 = parseFloat(areaM2);
+    if (bedrooms) insertPayload.bedrooms = parseInt(bedrooms);
+    if (bathrooms) insertPayload.bathrooms = parseInt(bathrooms);
+    if (parkingSpots) insertPayload.parking_spots = parseInt(parkingSpots);
+    if (stratum) insertPayload.stratum = parseInt(stratum);
+    if (fuelType) insertPayload.fuel_type = fuelType;
+    if (transmission) insertPayload.transmission = transmission;
+    if (engineDisplacement) insertPayload.engine_displacement = engineDisplacement;
+    if (exteriorColor) insertPayload.exterior_color = exteriorColor;
+    if (interiorColor) insertPayload.interior_color = interiorColor;
+    if (Array.isArray(features) && features.length > 0) insertPayload.features = features;
+
     const { data: newItem, error: insertError } = await supabase
       .from('inventory_items')
-      .insert({
-        tenant_id: tenantId,
-        sku,
-        name: name.trim(),
-        brand: brand ? brand.trim() : 'Trinova',
-        model: model ? model.trim() : 'Oficial',
-        year: year ? parseInt(year) : 2024,
-        price: priceNum,
-        price_cop: priceNum,
-        category: categoryType,
-        category_type: categoryType,
-        license_plate: licensePlate ? licensePlate.trim().toUpperCase() : null,
-        mileage: mileage ? parseInt(mileage) : null,
-        city: city.trim(),
-        description: description ? description.trim() : `Vehículo oficial garantizado por YJD TRINOVA S.A.S. con peritaje de 150 puntos.`,
-        images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'],
-        status: 'AVAILABLE'
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

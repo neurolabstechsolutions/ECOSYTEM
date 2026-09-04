@@ -204,6 +204,7 @@ export default function MarketplacePage(props: MarketplacePageProps) {
   // Interaction states
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedVehicleForModal, setSelectedVehicleForModal] = useState<Vehicle | null>(null);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
   const [activeImageIndexMap, setActiveImageIndexMap] = useState<Record<string, number>>({});
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -1328,7 +1329,10 @@ Estoy interesado en el siguiente vehículo:
                             {/* Technical Sheet / Detail Modal */}
                             <Button
                               variant="outline"
-                              onClick={() => setSelectedVehicleForModal(car)}
+                              onClick={() => {
+                                setSelectedVehicleForModal(car);
+                                setModalImageIndex(0);
+                              }}
                               className="h-10 text-xs font-semibold border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100 hover:text-slate-950"
                             >
                               Ver Ficha
@@ -1367,13 +1371,69 @@ Estoy interesado en el siguiente vehículo:
           {selectedVehicleForModal && (
             <div className="flex flex-col lg:flex-row h-full w-full">
               
-              {/* Left Column: Full height image */}
-              <div className="relative w-full lg:w-[55%] h-56 sm:h-72 lg:h-full bg-slate-100 flex-shrink-0">
-                <img
-                  src={selectedVehicleForModal.images[0]}
-                  alt={`${selectedVehicleForModal.brand} ${selectedVehicleForModal.model}`}
-                  className="h-full w-full object-cover"
-                />
+              {/* Left Column: Interactive Multi-Image Gallery */}
+              <div className="relative w-full lg:w-[55%] h-72 sm:h-96 lg:h-full bg-slate-950 flex flex-col flex-shrink-0 group overflow-hidden">
+                {/* Main Large Image */}
+                <div className="relative flex-1 w-full h-full overflow-hidden">
+                  <img
+                    src={selectedVehicleForModal.images[modalImageIndex] || selectedVehicleForModal.images[0]}
+                    alt={`${selectedVehicleForModal.brand} ${selectedVehicleForModal.model}`}
+                    className="h-full w-full object-cover transition-all duration-300"
+                  />
+
+                  {/* Top Counter Badge */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <Badge className="bg-black/75 text-white backdrop-blur-md text-[10px] font-bold px-2.5 py-1">
+                      Foto {modalImageIndex + 1} de {selectedVehicleForModal.images.length}
+                    </Badge>
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  {selectedVehicleForModal.images.length > 1 && (
+                    <div className="absolute inset-y-0 inset-x-3 flex items-center justify-between pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModalImageIndex((prev) => (prev - 1 + selectedVehicleForModal.images.length) % selectedVehicleForModal.images.length);
+                        }}
+                        className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black transition-transform hover:scale-110 shadow-lg"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModalImageIndex((prev) => (prev + 1) % selectedVehicleForModal.images.length);
+                        }}
+                        className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black transition-transform hover:scale-110 shadow-lg"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Thumbnails Strip */}
+                {selectedVehicleForModal.images.length > 1 && (
+                  <div className="p-3 bg-black/80 backdrop-blur-md flex items-center gap-2 overflow-x-auto custom-scrollbar z-10 shrink-0">
+                    {selectedVehicleForModal.images.map((imgUrl, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setModalImageIndex(idx)}
+                        className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                          modalImageIndex === idx
+                            ? "border-emerald-500 ring-2 ring-emerald-500/40 opacity-100 scale-105"
+                            : "border-white/20 opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <img src={imgUrl} alt={`Miniatura ${idx + 1}`} className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Content with Tabs */}

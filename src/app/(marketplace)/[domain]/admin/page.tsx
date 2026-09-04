@@ -11,7 +11,8 @@ import {
   ChevronRight, ArrowRight, Briefcase, Layers, QrCode,
   Smartphone, RefreshCw, MessageSquare, Unplug, Shield, Menu,
   X, Database, Activity, Terminal, Award, HelpCircle, Megaphone,
-  FileCheck2, Compass, Lock, LogOut, EyeOff, Plus, Trash2, Sparkles, Image as ImageIcon
+  FileCheck2, Compass, Lock, LogOut, EyeOff, Plus, Trash2, Sparkles, Image as ImageIcon,
+  Upload, Home, Bed, Bath, Fuel, Zap, Gauge
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -317,21 +318,94 @@ export default function TrinovaDedicatedAdminPage() {
   const [newItemModel, setNewItemModel] = useState('')
   const [newItemYear, setNewItemYear] = useState('2024')
   const [newItemPrice, setNewItemPrice] = useState('')
-  const [newItemPlate, setNewItemPlate] = useState('')
-  const [newItemMileage, setNewItemMileage] = useState('')
   const [newItemCity, setNewItemCity] = useState('Barranquilla')
   const [newItemDescription, setNewItemDescription] = useState('')
   const [newItemImages, setNewItemImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'
+    'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
+    'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200',
+    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=1200'
   ])
   const [newImageUrlInput, setNewImageUrlInput] = useState('')
   const [isSavingItem, setIsSavingItem] = useState(false)
 
+  // Specific for Motos (MOTO)
+  const [newMotoDisplacement, setNewMotoDisplacement] = useState('890 cc')
+  const [newMotoType, setNewMotoType] = useState('Naked')
+  const [newMotoBrakes, setNewMotoBrakes] = useState('ABS Doble Canal')
+  const [newMotoTransmission, setNewMotoTransmission] = useState('Mecánica 6 Vel')
+  const [newMotoPlate, setNewMotoPlate] = useState('KTY-89G')
+  const [newMotoMileage, setNewMotoMileage] = useState('4500')
+  const [newMotoColor, setNewMotoColor] = useState('Gris Nardo / Azul Icon')
+
+  // Specific for Carros / Vehículos (VEHICULO)
+  const [newCarBodyType, setNewCarBodyType] = useState('SUV / Camioneta')
+  const [newCarEngine, setNewCarEngine] = useState('2.8L Turbo Diésel')
+  const [newCarTraction, setNewCarTraction] = useState('4x4 con Bajo')
+  const [newCarTransmission, setNewCarTransmission] = useState('Automática Secuencial')
+  const [newCarFuel, setNewCarFuel] = useState('Diésel')
+  const [newCarArmor, setNewCarArmor] = useState('Sin Blindaje')
+  const [newCarPlate, setNewCarPlate] = useState('LMN-456')
+  const [newCarMileage, setNewCarMileage] = useState('18500')
+  const [newCarExteriorColor, setNewCarExteriorColor] = useState('Blanco Perlado')
+  const [newCarInteriorColor, setNewCarInteriorColor] = useState('Cuero Negro')
+
+  // Specific for Bienes Raíces (INMUEBLE_VENTA / INMUEBLE_RENTA)
+  const [newPropertyType, setNewPropertyType] = useState('Penthouse')
+  const [newPropertyNeighborhood, setNewPropertyNeighborhood] = useState('Alto Prado')
+  const [newPropertyAreaM2, setNewPropertyAreaM2] = useState('240')
+  const [newPropertyLotAreaM2, setNewPropertyLotAreaM2] = useState('60')
+  const [newPropertyBedrooms, setNewPropertyBedrooms] = useState('3')
+  const [newPropertyBathrooms, setNewPropertyBathrooms] = useState('4')
+  const [newPropertyParking, setNewPropertyParking] = useState('2')
+  const [newPropertyStratum, setNewPropertyStratum] = useState('6')
+  const [newPropertyFloor, setNewPropertyFloor] = useState('Piso 12')
+  const [newPropertyAdminFee, setNewPropertyAdminFee] = useState('950000')
+  const [newPropertyAmenities, setNewPropertyAmenities] = useState<string>('Piscina Privada, Gimnasio, Balcón Panorámico, Ascensor Privado, Planta Eléctrica Total, Seguridad 24/7')
+
+  // Multi-image upload from local device (FileReader)
+  const handleImageFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    const fileArray = Array.from(files)
+    fileArray.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setNewItemImages(prev => [...prev, event.target!.result as string])
+        }
+      }
+      reader.readAsDataURL(file)
+    })
+    toast.success(`Cargando ${fileArray.length} imagen(es) a la galería`)
+    e.target.value = ''
+  }
+
+  // Paste multiple URLs (comma, space or newline separated)
   const handleAddImageUrl = () => {
     if (!newImageUrlInput.trim()) return
-    setNewItemImages(prev => [...prev, newImageUrlInput.trim()])
-    setNewImageUrlInput('')
-    toast.success("Foto añadida a la galería")
+    const urls = newImageUrlInput
+      .split(/[\n,\s]+/)
+      .map(u => u.trim())
+      .filter(u => u.startsWith('http://') || u.startsWith('https://') || u.startsWith('data:'))
+
+    if (urls.length > 0) {
+      setNewItemImages(prev => [...prev, ...urls])
+      setNewImageUrlInput('')
+      toast.success(`Se agregaron ${urls.length} foto(s) a la galería`)
+    } else {
+      toast.error("Ingresa URLs válidas que empiecen con http:// o https://")
+    }
+  }
+
+  const handleSetAsCover = (index: number) => {
+    if (index === 0) return
+    setNewItemImages(prev => {
+      const copy = [...prev]
+      const [item] = copy.splice(index, 1)
+      copy.unshift(item)
+      return copy
+    })
+    toast.success("Foto establecida como portada principal")
   }
 
   const handleRemoveImageUrl = (index: number) => {
@@ -345,66 +419,196 @@ export default function TrinovaDedicatedAdminPage() {
     }
 
     const nameLower = newItemName.toLowerCase()
-    if (nameLower.includes('moto') || nameLower.includes('yamaha') || nameLower.includes('kawasaki') || nameLower.includes('ducati') || nameLower.includes('bmw') || nameLower.includes('honda') || nameLower.includes('suzuki') || nameLower.includes('ktm')) {
+
+    // 1. MOTOS
+    if (nameLower.includes('moto') || nameLower.includes('yamaha') || nameLower.includes('kawasaki') || nameLower.includes('ducati') || nameLower.includes('bmw r') || nameLower.includes('bmw s') || nameLower.includes('bmw f') || nameLower.includes('honda cbr') || nameLower.includes('suzuki gsx') || nameLower.includes('ktm') || nameLower.includes('triumph') || nameLower.includes('harley') || nameLower.includes('royal enfield') || nameLower.includes('ninja') || nameLower.includes('mt-09') || nameLower.includes('z900') || nameLower.includes('panigale')) {
       setNewItemCategory('MOTO')
-      if (nameLower.includes('yamaha')) setNewItemBrand('Yamaha')
-      else if (nameLower.includes('kawasaki')) setNewItemBrand('Kawasaki')
-      else if (nameLower.includes('bmw')) setNewItemBrand('BMW Motorrad')
-      else if (nameLower.includes('ducati')) setNewItemBrand('Ducati')
-      else if (nameLower.includes('ktm')) setNewItemBrand('KTM')
-      else if (nameLower.includes('honda')) setNewItemBrand('Honda')
-      else setNewItemBrand('Yamaha')
+      if (nameLower.includes('yamaha') || nameLower.includes('mt-09') || nameLower.includes('r6') || nameLower.includes('r1')) {
+        setNewItemBrand('Yamaha')
+        setNewItemModel(nameLower.includes('mt-09') ? 'MT-09 SP' : 'YZF-R6')
+        setNewMotoDisplacement('890 cc')
+        setNewMotoType('Naked')
+      } else if (nameLower.includes('kawasaki') || nameLower.includes('z900') || nameLower.includes('ninja')) {
+        setNewItemBrand('Kawasaki')
+        setNewItemModel(nameLower.includes('z900') ? 'Z900 ABS' : 'Ninja ZX-6R')
+        setNewMotoDisplacement('948 cc')
+        setNewMotoType('Superdeportiva / Sport')
+      } else if (nameLower.includes('ducati') || nameLower.includes('panigale') || nameLower.includes('monster') || nameLower.includes('streetfighter')) {
+        setNewItemBrand('Ducati')
+        setNewItemModel(nameLower.includes('panigale') ? 'Panigale V4 S' : 'Streetfighter V2')
+        setNewMotoDisplacement('1.103 cc')
+        setNewMotoType('Superdeportiva / Sport')
+        setNewMotoBrakes('Frenos Brembo Stylema ABS Cornering')
+      } else if (nameLower.includes('bmw') || nameLower.includes('gs') || nameLower.includes('s1000rr')) {
+        setNewItemBrand('BMW Motorrad')
+        setNewItemModel(nameLower.includes('gs') ? 'R 1250 GS Adventure' : 'S 1000 RR M Package')
+        setNewMotoDisplacement(nameLower.includes('gs') ? '1.254 cc' : '999 cc')
+        setNewMotoType(nameLower.includes('gs') ? 'Touring / Aventura' : 'Superdeportiva / Sport')
+      } else if (nameLower.includes('ktm') || nameLower.includes('duke')) {
+        setNewItemBrand('KTM')
+        setNewItemModel('Super Duke 1290 R')
+        setNewMotoDisplacement('1.301 cc')
+        setNewMotoType('Naked')
+      } else if (nameLower.includes('honda')) {
+        setNewItemBrand('Honda')
+        setNewItemModel('CBR 650R ABS')
+        setNewMotoDisplacement('649 cc')
+        setNewMotoType('Superdeportiva / Sport')
+      } else {
+        setNewItemBrand('Yamaha')
+        setNewItemModel('MT-09')
+        setNewMotoDisplacement('890 cc')
+      }
 
       if (!newItemPrice) setNewItemPrice('68500000')
-      if (!newItemMileage) setNewItemMileage('4500')
-      if (!newItemPlate) setNewItemPlate('KTY-89G')
+      setNewMotoMileage('4500')
+      setNewMotoPlate('KTY-89G')
+      setNewMotoColor('Gris Nardo / Azul Icon')
+      setNewMotoTransmission('Quickshifter Up/Down 6 Vel')
+      setNewMotoBrakes('ABS Doble Canal & Control de Tracción TCS')
 
-      if (!newItemDescription) {
-        setNewItemDescription(`Exclusiva ${newItemName} en condición impecable. Cuenta con peritaje integral de 150 puntos avalado por YJD TRINOVA S.A.S., mantenimiento oficial al día, garantía mecánica y lista para traspaso inmediato sin gravámenes.`)
+      setNewItemDescription(`Exclusiva ${newItemName} en condición impecable. Cuenta con peritaje integral de 150 puntos avalado por YJD TRINOVA S.A.S., mantenimiento oficial al día en concesionario, garantía mecánica de 1 año y lista para traspaso inmediato sin gravámenes ni embargos.`)
+      
+      setNewItemImages([
+        'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&q=80&w=1200'
+      ])
+    } 
+    // 2. BIENES RAICES (INMUEBLE VENTA / RENTA)
+    else if (nameLower.includes('apartamento') || nameLower.includes('casa') || nameLower.includes('penthouse') || nameLower.includes('local') || nameLower.includes('inmueble') || nameLower.includes('lote') || nameLower.includes('bodega') || nameLower.includes('piso') || nameLower.includes('edificio') || nameLower.includes('prado') || nameLower.includes('arriendo') || nameLower.includes('renta')) {
+      const isRent = nameLower.includes('arriendo') || nameLower.includes('renta') || nameLower.includes('alquiler')
+      setNewItemCategory(isRent ? 'INMUEBLE_RENTA' : 'INMUEBLE_VENTA')
+      setNewItemBrand('Inmobiliaria YJD Trinova')
+      
+      if (nameLower.includes('penthouse')) {
+        setNewPropertyType('Penthouse')
+        setNewPropertyAreaM2('240')
+        setNewPropertyBedrooms('3')
+        setNewPropertyBathrooms('4')
+        setNewPropertyParking('2')
+        setNewPropertyStratum('6')
+        setNewPropertyFloor('Piso 14')
+        setNewPropertyNeighborhood('Alto Prado')
+        if (!newItemPrice) setNewItemPrice(isRent ? '8500000' : '850000000')
+      } else if (nameLower.includes('casa') && nameLower.includes('campestre')) {
+        setNewPropertyType('Casa Campestre')
+        setNewPropertyAreaM2('420')
+        setNewPropertyLotAreaM2('800')
+        setNewPropertyBedrooms('4')
+        setNewPropertyBathrooms('5')
+        setNewPropertyParking('4')
+        setNewPropertyStratum('Campestre')
+        setNewPropertyNeighborhood('Riomar / Puerto Colombia')
+        if (!newItemPrice) setNewItemPrice(isRent ? '12000000' : '1650000000')
+      } else if (nameLower.includes('casa')) {
+        setNewPropertyType('Casa de Lujo')
+        setNewPropertyAreaM2('320')
+        setNewPropertyBedrooms('4')
+        setNewPropertyBathrooms('4')
+        setNewPropertyParking('3')
+        setNewPropertyStratum('6')
+        setNewPropertyNeighborhood('Villa Country')
+        if (!newItemPrice) setNewItemPrice(isRent ? '9000000' : '1100000000')
+      } else {
+        setNewPropertyType('Apartamento')
+        setNewPropertyAreaM2('165')
+        setNewPropertyBedrooms('3')
+        setNewPropertyBathrooms('3')
+        setNewPropertyParking('2')
+        setNewPropertyStratum('6')
+        setNewPropertyFloor('Piso 8')
+        setNewPropertyNeighborhood('El Golf')
+        if (!newItemPrice) setNewItemPrice(isRent ? '5500000' : '620000000')
       }
-      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
-        setNewItemImages([
-          'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
-          'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200'
-        ])
-      }
-    } else if (nameLower.includes('apartamento') || nameLower.includes('casa') || nameLower.includes('penthouse') || nameLower.includes('local') || nameLower.includes('inmueble')) {
-      setNewItemCategory('INMUEBLE_VENTA')
-      setNewItemBrand('Inmobiliaria Trinova')
-      if (!newItemPrice) setNewItemPrice('850000000')
-      if (!newItemDescription) {
-        setNewItemDescription(`Extraordinaria propiedad ubicada en sector de alta valorización en Barranquilla. Acabados de lujo, excelente iluminación natural, seguridad privada 24/7 y toda la documentación jurídica al día para escrituración inmediata.`)
-      }
-      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
-        setNewItemImages([
-          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
-          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'
-        ])
-      }
-    } else {
+
+      setNewPropertyAdminFee('850000')
+      setNewPropertyAmenities('Piscina Privada, Gimnasio Dotado, Balcón con Vista Panorámica, Ascensor Privado, Planta Eléctrica Total, Salón Social, Vigilancia 24/7')
+
+      setNewItemDescription(`Extraordinaria propiedad ubicada en el sector más exclusivo y de mayor valorización de Barranquilla. Acabados de lujo importados, excelente iluminación natural, ventanales de piso a techo, doble parqueadero cubierto, depósito y seguridad privada 24/7. Documentación jurídica e impuestos 100% al día para escrituración inmediata con YJD TRINOVA S.A.S.`)
+      
+      setNewItemImages([
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=1200'
+      ])
+    } 
+    // 3. CARROS / VEHICULOS
+    else {
       setNewItemCategory('VEHICULO')
-      if (nameLower.includes('toyota')) setNewItemBrand('Toyota')
-      else if (nameLower.includes('mazda')) setNewItemBrand('Mazda')
-      else if (nameLower.includes('mercedes') || nameLower.includes('benz')) setNewItemBrand('Mercedes-Benz')
-      else if (nameLower.includes('bmw')) setNewItemBrand('BMW')
-      else if (nameLower.includes('audi')) setNewItemBrand('Audi')
-      else if (nameLower.includes('chevrolet')) setNewItemBrand('Chevrolet')
-      else setNewItemBrand('Toyota')
-
-      if (!newItemPrice) setNewItemPrice('310000000')
-      if (!newItemMileage) setNewItemMileage('12500')
-      if (!newItemPlate) setNewItemPlate('LMN-456')
-
-      if (!newItemDescription) {
-        setNewItemDescription(`Vehículo de gama alta garantizado bajo el programa de Corretaje Oficial YJD TRINOVA S.A.S. Peritaje de 150 puntos aprobado (motor, caja, chasis, suspensión y pintura), cero reclamaciones en aseguradora y listo para traspaso.`)
+      if (nameLower.includes('toyota') || nameLower.includes('prado') || nameLower.includes('fortuner') || nameLower.includes('hilux') || nameLower.includes('land cruiser')) {
+        setNewItemBrand('Toyota')
+        setNewItemModel(nameLower.includes('prado') ? 'Prado TXL 2.8L Diésel' : (nameLower.includes('fortuner') ? 'Fortuner Diamond 2.8L' : 'Hilux GR-Sport 4x4'))
+        setNewCarBodyType('SUV / Camioneta')
+        setNewCarEngine('2.8L 4 Cilindros 1GD-FTV Turbo Diésel')
+        setNewCarFuel('Diésel')
+        setNewCarTraction('4x4 con Bajo')
+        setNewCarTransmission('Automática Secuencial 6 Vel')
+        if (!newItemPrice) setNewItemPrice('310000000')
+      } else if (nameLower.includes('mazda') || nameLower.includes('cx-30') || nameLower.includes('cx-5') || nameLower.includes('cx-50')) {
+        setNewItemBrand('Mazda')
+        setNewItemModel(nameLower.includes('cx-30') ? 'CX-30 Grand Touring LX' : 'CX-50 Grand Touring AWD')
+        setNewCarBodyType('SUV / Camioneta')
+        setNewCarEngine('2.5L Skyactiv-G Turbo')
+        setNewCarFuel('Gasolina Extra')
+        setNewCarTraction('AWD Integral')
+        setNewCarTransmission('Automática Skyactiv-Drive 6 Vel')
+        if (!newItemPrice) setNewItemPrice('145000000')
+      } else if (nameLower.includes('mercedes') || nameLower.includes('benz') || nameLower.includes('gle') || nameLower.includes('glc') || nameLower.includes('amg')) {
+        setNewItemBrand('Mercedes-Benz')
+        setNewItemModel(nameLower.includes('gle') ? 'GLE 450 4MATIC AMG Line' : 'GLC 300 4MATIC')
+        setNewCarBodyType('SUV / Camioneta')
+        setNewCarEngine('3.0L Turbo 6 Cilindros EQ Boost Mild-Hybrid')
+        setNewCarFuel('Híbrido')
+        setNewCarTraction('AWD Integral')
+        setNewCarTransmission('Automática 9G-TRONIC')
+        if (!newItemPrice) setNewItemPrice('385000000')
+      } else if (nameLower.includes('bmw') || nameLower.includes('x5') || nameLower.includes('x3') || nameLower.includes('serie 3')) {
+        setNewItemBrand('BMW')
+        setNewItemModel(nameLower.includes('x5') ? 'X5 xDrive40i M Sport' : '330i M Sport')
+        setNewCarBodyType(nameLower.includes('x5') ? 'SUV / Camioneta' : 'Sedán')
+        setNewCarEngine('3.0L BMW TwinPower Turbo 6 Cilindros')
+        setNewCarFuel('Gasolina Extra')
+        setNewCarTraction('AWD Integral')
+        setNewCarTransmission('Automática Steptronic Sport 8 Vel')
+        if (!newItemPrice) setNewItemPrice('360000000')
+      } else if (nameLower.includes('audi') || nameLower.includes('q7') || nameLower.includes('q5')) {
+        setNewItemBrand('Audi')
+        setNewItemModel('Q7 55 TFSI quattro')
+        setNewCarBodyType('SUV / Camioneta')
+        setNewCarEngine('3.0L V6 Turbo TFSI')
+        setNewCarFuel('Híbrido')
+        setNewCarTraction('AWD Integral')
+        setNewCarTransmission('Automática Tiptronic 8 Vel')
+        if (!newItemPrice) setNewItemPrice('320000000')
+      } else {
+        setNewItemBrand('Toyota')
+        setNewItemModel('Prado TXL')
+        setNewCarBodyType('SUV / Camioneta')
+        setNewCarEngine('2.8L Turbo Diésel')
+        setNewCarFuel('Diésel')
+        setNewCarTraction('4x4 con Bajo')
+        if (!newItemPrice) setNewItemPrice('310000000')
       }
-      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
-        setNewItemImages([
-          'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
-          'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'
-        ])
-      }
+
+      setNewCarMileage('18500')
+      setNewCarPlate('LMN-456')
+      setNewCarArmor('Sin Blindaje')
+      setNewCarExteriorColor('Blanco Perlado')
+      setNewCarInteriorColor('Cuero Negro con Costuras Especiales')
+
+      setNewItemDescription(`Vehículo de gama alta garantizado bajo el programa de Corretaje Oficial YJD TRINOVA S.A.S. Peritaje de 150 puntos aprobado con calificación sobresaliente (motor, transmisión, chasis, suspensión, frenos y pintura original), cero reclamaciones en aseguradora, historial de mantenimientos en concesionario autorizado y listo para traspaso inmediato.`)
+      
+      setNewItemImages([
+        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1200',
+        'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&q=80&w=1200'
+      ])
     }
+
     toast.success("✨ ¡Ficha técnica completada con Asistente IA Trinova!")
   }
 
@@ -417,22 +621,56 @@ export default function TrinovaDedicatedAdminPage() {
 
     setIsSavingItem(true)
     try {
+      const cleanPrice = parseFloat(newItemPrice.toString().replace(/[^0-9]/g, ''))
+
+      // Dynamic payload according to category
+      let payload: any = {
+        name: newItemName,
+        brand: newItemBrand || (newItemCategory.startsWith('INMUEBLE') ? 'Inmobiliaria Trinova' : 'Trinova'),
+        model: newItemModel || 'Oficial',
+        year: parseInt(newItemYear) || 2024,
+        priceCop: cleanPrice,
+        categoryType: newItemCategory,
+        city: newItemCity || 'Barranquilla',
+        description: newItemDescription,
+        images: newItemImages.length > 0 ? newItemImages : ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200']
+      }
+
+      if (newItemCategory === 'MOTO') {
+        payload.subCategory = newMotoType
+        payload.engineDisplacement = newMotoDisplacement
+        payload.transmission = newMotoTransmission
+        payload.licensePlate = newMotoPlate
+        payload.mileage = newMotoMileage ? parseInt(newMotoMileage.toString().replace(/[^0-9]/g, '')) : 0
+        payload.exteriorColor = newMotoColor
+        payload.fuelType = 'Gasolina'
+        payload.features = [newMotoBrakes, newMotoTransmission, 'Peritaje 150 Puntos Trinova', 'Garantía 1 Año']
+      } else if (newItemCategory === 'VEHICULO') {
+        payload.subCategory = newCarBodyType
+        payload.engineDisplacement = newCarEngine
+        payload.transmission = newCarTransmission
+        payload.fuelType = newCarFuel
+        payload.licensePlate = newCarPlate
+        payload.mileage = newCarMileage ? parseInt(newCarMileage.toString().replace(/[^0-9]/g, '')) : 0
+        payload.exteriorColor = newCarExteriorColor
+        payload.interiorColor = newCarInteriorColor
+        payload.features = [newCarTraction, newCarArmor, 'Peritaje 150 Puntos Trinova', 'Garantía Oficial']
+      } else {
+        // INMUEBLE_VENTA or INMUEBLE_RENTA
+        payload.subCategory = newPropertyType
+        payload.neighborhood = newPropertyNeighborhood
+        payload.areaM2 = newPropertyAreaM2 ? parseFloat(newPropertyAreaM2) : null
+        payload.bedrooms = newPropertyBedrooms ? parseInt(newPropertyBedrooms) : null
+        payload.bathrooms = newPropertyBathrooms ? parseInt(newPropertyBathrooms) : null
+        payload.parkingSpots = newPropertyParking ? parseInt(newPropertyParking) : null
+        payload.stratum = newPropertyStratum ? parseInt(newPropertyStratum.replace(/[^0-9]/g, '')) : null
+        payload.features = newPropertyAmenities.split(',').map(s => s.trim()).filter(Boolean)
+      }
+
       const res = await fetch('/api/trinova/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newItemName,
-          brand: newItemBrand || 'Trinova',
-          model: newItemModel || 'Oficial',
-          year: parseInt(newItemYear) || 2024,
-          priceCop: parseFloat(newItemPrice.toString().replace(/[^0-9]/g, '')),
-          categoryType: newItemCategory,
-          licensePlate: newItemPlate,
-          mileage: newItemMileage ? parseInt(newItemMileage.toString().replace(/[^0-9]/g, '')) : null,
-          city: newItemCity || 'Barranquilla',
-          description: newItemDescription,
-          images: newItemImages.length > 0 ? newItemImages : ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200']
-        })
+        body: JSON.stringify(payload)
       })
 
       const data = await res.json()
@@ -443,10 +681,11 @@ export default function TrinovaDedicatedAdminPage() {
         setNewItemPrice('')
         setNewItemBrand('')
         setNewItemModel('')
-        setNewItemPlate('')
-        setNewItemMileage('')
         setNewItemDescription('')
-        setNewItemImages(['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'])
+        setNewItemImages([
+          'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200'
+        ])
         loadTrinovaDashboardData()
       } else {
         toast.error(data.error || "Error al publicar")
@@ -1433,19 +1672,19 @@ export default function TrinovaDedicatedAdminPage() {
 
       {/* ─── Modal de Carga & Publicación de Inventario con Asistente IA ─── */}
       <Dialog open={isCreateItemOpen} onOpenChange={setIsCreateItemOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white p-6 rounded-2xl shadow-2xl">
+        <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto bg-white p-6 rounded-2xl shadow-2xl">
           <DialogHeader className="pb-3 border-b border-zinc-100">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
                   <DialogTitle className="text-base font-bold text-zinc-900">
-                    Publicar Nuevo Bien en Inventario & Marketplace
+                    Carga & Publicación de Inventario Oficial Trinova
                   </DialogTitle>
                   <DialogDescription className="text-xs text-zinc-500">
-                    Carga vehículos, motos o inmuebles con ficha técnica oficial, fotos y conexión directa al Asistente IA de WhatsApp.
+                    Fichas técnicas dinámicas para Motos, Vehículos y Bienes Raíces con fotos reales y conexión en tiempo real al Marketplace y WhatsApp.
                   </DialogDescription>
                 </div>
               </div>
@@ -1453,17 +1692,17 @@ export default function TrinovaDedicatedAdminPage() {
           </DialogHeader>
 
           <form onSubmit={handleSaveItem} className="space-y-4 pt-2">
-            {/* 1. Selector de Categoría */}
+            {/* 1. Selector de Categoría Principal */}
             <div>
-              <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
-                Tipo de Bien / Categoría:
+              <label className="text-xs font-bold text-zinc-800 block mb-1.5">
+                1. Selecciona el Tipo de Bien / Categoría:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { id: 'MOTO', label: '🏍️ Motocicleta', desc: 'Motos de alto cilindraje' },
-                  { id: 'VEHICULO', label: '🚗 Automóvil / SUV', desc: 'Carros y camionetas' },
-                  { id: 'INMUEBLE_VENTA', label: '🏢 Inmueble Venta', desc: 'Casas y apartamentos' },
-                  { id: 'INMUEBLE_RENTA', label: '🏠 Inmueble Renta', desc: 'Arriendos oficiales' }
+                  { id: 'MOTO', label: '🏍️ Motocicleta', desc: 'Cilindraje, frenos ABS, tipo' },
+                  { id: 'VEHICULO', label: '🚗 Automóvil / SUV', desc: 'Carrocería, motor, tracción, blindaje' },
+                  { id: 'INMUEBLE_VENTA', label: '🏢 Inmueble Venta', desc: 'Área m², alcobas, barrio, estrato' },
+                  { id: 'INMUEBLE_RENTA', label: '🏠 Inmueble Renta', desc: 'Canon mensual, administración' }
                 ].map(cat => (
                   <button
                     key={cat.id}
@@ -1482,22 +1721,28 @@ export default function TrinovaDedicatedAdminPage() {
               </div>
             </div>
 
-            {/* 2. Título & Botón Asistente IA */}
-            <div className="p-3 bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-purple-50/70 border border-purple-200/80 rounded-xl space-y-2">
+            {/* 2. Asistente IA Trinova (Autocompletar Inteligente) */}
+            <div className="p-3.5 bg-gradient-to-r from-purple-50 via-indigo-50/70 to-purple-50 border border-purple-200 rounded-xl space-y-2.5 shadow-sm">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span>Nombre / Modelo del Bien (Escribe aquí para autocompletar con IA):</span>
+                  <span>2. Asistente IA Trinova (Escribe el nombre o modelo y autocompleta):</span>
                 </label>
-                <span className="text-[10px] font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                  Asistente IA Trinova
-                </span>
+                <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] font-semibold">
+                  IA de Alto Nivel
+                </Badge>
               </div>
               <div className="flex gap-2">
                 <Input
                   value={newItemName}
                   onChange={e => setNewItemName(e.target.value)}
-                  placeholder="Ej: Yamaha MT-09 2024, Toyota Fortuner 2023, Penthouse Alto Prado..."
+                  placeholder={
+                    newItemCategory === 'MOTO'
+                      ? "Ej: Yamaha MT-09 2024, Kawasaki Z900, Ducati Panigale..."
+                      : newItemCategory === 'VEHICULO'
+                      ? "Ej: Toyota Prado TXL 2.8L Diésel 2023, Mazda CX-30 Grand Touring, Mercedes GLE 450..."
+                      : "Ej: Penthouse Dúplex Alto Prado 240m², Casa en Villa Country, Apartamento El Golf..."
+                  }
                   className="bg-white border-purple-200 text-xs font-semibold focus-visible:ring-purple-500"
                 />
                 <Button
@@ -1511,191 +1756,580 @@ export default function TrinovaDedicatedAdminPage() {
                 </Button>
               </div>
               <p className="text-[10px] text-purple-700">
-                💡 Escribe el nombre o modelo y haz clic en <strong>Autocompletar con IA</strong> para rellenar precios de mercado, especificaciones técnicas, peritaje de 150 puntos y fotos oficiales de alta calidad.
+                💡 Al autocompletar, la IA adapta automáticamente todos los campos técnicos (cilindraje, motor, área m², habitaciones, peritaje de 150 puntos y galería completa de 4 fotos HD).
               </p>
             </div>
 
-            {/* 3. Grid de Datos Técnicos y Comerciales */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Marca / Constructor:</label>
-                <Input
-                  value={newItemBrand}
-                  onChange={e => setNewItemBrand(e.target.value)}
-                  placeholder="Ej: Yamaha, Toyota, BMW..."
-                  className="text-xs bg-zinc-50 border-zinc-200"
-                />
+            {/* 3. Datos Generales (Marca, Modelo, Año, Precio COP, Ciudad) */}
+            <div className="p-3 bg-zinc-50/80 rounded-xl border border-zinc-200 space-y-3">
+              <span className="text-xs font-bold text-zinc-800 block">3. Información Comercial Principal</span>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-600 block mb-1">
+                    {newItemCategory.startsWith('INMUEBLE') ? 'Inmobiliaria / Constructor:' : 'Marca:'}
+                  </label>
+                  <Input
+                    value={newItemBrand}
+                    onChange={e => setNewItemBrand(e.target.value)}
+                    placeholder={newItemCategory.startsWith('INMUEBLE') ? 'Inmobiliaria Trinova' : 'Toyota, Yamaha, BMW...'}
+                    className="text-xs bg-white border-zinc-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-600 block mb-1">Línea / Referencia:</label>
+                  <Input
+                    value={newItemModel}
+                    onChange={e => setNewItemModel(e.target.value)}
+                    placeholder="Ej: MT-09 SP / TXL 4x4 / Dúplex"
+                    className="text-xs bg-white border-zinc-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-600 block mb-1">Año / Modelo:</label>
+                  <Input
+                    value={newItemYear}
+                    onChange={e => setNewItemYear(e.target.value)}
+                    placeholder="2024"
+                    type="number"
+                    className="text-xs bg-white border-zinc-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-600 block mb-1">
+                    {newItemCategory === 'INMUEBLE_RENTA' ? 'Canon Arriendo COP ($/mes):' : 'Precio Total en COP ($):'}
+                  </label>
+                  <Input
+                    value={newItemPrice}
+                    onChange={e => setNewItemPrice(e.target.value)}
+                    placeholder="Ej: 68500000"
+                    type="number"
+                    className="text-xs font-mono font-bold bg-white border-zinc-200 text-emerald-900"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Modelo / Línea:</label>
-                <Input
-                  value={newItemModel}
-                  onChange={e => setNewItemModel(e.target.value)}
-                  placeholder="Ej: MT-09, TXL Diesel, Prado..."
-                  className="text-xs bg-zinc-50 border-zinc-200"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Año / Modelo:</label>
-                <Input
-                  value={newItemYear}
-                  onChange={e => setNewItemYear(e.target.value)}
-                  placeholder="Ej: 2024"
-                  type="number"
-                  className="text-xs bg-zinc-50 border-zinc-200"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Precio en COP ($):</label>
-                <Input
-                  value={newItemPrice}
-                  onChange={e => setNewItemPrice(e.target.value)}
-                  placeholder="Ej: 68500000"
-                  type="number"
-                  className="text-xs font-mono font-bold bg-zinc-50 border-zinc-200 text-emerald-900"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Placa / Matrícula:</label>
-                <Input
-                  value={newItemPlate}
-                  onChange={e => setNewItemPlate(e.target.value)}
-                  placeholder="Ej: KTY-89G / LMN-456"
-                  className="text-xs font-mono uppercase bg-zinc-50 border-zinc-200"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Kilometraje / Recorrido:</label>
-                <Input
-                  value={newItemMileage}
-                  onChange={e => setNewItemMileage(e.target.value)}
-                  placeholder="Ej: 4500 (km)"
-                  type="number"
-                  className="text-xs bg-zinc-50 border-zinc-200"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1">Ciudad / Sede:</label>
-                <Input
-                  value={newItemCity}
-                  onChange={e => setNewItemCity(e.target.value)}
-                  placeholder="Ej: Barranquilla"
-                  className="text-xs bg-zinc-50 border-zinc-200"
-                />
-              </div>
-              <div className="flex items-center gap-2 pt-6">
-                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 w-full">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Estado: <strong>AVAILABLE</strong> (Visible en Marketplace & WhatsApp)</span>
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-600 block mb-1">Ciudad / Sede:</label>
+                  <Input
+                    value={newItemCity}
+                    onChange={e => setNewItemCity(e.target.value)}
+                    placeholder="Barranquilla"
+                    className="text-xs bg-white border-zinc-200"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-4">
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 w-full">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Estado: <strong>AVAILABLE</strong> (Conectado a Marketplace & WhatsApp)</span>
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* 4. Galería de Imágenes */}
-            <div className="space-y-2 p-3 bg-zinc-50 rounded-xl border border-zinc-200">
-              <label className="text-xs font-bold text-zinc-800 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-zinc-600" />
-                  <span>Galería de Fotos ({newItemImages.length} cargadas):</span>
-                </span>
-                <span className="text-[10px] text-zinc-400 font-normal">Pega enlaces directos de imágenes</span>
-              </label>
+            {/* 4. FICHAS TÉCNICAS ESPECÍFICAS POR CATEGORÍA */}
 
-              <div className="flex gap-2">
-                <Input
-                  value={newImageUrlInput}
-                  onChange={e => setNewImageUrlInput(e.target.value)}
-                  placeholder="https://images.unsplash.com/... o enlace directo de imagen"
-                  className="text-xs bg-white border-zinc-200"
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddImageUrl}
-                  variant="outline"
-                  className="text-xs font-semibold shrink-0 bg-white hover:bg-zinc-100"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  <span>Añadir</span>
-                </Button>
+            {/* ─── 4A: FICHA ESPECÍFICA PARA MOTOS (MOTO) ─── */}
+            {newItemCategory === 'MOTO' && (
+              <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/80 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏍️</span>
+                  <span className="text-xs font-bold text-amber-950 uppercase tracking-wide">Ficha Técnica Específica de Motocicleta</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Cilindraje / Motor (cc):</label>
+                    <Input
+                      value={newMotoDisplacement}
+                      onChange={e => setNewMotoDisplacement(e.target.value)}
+                      placeholder="Ej: 890 cc / 948 cc"
+                      className="text-xs bg-white border-amber-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Tipo de Motocicleta:</label>
+                    <select
+                      value={newMotoType}
+                      onChange={e => setNewMotoType(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-amber-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="Naked">Naked</option>
+                      <option value="Superdeportiva / Sport">Superdeportiva / Sport</option>
+                      <option value="Touring / Aventura">Touring / Aventura</option>
+                      <option value="Scooter / Urbana">Scooter / Urbana</option>
+                      <option value="Enduro / Cross">Enduro / Cross</option>
+                      <option value="Custom / Cruiser">Custom / Cruiser</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Frenos & Asistencias:</label>
+                    <Input
+                      value={newMotoBrakes}
+                      onChange={e => setNewMotoBrakes(e.target.value)}
+                      placeholder="Ej: ABS Doble Canal & TCS"
+                      className="text-xs bg-white border-amber-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Transmisión:</label>
+                    <Input
+                      value={newMotoTransmission}
+                      onChange={e => setNewMotoTransmission(e.target.value)}
+                      placeholder="Ej: Quickshifter Up/Down 6 Vel"
+                      className="text-xs bg-white border-amber-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Placa / Matrícula:</label>
+                    <Input
+                      value={newMotoPlate}
+                      onChange={e => setNewMotoPlate(e.target.value)}
+                      placeholder="Ej: KTY-89G"
+                      className="text-xs font-mono uppercase bg-white border-amber-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-amber-900 block mb-1">Kilometraje (km):</label>
+                    <Input
+                      value={newMotoMileage}
+                      onChange={e => setNewMotoMileage(e.target.value)}
+                      placeholder="Ej: 4500"
+                      type="number"
+                      className="text-xs bg-white border-amber-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-amber-900 block mb-1">Color Oficial / Pintura:</label>
+                  <Input
+                    value={newMotoColor}
+                    onChange={e => setNewMotoColor(e.target.value)}
+                    placeholder="Ej: Gris Nardo / Azul Icon"
+                    className="text-xs bg-white border-amber-200"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ─── 4B: FICHA ESPECÍFICA PARA CARROS & SUV (VEHICULO) ─── */}
+            {newItemCategory === 'VEHICULO' && (
+              <div className="p-3.5 bg-blue-50/50 rounded-xl border border-blue-200/80 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🚗</span>
+                  <span className="text-xs font-bold text-blue-950 uppercase tracking-wide">Ficha Técnica Específica de Automóvil / Camioneta SUV</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Tipo de Carrocería:</label>
+                    <select
+                      value={newCarBodyType}
+                      onChange={e => setNewCarBodyType(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-blue-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="SUV / Camioneta">SUV / Camioneta</option>
+                      <option value="Sedán">Sedán</option>
+                      <option value="Pickup / Platón">Pickup / Platón</option>
+                      <option value="Hatchback">Hatchback</option>
+                      <option value="Coupé / Deportivo">Coupé / Deportivo</option>
+                      <option value="Blindado">Blindado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Motor / Cilindrada:</label>
+                    <Input
+                      value={newCarEngine}
+                      onChange={e => setNewCarEngine(e.target.value)}
+                      placeholder="Ej: 2.8L Turbo Diésel / 3.0L V6 Turbo"
+                      className="text-xs bg-white border-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Sistema de Tracción:</label>
+                    <select
+                      value={newCarTraction}
+                      onChange={e => setNewCarTraction(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-blue-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="4x4 con Bajo">4x4 con Bajo</option>
+                      <option value="AWD Integral">AWD Integral</option>
+                      <option value="4x2 Delantera (FWD)">4x2 Delantera (FWD)</option>
+                      <option value="4x2 Trasera (RWD)">4x2 Trasera (RWD)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Transmisión:</label>
+                    <Input
+                      value={newCarTransmission}
+                      onChange={e => setNewCarTransmission(e.target.value)}
+                      placeholder="Ej: Automática Secuencial 6 Vel"
+                      className="text-xs bg-white border-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Tipo de Combustible:</label>
+                    <select
+                      value={newCarFuel}
+                      onChange={e => setNewCarFuel(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-blue-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="Diésel">Diésel</option>
+                      <option value="Gasolina Extra">Gasolina Extra</option>
+                      <option value="Híbrido">Híbrido (Mild-Hybrid / Plug-in)</option>
+                      <option value="100% Eléctrico">100% Eléctrico</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Nivel de Blindaje:</label>
+                    <select
+                      value={newCarArmor}
+                      onChange={e => setNewCarArmor(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-blue-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="Sin Blindaje">Sin Blindaje</option>
+                      <option value="Blindaje Nivel II">Blindaje Nivel II</option>
+                      <option value="Blindaje Nivel III">Blindaje Nivel III</option>
+                      <option value="Blindaje Nivel IV">Blindaje Nivel IV</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Placa / Matrícula:</label>
+                    <Input
+                      value={newCarPlate}
+                      onChange={e => setNewCarPlate(e.target.value)}
+                      placeholder="Ej: LMN-456"
+                      className="text-xs font-mono uppercase bg-white border-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Kilometraje (km):</label>
+                    <Input
+                      value={newCarMileage}
+                      onChange={e => setNewCarMileage(e.target.value)}
+                      placeholder="Ej: 18500"
+                      type="number"
+                      className="text-xs bg-white border-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-blue-900 block mb-1">Color Exterior:</label>
+                    <Input
+                      value={newCarExteriorColor}
+                      onChange={e => setNewCarExteriorColor(e.target.value)}
+                      placeholder="Ej: Blanco Perlado"
+                      className="text-xs bg-white border-blue-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-blue-900 block mb-1">Cojinería & Color Interior:</label>
+                  <Input
+                    value={newCarInteriorColor}
+                    onChange={e => setNewCarInteriorColor(e.target.value)}
+                    placeholder="Ej: Cuero Negro / Moka con Costuras Deportivas"
+                    className="text-xs bg-white border-blue-200"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ─── 4C: FICHA ESPECÍFICA PARA BIENES RAÍCES (INMUEBLE_VENTA / INMUEBLE_RENTA) ─── */}
+            {(newItemCategory === 'INMUEBLE_VENTA' || newItemCategory === 'INMUEBLE_RENTA') && (
+              <div className="p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-200/80 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏢</span>
+                  <span className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                    Ficha Técnica Específica de Finca Raíz & Inmuebles ({newItemCategory === 'INMUEBLE_RENTA' ? 'Renta' : 'Venta'})
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Tipo de Inmueble:</label>
+                    <select
+                      value={newPropertyType}
+                      onChange={e => setNewPropertyType(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-emerald-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="Penthouse">Penthouse</option>
+                      <option value="Apartamento">Apartamento</option>
+                      <option value="Casa de Lujo">Casa de Lujo</option>
+                      <option value="Casa Campestre">Casa Campestre</option>
+                      <option value="Oficina / Local Comercial">Oficina / Local Comercial</option>
+                      <option value="Lote / Terreno">Lote / Terreno</option>
+                      <option value="Bodega Industrial">Bodega Industrial</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Barrio / Sector:</label>
+                    <Input
+                      value={newPropertyNeighborhood}
+                      onChange={e => setNewPropertyNeighborhood(e.target.value)}
+                      placeholder="Ej: Alto Prado / El Golf / Riomar"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Área Construida (m²):</label>
+                    <Input
+                      value={newPropertyAreaM2}
+                      onChange={e => setNewPropertyAreaM2(e.target.value)}
+                      placeholder="Ej: 240"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Área Lote / Terraza (m²):</label>
+                    <Input
+                      value={newPropertyLotAreaM2}
+                      onChange={e => setNewPropertyLotAreaM2(e.target.value)}
+                      placeholder="Ej: 60"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Habitaciones / Alcobas:</label>
+                    <Input
+                      value={newPropertyBedrooms}
+                      onChange={e => setNewPropertyBedrooms(e.target.value)}
+                      placeholder="Ej: 3"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Baños:</label>
+                    <Input
+                      value={newPropertyBathrooms}
+                      onChange={e => setNewPropertyBathrooms(e.target.value)}
+                      placeholder="Ej: 4"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Parqueaderos:</label>
+                    <Input
+                      value={newPropertyParking}
+                      onChange={e => setNewPropertyParking(e.target.value)}
+                      placeholder="Ej: 2 cubiertos"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Estrato Socioeconómico:</label>
+                    <select
+                      value={newPropertyStratum}
+                      onChange={e => setNewPropertyStratum(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-emerald-200 bg-white text-zinc-800 font-medium"
+                    >
+                      <option value="6">Estrato 6 (Exclusivo)</option>
+                      <option value="5">Estrato 5</option>
+                      <option value="4">Estrato 4</option>
+                      <option value="Campestre">Campestre / Rural</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Piso / Nivel:</label>
+                    <Input
+                      value={newPropertyFloor}
+                      onChange={e => setNewPropertyFloor(e.target.value)}
+                      placeholder="Ej: Piso 12"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Valor Administración COP ($/mes):</label>
+                    <Input
+                      value={newPropertyAdminFee}
+                      onChange={e => setNewPropertyAdminFee(e.target.value)}
+                      placeholder="Ej: 950000"
+                      type="number"
+                      className="text-xs bg-white border-emerald-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-emerald-900 block mb-1">Amenidades & Zonas Comunes (separadas por coma):</label>
+                  <Input
+                    value={newPropertyAmenities}
+                    onChange={e => setNewPropertyAmenities(e.target.value)}
+                    placeholder="Piscina Privada, Gimnasio, Balcón Panorámico, Ascensor Privado, Vigilancia 24/7..."
+                    className="text-xs bg-white border-emerald-200"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 5. GESTOR DE GALERÍA DE MÚLTIPLES FOTOS */}
+            <div className="space-y-3 p-4 bg-zinc-50 rounded-xl border border-zinc-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <label className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-emerald-600" />
+                  <span>5. Galería de Imágenes Oficiales ({newItemImages.length} fotos cargadas):</span>
+                </label>
+                <span className="text-[11px] text-zinc-500 font-medium">
+                  Sube múltiples fotos de tu PC/móvil o pega enlaces web
+                </span>
               </div>
 
-              {/* Botones Rápidos de Fotos Preset */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] text-zinc-400 font-semibold">Presets rápidos de fotos HD:</span>
+              {/* Botón de Carga de Archivos Locales + Input de Enlaces Web */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                {/* File Upload Button */}
+                <div className="sm:col-span-4">
+                  <label className="flex items-center justify-center gap-2 px-3 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-sm w-full text-center">
+                    <Upload className="w-4 h-4" />
+                    <span>📁 Subir Fotos desde PC/Celular</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageFilesUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Paste URL Input */}
+                <div className="sm:col-span-8 flex gap-2">
+                  <Input
+                    value={newImageUrlInput}
+                    onChange={e => setNewImageUrlInput(e.target.value)}
+                    placeholder="Pega enlace(s) https://... (puedes pegar varios separados por coma)"
+                    className="text-xs bg-white border-zinc-200"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    variant="outline"
+                    className="text-xs font-semibold shrink-0 bg-white hover:bg-zinc-100"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    <span>Añadir</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Presets Rápidos de Sets de Fotos HD Completas */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-200/60">
+                <span className="text-[10px] text-zinc-500 font-bold">Sets de demostración (4 fotos HD c/u):</span>
                 <button
                   type="button"
                   onClick={() => setNewItemImages([
                     'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
-                    'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200'
+                    'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&q=80&w=1200'
                   ])}
-                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                  className="text-[10px] bg-white border border-amber-300 hover:bg-amber-50 px-2.5 py-1 rounded-full text-amber-900 font-semibold transition-colors"
                 >
-                  🏍️ Moto Naked HD
+                  🏍️ Set 4 Fotos Moto Naked HD
                 </button>
                 <button
                   type="button"
                   onClick={() => setNewItemImages([
                     'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
-                    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'
+                    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&q=80&w=1200'
                   ])}
-                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                  className="text-[10px] bg-white border border-blue-300 hover:bg-blue-50 px-2.5 py-1 rounded-full text-blue-900 font-semibold transition-colors"
                 >
-                  🚗 Carro / SUV HD
+                  🚗 Set 4 Fotos Camioneta SUV HD
                 </button>
                 <button
                   type="button"
                   onClick={() => setNewItemImages([
                     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
-                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=1200'
                   ])}
-                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                  className="text-[10px] bg-white border border-emerald-300 hover:bg-emerald-50 px-2.5 py-1 rounded-full text-emerald-900 font-semibold transition-colors"
                 >
-                  🏢 Inmueble Lujo HD
+                  🏢 Set 4 Fotos Penthouse Lujo HD
                 </button>
               </div>
 
-              {/* Grid de Miniaturas */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              {/* Grilla Interactiva de Miniaturas */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
                 {newItemImages.map((imgUrl, idx) => (
-                  <div key={idx} className="relative group rounded-lg overflow-hidden border border-zinc-200 bg-white aspect-video">
+                  <div key={idx} className="relative group rounded-xl overflow-hidden border-2 border-zinc-200 bg-white aspect-video shadow-xs">
                     <img src={imgUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
-                    {idx === 0 && (
-                      <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
-                        Foto Portada
+                    
+                    {/* Badge Portada */}
+                    {idx === 0 ? (
+                      <span className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded shadow-md">
+                        ⭐ Portada Principal
                       </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSetAsCover(idx)}
+                        className="absolute top-1.5 left-1.5 bg-black/70 hover:bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                        title="Poner esta foto como portada"
+                      >
+                        Poner Portada
+                      </button>
                     )}
+
+                    {/* Botón Eliminar */}
                     <button
                       type="button"
                       onClick={() => handleRemoveImageUrl(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                      className="absolute top-1.5 right-1.5 bg-red-600 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow hover:bg-red-700"
                       title="Eliminar foto"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 5. Descripción y Garantía Legal */}
+            {/* 6. Descripción Comercial & Garantía Legal */}
             <div>
-              <label className="text-xs font-semibold text-zinc-700 block mb-1">
-                Ficha Técnica, Peritaje y Descripción Comercial:
+              <label className="text-xs font-bold text-zinc-800 block mb-1">
+                6. Descripción Oficial, Historial Jurídico y Certificación Trinova:
               </label>
               <textarea
                 value={newItemDescription}
                 onChange={e => setNewItemDescription(e.target.value)}
                 rows={3}
                 placeholder="Ficha técnica, historial de mantenimiento, certificación de 150 puntos y garantía legal de YJD TRINOVA S.A.S..."
-                className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-zinc-800"
+                className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-zinc-800 font-medium"
               />
             </div>
 
@@ -1704,14 +2338,14 @@ export default function TrinovaDedicatedAdminPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsCreateItemOpen(false)}
-                className="text-xs"
+                className="text-xs font-semibold"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isSavingItem}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 px-5 shadow-md"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 px-6 shadow-md"
               >
                 {isSavingItem ? (
                   <>
