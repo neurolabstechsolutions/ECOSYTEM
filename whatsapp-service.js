@@ -455,17 +455,18 @@ CASO A: CLIENTE / COMPRADOR PROVENIENTE DE ANUNCIOS EN REDES SOCIALES
 - Si el cliente pregunta por un vehículo, moto o inmueble (aunque solo pregunte precio, kilometraje, estado, ubicación o disponibilidad):
   1. Responde su duda con precisión comercial, destacando el valor en Pesos COP ($) y el Peritaje de 150 Puntos.
   2. 🎯 REGLA DE ORO DE CIERRE PROACTIVO: En TODA respuesta a un comprador interesado, SIEMPRE pregúntale al final si desea agendar una cita para verlo en persona y hacer la prueba de manejo:
-     "¿Te gustaría que te agendemos una cita personalizada con nuestra Administradora y Asesora Titular, *Yury Jaramillo*, para que mires el vehículo en persona y realices la prueba de manejo? ¿Qué día y horario te queda más cómodo?"
   3. Si el cliente muestra interés en la cita (ej: "sí", "el sábado", "mañana", "a qué hora atienden"):
-     Pídele amablemente:
-     • Su nombre completo
-     • Su número de Cédula de Ciudadanía (C.C.) para el protocolo de seguridad y notarial
-     • El día y hora exacta
+     Pídele amablemente sus datos oficiales:
+     • Nombre completo
+     • Cédula de Ciudadanía (C.C.)
+     • Correo electrónico real (para enviarle la confirmación y ficha técnica en PDF)
+     • Día y hora de preferencia
   4. Una vez recibas los datos y el horario, CONFIRMA la cita inmediatamente con este formato limpio:
      "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
 
      • *Cliente:* [Nombre]
      • *Cédula:* [CC]
+     • *Correo:* [Correo electrónico real del cliente]
      • *Vehículo / Bien:* [Marca Modelo Año]
      • *Fecha y Hora:* [Día y Hora acordada]
      • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
@@ -490,7 +491,8 @@ CASO B: PROVEEDOR / CONSIGNANTE (Quiere vender su vehículo, moto o inmueble)
   • Ciudad donde se ubica y Placa
   • Nombre completo del propietario
   • Cédula de Ciudadanía (C.C. o NIT) del titular
-  • Teléfono y correo de contacto
+  • Correo electrónico real (para expedición y firma del Mandato de Corretaje con Sello Notarial SHA-256)
+  • Teléfono de contacto
   • 📸 FOTOS REALES: Pídele explícitamente: "Por favor envíame aquí mismo por WhatsApp de 2 a 4 fotos reales del bien (frontal, laterales, trasera, tablero con kilometraje e interior) para asociarlas a la ficha técnica del Marketplace."
 - Si el usuario te envía fotos, agradécele y confírmale que han sido adjuntadas a su expediente.
 - Infórmale que su bien quedará publicado en el Marketplace y respaldado bajo Mandato de Corretaje con Sello Criptográfico SHA-256.
@@ -623,27 +625,32 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           }
           const docNumber = extractedDoc ? `CC ${extractedDoc.replace(/[^0-9]/g, '')}` : 'CC En Validación';
 
+          // Extracción Inteligente de Correo Real
+          const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+          const ownerEmail = emailMatch ? emailMatch[1].trim().toLowerCase() : null;
+
           // 1. Guardar o actualizar contacto con Teléfono Real (+cleanPhone)
-          let { data: contact } = await supabase.from('contacts').select('id').eq('phone', `+${cleanPhone}`).single();
+          let { data: contact } = await supabase.from('contacts').select('id, email').eq('phone', `+${cleanPhone}`).single();
           if (!contact) {
             const { data: newContact } = await supabase.from('contacts').insert({
               tenant_id: tenantId,
               name: ownerName,
               phone: `+${cleanPhone}`,
-              email: ownerEmail,
+              email: ownerEmail || 'Pendiente por registrar',
               doc_number: docNumber,
               person_type: 'PERSONA_NATURAL',
               role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR',
               city: 'Barranquilla',
               status: 'ACTIVO'
-            }).select('id').single();
+            }).select('id, email').single();
             contact = newContact;
           } else {
-            await supabase.from('contacts').update({
+            const updatePayload = {
               doc_number: docNumber,
-              name: ownerName,
-              email: ownerEmail
-            }).eq('id', contact.id);
+              name: ownerName
+            };
+            if (ownerEmail) updatePayload.email = ownerEmail;
+            await supabase.from('contacts').update(updatePayload).eq('id', contact.id);
           }
 
           // 2. Si es una consignación con datos, guardar en inventory_items y generar contrato
@@ -718,6 +725,7 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
           if (hasConfirmedTicket) {
             const nameFromReply = aiReply.match(/Cliente:\s*([^\n\r*]+)/i);
             const docFromReply = aiReply.match(/C[eé]dula:\s*([^\n\r*]+)/i);
+            const emailFromReply = aiReply.match(/Correo:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
             const itemFromReply = aiReply.match(/(?:Bien|Veh[ií]culo):\s*([^\n\r*]+)/i);
             const scheduleFromReply = aiReply.match(/Fecha y Hora:\s*([^\n\r*]+)/i);
 
@@ -726,24 +734,29 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
               const rawDoc = docFromReply[1].trim();
               ticketDocNumber = rawDoc.startsWith('CC') ? rawDoc : `CC ${rawDoc}`;
             }
+            if (emailFromReply) ticketEmail = emailFromReply[1].trim().toLowerCase();
             if (itemFromReply) ticketItem = itemFromReply[1].trim();
             if (scheduleFromReply) ticketSchedule = scheduleFromReply[1].trim();
 
-            console.log(`🎟️ [TICKET DE CITA CONFIRMADO]: ${ticketClientName} | ${ticketDocNumber} | ${ticketSchedule}`);
+            console.log(`🎟️ [TICKET DE CITA CONFIRMADO]: ${ticketClientName} | ${ticketDocNumber} | ${ticketEmail || 'Sin correo'} | ${ticketSchedule}`);
           }
 
           // Registrar o Actualizar Contacto y Lead en CRM
           if (contact) {
             const finalContactName = hasConfirmedTicket ? ticketClientName : ownerName;
             const finalContactDoc = hasConfirmedTicket ? ticketDocNumber : docNumber;
+            const finalContactEmail = hasConfirmedTicket ? (ticketEmail || ownerEmail) : ownerEmail;
             const leadStatus = (hasConfirmedTicket || isAppointmentIntent) ? 'CITA_AGENDADA' : (isConsignmentData ? 'EN_PERITAJE' : 'NUEVO');
 
-            await supabase.from('contacts').update({
+            const contactUpdatePayload = {
               name: finalContactName,
               doc_number: finalContactDoc,
               status: 'ACTIVO',
               role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR'
-            }).eq('id', contact.id);
+            };
+            if (finalContactEmail) contactUpdatePayload.email = finalContactEmail;
+
+            await supabase.from('contacts').update(contactUpdatePayload).eq('id', contact.id);
 
             await supabase.from('leads').insert({
               tenant_id: tenantId,
