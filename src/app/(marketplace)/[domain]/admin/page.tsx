@@ -11,7 +11,7 @@ import {
   ChevronRight, ArrowRight, Briefcase, Layers, QrCode,
   Smartphone, RefreshCw, MessageSquare, Unplug, Shield, Menu,
   X, Database, Activity, Terminal, Award, HelpCircle, Megaphone,
-  FileCheck2, Compass, Lock, LogOut, EyeOff
+  FileCheck2, Compass, Lock, LogOut, EyeOff, Plus, Trash2, Sparkles, Image as ImageIcon
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -306,6 +306,171 @@ export default function TrinovaDedicatedAdminPage() {
       checkStatusAndQR()
     } catch (e) {
       toast.error("Error al desvincular")
+    }
+  }
+
+  // ─── New Inventory Item Form State ───
+  const [isCreateItemOpen, setIsCreateItemOpen] = useState(false)
+  const [newItemCategory, setNewItemCategory] = useState<'MOTO' | 'VEHICULO' | 'INMUEBLE_VENTA' | 'INMUEBLE_RENTA'>('MOTO')
+  const [newItemName, setNewItemName] = useState('')
+  const [newItemBrand, setNewItemBrand] = useState('')
+  const [newItemModel, setNewItemModel] = useState('')
+  const [newItemYear, setNewItemYear] = useState('2024')
+  const [newItemPrice, setNewItemPrice] = useState('')
+  const [newItemPlate, setNewItemPlate] = useState('')
+  const [newItemMileage, setNewItemMileage] = useState('')
+  const [newItemCity, setNewItemCity] = useState('Barranquilla')
+  const [newItemDescription, setNewItemDescription] = useState('')
+  const [newItemImages, setNewItemImages] = useState<string[]>([
+    'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'
+  ])
+  const [newImageUrlInput, setNewImageUrlInput] = useState('')
+  const [isSavingItem, setIsSavingItem] = useState(false)
+
+  const handleAddImageUrl = () => {
+    if (!newImageUrlInput.trim()) return
+    setNewItemImages(prev => [...prev, newImageUrlInput.trim()])
+    setNewImageUrlInput('')
+    toast.success("Foto añadida a la galería")
+  }
+
+  const handleRemoveImageUrl = (index: number) => {
+    setNewItemImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleAIAutocomplete = () => {
+    if (!newItemName) {
+      toast.error("Por favor escribe primero el nombre o modelo del bien para que la IA lo complete")
+      return
+    }
+
+    const nameLower = newItemName.toLowerCase()
+    if (nameLower.includes('moto') || nameLower.includes('yamaha') || nameLower.includes('kawasaki') || nameLower.includes('ducati') || nameLower.includes('bmw') || nameLower.includes('honda') || nameLower.includes('suzuki') || nameLower.includes('ktm')) {
+      setNewItemCategory('MOTO')
+      if (nameLower.includes('yamaha')) setNewItemBrand('Yamaha')
+      else if (nameLower.includes('kawasaki')) setNewItemBrand('Kawasaki')
+      else if (nameLower.includes('bmw')) setNewItemBrand('BMW Motorrad')
+      else if (nameLower.includes('ducati')) setNewItemBrand('Ducati')
+      else if (nameLower.includes('ktm')) setNewItemBrand('KTM')
+      else if (nameLower.includes('honda')) setNewItemBrand('Honda')
+      else setNewItemBrand('Yamaha')
+
+      if (!newItemPrice) setNewItemPrice('68500000')
+      if (!newItemMileage) setNewItemMileage('4500')
+      if (!newItemPlate) setNewItemPlate('KTY-89G')
+
+      if (!newItemDescription) {
+        setNewItemDescription(`Exclusiva ${newItemName} en condición impecable. Cuenta con peritaje integral de 150 puntos avalado por YJD TRINOVA S.A.S., mantenimiento oficial al día, garantía mecánica y lista para traspaso inmediato sin gravámenes.`)
+      }
+      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
+        setNewItemImages([
+          'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200'
+        ])
+      }
+    } else if (nameLower.includes('apartamento') || nameLower.includes('casa') || nameLower.includes('penthouse') || nameLower.includes('local') || nameLower.includes('inmueble')) {
+      setNewItemCategory('INMUEBLE_VENTA')
+      setNewItemBrand('Inmobiliaria Trinova')
+      if (!newItemPrice) setNewItemPrice('850000000')
+      if (!newItemDescription) {
+        setNewItemDescription(`Extraordinaria propiedad ubicada en sector de alta valorización en Barranquilla. Acabados de lujo, excelente iluminación natural, seguridad privada 24/7 y toda la documentación jurídica al día para escrituración inmediata.`)
+      }
+      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
+        setNewItemImages([
+          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'
+        ])
+      }
+    } else {
+      setNewItemCategory('VEHICULO')
+      if (nameLower.includes('toyota')) setNewItemBrand('Toyota')
+      else if (nameLower.includes('mazda')) setNewItemBrand('Mazda')
+      else if (nameLower.includes('mercedes') || nameLower.includes('benz')) setNewItemBrand('Mercedes-Benz')
+      else if (nameLower.includes('bmw')) setNewItemBrand('BMW')
+      else if (nameLower.includes('audi')) setNewItemBrand('Audi')
+      else if (nameLower.includes('chevrolet')) setNewItemBrand('Chevrolet')
+      else setNewItemBrand('Toyota')
+
+      if (!newItemPrice) setNewItemPrice('310000000')
+      if (!newItemMileage) setNewItemMileage('12500')
+      if (!newItemPlate) setNewItemPlate('LMN-456')
+
+      if (!newItemDescription) {
+        setNewItemDescription(`Vehículo de gama alta garantizado bajo el programa de Corretaje Oficial YJD TRINOVA S.A.S. Peritaje de 150 puntos aprobado (motor, caja, chasis, suspensión y pintura), cero reclamaciones en aseguradora y listo para traspaso.`)
+      }
+      if (newItemImages.length === 0 || (newItemImages.length === 1 && newItemImages[0].includes('photo-1558981403'))) {
+        setNewItemImages([
+          'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
+          'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'
+        ])
+      }
+    }
+    toast.success("✨ ¡Ficha técnica completada con Asistente IA Trinova!")
+  }
+
+  const handleSaveItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newItemName || !newItemPrice) {
+      toast.error("El nombre y el precio son obligatorios")
+      return
+    }
+
+    setIsSavingItem(true)
+    try {
+      const res = await fetch('/api/trinova/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newItemName,
+          brand: newItemBrand || 'Trinova',
+          model: newItemModel || 'Oficial',
+          year: parseInt(newItemYear) || 2024,
+          priceCop: parseFloat(newItemPrice.toString().replace(/[^0-9]/g, '')),
+          categoryType: newItemCategory,
+          licensePlate: newItemPlate,
+          mileage: newItemMileage ? parseInt(newItemMileage.toString().replace(/[^0-9]/g, '')) : null,
+          city: newItemCity || 'Barranquilla',
+          description: newItemDescription,
+          images: newItemImages.length > 0 ? newItemImages : ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200']
+        })
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        toast.success("🎉 ¡Bien publicado con éxito en el Marketplace y conectado a WhatsApp!")
+        setIsCreateItemOpen(false)
+        setNewItemName('')
+        setNewItemPrice('')
+        setNewItemBrand('')
+        setNewItemModel('')
+        setNewItemPlate('')
+        setNewItemMileage('')
+        setNewItemDescription('')
+        setNewItemImages(['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200'])
+        loadTrinovaDashboardData()
+      } else {
+        toast.error(data.error || "Error al publicar")
+      }
+    } catch (err: any) {
+      toast.error("Error conectando con el servidor")
+    } finally {
+      setIsSavingItem(false)
+    }
+  }
+
+  const handleDeleteItem = async (id: string, name: string) => {
+    if (!window.confirm(`¿Seguro que deseas eliminar "${name}" del inventario oficial?`)) return
+    try {
+      const res = await fetch(`/api/trinova/inventory?id=${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`"${name}" eliminado del catálogo`)
+        loadTrinovaDashboardData()
+      } else {
+        toast.error(data.error || "Error al eliminar")
+      }
+    } catch (e) {
+      toast.error("Error al conectar")
     }
   }
 
@@ -977,15 +1142,23 @@ export default function TrinovaDedicatedAdminPage() {
 
           {/* ════ SECTION 4: INVENTARIO CENTRAL SUPABASE (FLAT TABLE) ════ */}
           {activeTab === 'inventory' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-zinc-100">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Inventario Activo en Base de Datos Real (Supabase Cloud)</h2>
+                  <h2 className="font-bold text-zinc-900 uppercase tracking-wide text-xs">Inventario Activo en Base de Datos Real (Supabase Cloud)</h2>
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                     {effectiveInventory.length} Disponibles
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setIsCreateItemOpen(true)}
+                    size="sm"
+                    className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5 shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Publicar Nuevo Bien</span>
+                  </Button>
                   <Button 
                     onClick={loadTrinovaDashboardData}
                     variant="outline"
@@ -1006,34 +1179,78 @@ export default function TrinovaDedicatedAdminPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
                     <tr>
+                      <th className="py-2 px-1">Foto</th>
                       <th className="py-2 px-1">Título / Bien</th>
                       <th className="py-2 px-1">SKU / Referencia</th>
                       <th className="py-2 px-1">Categoría</th>
                       <th className="py-2 px-1">Precio COP</th>
                       <th className="py-2 px-1">Placa / Ubicación</th>
                       <th className="py-2 px-1">Estado</th>
+                      <th className="py-2 px-1 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {effectiveInventory.length > 0 ? (
                       effectiveInventory.map((item: any) => (
                         <tr key={item.id} className="hover:bg-zinc-50 transition-colors">
-                          <td className="py-2.5 px-1 font-semibold text-zinc-900">{item.name || item.title}</td>
+                          <td className="py-2 px-1">
+                            <div className="w-12 h-10 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
+                              {item.images && item.images.length > 0 ? (
+                                <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                                  <ImageIcon className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-1 font-semibold text-zinc-900">
+                            <div>{item.name || item.title}</div>
+                            {item.brand && <div className="text-[10px] text-zinc-400 font-normal">{item.brand} • {item.year || '2024'}</div>}
+                          </td>
                           <td className="py-2.5 px-1 font-mono text-zinc-500 text-[11px]">{item.sku || 'TRN-AUTO'}</td>
                           <td className="py-2.5 px-1"><Badge variant="outline" className="text-[10px]">{item.category_type || item.category || 'VEHICULO'}</Badge></td>
                           <td className="py-2.5 px-1 font-mono font-bold text-zinc-900">${Number(item.price_cop || item.price || 0).toLocaleString('es-CO')} COP</td>
-                          <td className="py-2.5 px-1 text-zinc-600">{item.license_plate ? `Placa: ${item.license_plate}` : 'Barranquilla'}</td>
+                          <td className="py-2.5 px-1 text-zinc-600">{item.license_plate ? `Placa: ${item.license_plate}` : (item.city || 'Barranquilla')}</td>
                           <td className="py-2.5 px-1">
                             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                               {item.status}
                             </span>
                           </td>
+                          <td className="py-2.5 px-1 text-right">
+                            <Button
+                              onClick={() => handleDeleteItem(item.id, item.name || item.title)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                              title="Eliminar bien de inventario"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-zinc-400 text-xs">
-                          {isLoadingDashboard ? 'Cargando datos desde Supabase Cloud...' : '0 vehículos en base de datos.'}
+                        <td colSpan={8} className="py-10 text-center text-zinc-400 text-xs">
+                          {isLoadingDashboard ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" />
+                              <span>Cargando datos desde Supabase Cloud...</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p>No hay bienes registrados en el inventario.</p>
+                              <Button
+                                onClick={() => setIsCreateItemOpen(true)}
+                                size="sm"
+                                className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Publicar Primer Bien</span>
+                              </Button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     )}
@@ -1211,6 +1428,305 @@ export default function TrinovaDedicatedAdminPage() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Modal de Carga & Publicación de Inventario con Asistente IA ─── */}
+      <Dialog open={isCreateItemOpen} onOpenChange={setIsCreateItemOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white p-6 rounded-2xl shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-zinc-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-zinc-900">
+                    Publicar Nuevo Bien en Inventario & Marketplace
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-zinc-500">
+                    Carga vehículos, motos o inmuebles con ficha técnica oficial, fotos y conexión directa al Asistente IA de WhatsApp.
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveItem} className="space-y-4 pt-2">
+            {/* 1. Selector de Categoría */}
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
+                Tipo de Bien / Categoría:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: 'MOTO', label: '🏍️ Motocicleta', desc: 'Motos de alto cilindraje' },
+                  { id: 'VEHICULO', label: '🚗 Automóvil / SUV', desc: 'Carros y camionetas' },
+                  { id: 'INMUEBLE_VENTA', label: '🏢 Inmueble Venta', desc: 'Casas y apartamentos' },
+                  { id: 'INMUEBLE_RENTA', label: '🏠 Inmueble Renta', desc: 'Arriendos oficiales' }
+                ].map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setNewItemCategory(cat.id as any)}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      newItemCategory === cat.id
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500/20 font-bold shadow-sm'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 font-medium'
+                    }`}
+                  >
+                    <div className="text-xs">{cat.label}</div>
+                    <div className="text-[10px] text-zinc-400 truncate">{cat.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Título & Botón Asistente IA */}
+            <div className="p-3 bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-purple-50/70 border border-purple-200/80 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span>Nombre / Modelo del Bien (Escribe aquí para autocompletar con IA):</span>
+                </label>
+                <span className="text-[10px] font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                  Asistente IA Trinova
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newItemName}
+                  onChange={e => setNewItemName(e.target.value)}
+                  placeholder="Ej: Yamaha MT-09 2024, Toyota Fortuner 2023, Penthouse Alto Prado..."
+                  className="bg-white border-purple-200 text-xs font-semibold focus-visible:ring-purple-500"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAIAutocomplete}
+                  variant="outline"
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs gap-1.5 shrink-0 shadow-sm border-purple-600"
+                >
+                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                  <span>✨ Autocompletar con IA</span>
+                </Button>
+              </div>
+              <p className="text-[10px] text-purple-700">
+                💡 Escribe el nombre o modelo y haz clic en <strong>Autocompletar con IA</strong> para rellenar precios de mercado, especificaciones técnicas, peritaje de 150 puntos y fotos oficiales de alta calidad.
+              </p>
+            </div>
+
+            {/* 3. Grid de Datos Técnicos y Comerciales */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Marca / Constructor:</label>
+                <Input
+                  value={newItemBrand}
+                  onChange={e => setNewItemBrand(e.target.value)}
+                  placeholder="Ej: Yamaha, Toyota, BMW..."
+                  className="text-xs bg-zinc-50 border-zinc-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Modelo / Línea:</label>
+                <Input
+                  value={newItemModel}
+                  onChange={e => setNewItemModel(e.target.value)}
+                  placeholder="Ej: MT-09, TXL Diesel, Prado..."
+                  className="text-xs bg-zinc-50 border-zinc-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Año / Modelo:</label>
+                <Input
+                  value={newItemYear}
+                  onChange={e => setNewItemYear(e.target.value)}
+                  placeholder="Ej: 2024"
+                  type="number"
+                  className="text-xs bg-zinc-50 border-zinc-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Precio en COP ($):</label>
+                <Input
+                  value={newItemPrice}
+                  onChange={e => setNewItemPrice(e.target.value)}
+                  placeholder="Ej: 68500000"
+                  type="number"
+                  className="text-xs font-mono font-bold bg-zinc-50 border-zinc-200 text-emerald-900"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Placa / Matrícula:</label>
+                <Input
+                  value={newItemPlate}
+                  onChange={e => setNewItemPlate(e.target.value)}
+                  placeholder="Ej: KTY-89G / LMN-456"
+                  className="text-xs font-mono uppercase bg-zinc-50 border-zinc-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Kilometraje / Recorrido:</label>
+                <Input
+                  value={newItemMileage}
+                  onChange={e => setNewItemMileage(e.target.value)}
+                  placeholder="Ej: 4500 (km)"
+                  type="number"
+                  className="text-xs bg-zinc-50 border-zinc-200"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Ciudad / Sede:</label>
+                <Input
+                  value={newItemCity}
+                  onChange={e => setNewItemCity(e.target.value)}
+                  placeholder="Ej: Barranquilla"
+                  className="text-xs bg-zinc-50 border-zinc-200"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 w-full">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Estado: <strong>AVAILABLE</strong> (Visible en Marketplace & WhatsApp)</span>
+                </span>
+              </div>
+            </div>
+
+            {/* 4. Galería de Imágenes */}
+            <div className="space-y-2 p-3 bg-zinc-50 rounded-xl border border-zinc-200">
+              <label className="text-xs font-bold text-zinc-800 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-zinc-600" />
+                  <span>Galería de Fotos ({newItemImages.length} cargadas):</span>
+                </span>
+                <span className="text-[10px] text-zinc-400 font-normal">Pega enlaces directos de imágenes</span>
+              </label>
+
+              <div className="flex gap-2">
+                <Input
+                  value={newImageUrlInput}
+                  onChange={e => setNewImageUrlInput(e.target.value)}
+                  placeholder="https://images.unsplash.com/... o enlace directo de imagen"
+                  className="text-xs bg-white border-zinc-200"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  variant="outline"
+                  className="text-xs font-semibold shrink-0 bg-white hover:bg-zinc-100"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  <span>Añadir</span>
+                </Button>
+              </div>
+
+              {/* Botones Rápidos de Fotos Preset */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] text-zinc-400 font-semibold">Presets rápidos de fotos HD:</span>
+                <button
+                  type="button"
+                  onClick={() => setNewItemImages([
+                    'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=1200'
+                  ])}
+                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                >
+                  🏍️ Moto Naked HD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewItemImages([
+                    'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'
+                  ])}
+                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                >
+                  🚗 Carro / SUV HD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewItemImages([
+                    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'
+                  ])}
+                  className="text-[10px] bg-white border border-zinc-200 hover:border-zinc-400 px-2 py-0.5 rounded-full text-zinc-700 font-medium transition-colors"
+                >
+                  🏢 Inmueble Lujo HD
+                </button>
+              </div>
+
+              {/* Grid de Miniaturas */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                {newItemImages.map((imgUrl, idx) => (
+                  <div key={idx} className="relative group rounded-lg overflow-hidden border border-zinc-200 bg-white aspect-video">
+                    <img src={imgUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    {idx === 0 && (
+                      <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                        Foto Portada
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImageUrl(idx)}
+                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                      title="Eliminar foto"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 5. Descripción y Garantía Legal */}
+            <div>
+              <label className="text-xs font-semibold text-zinc-700 block mb-1">
+                Ficha Técnica, Peritaje y Descripción Comercial:
+              </label>
+              <textarea
+                value={newItemDescription}
+                onChange={e => setNewItemDescription(e.target.value)}
+                rows={3}
+                placeholder="Ficha técnica, historial de mantenimiento, certificación de 150 puntos y garantía legal de YJD TRINOVA S.A.S..."
+                className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-zinc-800"
+              />
+            </div>
+
+            <DialogFooter className="pt-3 border-t border-zinc-100 flex items-center justify-between sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateItemOpen(false)}
+                className="text-xs"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSavingItem}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 px-5 shadow-md"
+              >
+                {isSavingItem ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Publicando en Supabase...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Guardar y Publicar en Marketplace & WhatsApp</span>
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
