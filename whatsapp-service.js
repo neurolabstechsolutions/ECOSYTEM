@@ -433,13 +433,27 @@ ${liveInventoryText}
 🧠 INSTRUCCIONES ESTRICTAS DE RESPUESTA Y VALIDACIÓN DE IDENTIDAD:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO A: CLIENTE / COMPRADOR (Pregunta por motos, autos o inmuebles)
+CASO A: CLIENTE / COMPRADOR PROVENIENTE DE ANUNCIOS EN REDES SOCIALES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Si hay bienes en el inventario real de arriba: Preséntale exactamente los modelos reales con Marca, Año, Placa y Precio en Pesos Colombianos (COP) con símbolo $.
-- Solicita sus datos de validación de identidad para agendar peritaje / visita:
-  • Nombre completo
-  • Cédula de Ciudadanía (C.C.) para verificación de seguridad y SARLAFT
-  • Ciudad y Teléfono
+- Si el cliente viene de un anuncio en redes sociales o pregunta por un vehículo, moto o inmueble:
+  • Preséntale el modelo con calidez comercial, destacando peritaje de 150 puntos y precio en Pesos COP ($).
+  • Ofrécele inmediatamente agendar una cita presencial con nuestra Administradora y Asesora Titular, Yury Jaramillo, para que pueda mirar el vehículo en persona, revisarlo y realizar la prueba de manejo.
+  • Solicítale los datos de la cita:
+    1. Nombre completo
+    2. Cédula de Ciudadanía (C.C.) para el protocolo de seguridad y validación SARLAFT
+    3. Día y Hora de preferencia (ej: Mañana a las 10:00 AM, Sábado en la tarde, etc.)
+    4. Ciudad donde se encuentra
+- Una vez el cliente te dé su horario y datos, confirma su cita con este formato limpio:
+  "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
+
+  • *Cliente:* [Nombre]
+  • *Cédula:* [CC]
+  • *Vehículo / Bien:* [Marca Modelo Año]
+  • *Fecha y Hora:* [Día y Hora acordada]
+  • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
+  • *Asesora Asignada:* Yury Jaramillo (Titular)
+
+  Nuestra asesora titular Yury Jaramillo te estará esperando puntualmente para la inspección y prueba de manejo. ¡Te esperamos!"
 - Si NO hay bienes en la categoría solicitada o el inventario está vacío:
   Dile con total transparencia, elegancia y calidez comercial:
   "En este momento estamos en proceso de peritaje e ingreso de nuevas unidades a nuestro catálogo oficial de YJD TRINOVA. ¿Qué modelo o rango de presupuesto tienes en mente para tomar tus datos y notificarte de manera prioritaria apenas ingrese, o tienes un vehículo/moto que desees consignar y vender con nosotros?"
@@ -647,18 +661,49 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
             }
           }
 
+          // 5. Detección de Cita Presencial / Anuncios de Redes Sociales
+          const isAppointmentIntent = text.toLowerCase().includes('cita') || 
+                                      text.toLowerCase().includes('agend') || 
+                                      text.toLowerCase().includes('visita') || 
+                                      text.toLowerCase().includes('ver') || 
+                                      text.toLowerCase().includes('mirar') ||
+                                      text.toLowerCase().includes('probar') ||
+                                      text.toLowerCase().includes('mañana') ||
+                                      text.toLowerCase().includes('lunes') ||
+                                      text.toLowerCase().includes('martes') ||
+                                      text.toLowerCase().includes('miercoles') ||
+                                      text.toLowerCase().includes('jueves') ||
+                                      text.toLowerCase().includes('viernes') ||
+                                      text.toLowerCase().includes('sabado') ||
+                                      text.toLowerCase().includes('anuncio') ||
+                                      text.toLowerCase().includes('instagram') ||
+                                      text.toLowerCase().includes('facebook') ||
+                                      text.toLowerCase().includes('tiktok');
+
           // Registrar Lead en CRM
           if (contact) {
+            const leadStatus = isAppointmentIntent ? 'CITA_AGENDADA' : (isConsignmentData ? 'EN_PERITAJE' : 'NUEVO');
             await supabase.from('leads').insert({
               tenant_id: tenantId,
               contact_id: contact.id,
               name: ownerName,
               phone: `+${cleanPhone}`,
               interest_item_title: text.slice(0, 100),
-              status: isConsignmentData ? 'EN_PERITAJE' : 'NUEVO',
-              lead_score: 95,
+              status: leadStatus,
+              lead_score: isAppointmentIntent ? 99 : 90,
               intent_level: 'ALTA'
             });
+
+            // Si hay cita agendada o interés en ver el vehículo/moto, alertar a la titular Yury Jaramillo
+            if (isAppointmentIntent && (text.length > 5)) {
+              try {
+                const alertMsg = `🚨 *NUEVA CITA AGENDADA DESDE REDES SOCIALES* 📅✨\n\n• *Cliente:* ${ownerName}\n• *Cédula:* ${docNumber}\n• *Teléfono:* +${cleanPhone}\n• *Mensaje / Solicitud:* "${text.slice(0, 150)}"\n• *Canal:* Anuncio Redes Sociales (Instagram/Facebook Ads)\n• *Asesora Asignada:* Yury Jaramillo (Titular)\n\n_El cliente fue agendado en el sistema para la inspección física y prueba de manejo._`;
+                await sock.sendMessage(OWNER_PHONE, { text: alertMsg });
+                console.log(`📲 [ALERTA DE CITA ENVIADA A YURY JARAMILLO (+57 323 5845145)]`);
+              } catch (alertErr) {
+                console.warn('Error enviando alerta de cita a titular:', alertErr.message);
+              }
+            }
           }
         } catch (dbErr) {
           console.warn('[Supabase Sync Warning]:', dbErr.message);
