@@ -225,6 +225,7 @@ export default function TrinovaDedicatedAdminPage() {
   const [realContacts, setRealContacts] = useState<any[]>([])
   const [realLeads, setRealLeads] = useState<any[]>([])
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [clientFilter, setClientFilter] = useState<'ALL' | 'BUYERS' | 'SELLERS'>('ALL')
 
   // WhatsApp Live QR State from Render Service
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -1042,81 +1043,130 @@ export default function TrinovaDedicatedAdminPage() {
             </div>
           )}
 
-          {/* ════ SECTION 5: CLIENTES & CONTACTOS (FLAT TABLE) ════ */}
-          {activeTab === 'clients' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-bold text-zinc-900 uppercase tracking-wide">Directorio de Clientes & Contactos de WhatsApp</h2>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                    {effectiveContacts.length} Registrados
-                  </span>
-                </div>
-                <Button 
-                  onClick={loadTrinovaDashboardData}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs border-zinc-200 gap-1 shrink-0"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isLoadingDashboard ? 'animate-spin' : ''}`} />
-                  <span>Actualizar</span>
-                </Button>
-              </div>
+          {/* ════ SECTION 5: CLIENTES & CONTACTOS (FLAT TABLE WITH BUYER/SELLER TABS) ════ */}
+          {activeTab === 'clients' && (() => {
+            const buyersCount = effectiveContacts.filter((c: any) => c.role_type === 'COMPRADOR' || c.status === 'CITA_AGENDADA').length
+            const sellersCount = effectiveContacts.filter((c: any) => c.role_type === 'PROPIETARIO_CONSIGNANTE').length
+            const displayedContacts = effectiveContacts.filter((c: any) => {
+              if (clientFilter === 'BUYERS') return c.role_type === 'COMPRADOR' || c.status === 'CITA_AGENDADA'
+              if (clientFilter === 'SELLERS') return c.role_type === 'PROPIETARIO_CONSIGNANTE'
+              return true
+            })
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
-                    <tr>
-                      <th className="py-2 px-1">Nombre</th>
-                      <th className="py-2 px-1">Cédula / Identificación</th>
-                      <th className="py-2 px-1">Rol / Tipo</th>
-                      <th className="py-2 px-1">Teléfono / WhatsApp</th>
-                      <th className="py-2 px-1">Correo</th>
-                      <th className="py-2 px-1">Ciudad</th>
-                      <th className="py-2 px-1">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100">
-                    {effectiveContacts.length > 0 ? (
-                      effectiveContacts.map((c: any) => (
-                        <tr key={c.id} className="hover:bg-zinc-50 transition-colors">
-                          <td className="py-2.5 px-1 font-semibold text-zinc-900">{c.name || c.full_name}</td>
-                          <td className="py-2.5 px-1 font-mono text-[11px] font-bold text-zinc-800">
-                            {c.doc_number || c.identification || 'CC Validada'}
-                          </td>
-                          <td className="py-2.5 px-1">
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              c.role_type === 'PROPIETARIO_CONSIGNANTE' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            }`}>
-                              {c.role_type || 'COMPRADOR'}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-1 font-mono text-emerald-600">{c.phone}</td>
-                          <td className="py-2.5 px-1 text-zinc-600">{c.email}</td>
-                          <td className="py-2.5 px-1 text-zinc-600">{c.city || 'Barranquilla'}</td>
-                          <td className="py-2.5 px-1">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                              c.status === 'CITA_AGENDADA' 
-                                ? 'text-emerald-900 bg-emerald-100 border border-emerald-300 shadow-sm' 
-                                : 'text-emerald-700 bg-emerald-50'
-                            }`}>
-                              {c.status === 'CITA_AGENDADA' ? '📅 CITA AGENDADA' : (c.status || 'ACTIVO')}
-                            </span>
+            return (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-zinc-100">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold text-zinc-900 uppercase tracking-wide text-xs">Directorio Oficial de Contactos de WhatsApp</h2>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      {displayedContacts.length} Visibles ({effectiveContacts.length} Totales)
+                    </span>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1.5 bg-zinc-100 p-1 rounded-xl">
+                    <button
+                      onClick={() => setClientFilter('ALL')}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                        clientFilter === 'ALL' 
+                          ? 'bg-white text-zinc-900 shadow-sm' 
+                          : 'text-zinc-600 hover:text-zinc-900'
+                      }`}
+                    >
+                      Todos ({effectiveContacts.length})
+                    </button>
+                    <button
+                      onClick={() => setClientFilter('BUYERS')}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
+                        clientFilter === 'BUYERS' 
+                          ? 'bg-emerald-600 text-white shadow-sm' 
+                          : 'text-zinc-600 hover:text-zinc-900'
+                      }`}
+                    >
+                      <span>🛒 Compradores & Citas</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${clientFilter === 'BUYERS' ? 'bg-emerald-700 text-white' : 'bg-zinc-200 text-zinc-700'}`}>{buyersCount}</span>
+                    </button>
+                    <button
+                      onClick={() => setClientFilter('SELLERS')}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
+                        clientFilter === 'SELLERS' 
+                          ? 'bg-amber-600 text-white shadow-sm' 
+                          : 'text-zinc-600 hover:text-zinc-900'
+                      }`}
+                    >
+                      <span>🔑 Vendedores en Consignación</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${clientFilter === 'SELLERS' ? 'bg-amber-700 text-white' : 'bg-zinc-200 text-zinc-700'}`}>{sellersCount}</span>
+                    </button>
+                    <Button 
+                      onClick={loadTrinovaDashboardData}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-zinc-500 hover:text-zinc-900 ml-1"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingDashboard ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-zinc-200 text-zinc-500 font-semibold">
+                      <tr>
+                        <th className="py-2 px-1">Nombre</th>
+                        <th className="py-2 px-1">Cédula / Identificación</th>
+                        <th className="py-2 px-1">Tipo de Cliente</th>
+                        <th className="py-2 px-1">Teléfono / WhatsApp</th>
+                        <th className="py-2 px-1">Correo</th>
+                        <th className="py-2 px-1">Ciudad</th>
+                        <th className="py-2 px-1">Estado de Cita / Proceso</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {displayedContacts.length > 0 ? (
+                        displayedContacts.map((c: any) => (
+                          <tr key={c.id} className="hover:bg-zinc-50 transition-colors">
+                            <td className="py-2.5 px-1 font-semibold text-zinc-900">{c.name || c.full_name}</td>
+                            <td className="py-2.5 px-1 font-mono text-[11px] font-bold text-zinc-800">
+                              {c.doc_number || c.identification || 'CC Validada'}
+                            </td>
+                            <td className="py-2.5 px-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                                c.role_type === 'PROPIETARIO_CONSIGNANTE' 
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              }`}>
+                                {c.role_type === 'PROPIETARIO_CONSIGNANTE' ? '🔑 Vendedor / Consignante' : '🛒 Comprador Interesado'}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-1 font-mono text-emerald-600 font-semibold">{c.phone}</td>
+                            <td className="py-2.5 px-1 text-zinc-600">{c.email || 'Pendiente por registrar'}</td>
+                            <td className="py-2.5 px-1 text-zinc-600">{c.city || 'Barranquilla'}</td>
+                            <td className="py-2.5 px-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                c.status === 'CITA_AGENDADA' 
+                                  ? 'text-emerald-950 bg-emerald-200 border border-emerald-400 font-extrabold shadow-sm' 
+                                  : 'text-zinc-700 bg-zinc-100'
+                              }`}>
+                                {c.status === 'CITA_AGENDADA' ? '📅 CITA PRESENCIAL AGENDADA' : (c.status || 'ACTIVO')}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-zinc-400 text-xs">
+                            {isLoadingDashboard 
+                              ? 'Cargando directorio en tiempo real...' 
+                              : '0 contactos registrados. Los nuevos clientes y compradores de WhatsApp aparecerán aquí automáticamente.'}
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="py-8 text-center text-zinc-400 text-xs">
-                          {isLoadingDashboard ? 'Cargando directorio de Supabase...' : '0 contactos registrados.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </main>
       </div>
 
