@@ -708,24 +708,58 @@ REGLAS DE FORMATO LIMPIO PARA WHATSAPP:
                                       text.toLowerCase().includes('facebook') ||
                                       text.toLowerCase().includes('tiktok');
 
-          // Registrar Lead en CRM
+          // Detección de Ticket Oficial Confirmado en la Respuesta de la IA
+          const hasConfirmedTicket = aiReply.includes('CITA AGENDADA') || aiReply.includes('CITA CONFIRMADA');
+          let ticketClientName = ownerName;
+          let ticketDocNumber = docNumber;
+          let ticketItem = 'Yamaha MT-09 SP ABS 2024';
+          let ticketSchedule = 'Horario acordado';
+
+          if (hasConfirmedTicket) {
+            const nameFromReply = aiReply.match(/Cliente:\s*([^\n\r*]+)/i);
+            const docFromReply = aiReply.match(/C[eé]dula:\s*([^\n\r*]+)/i);
+            const itemFromReply = aiReply.match(/(?:Bien|Veh[ií]culo):\s*([^\n\r*]+)/i);
+            const scheduleFromReply = aiReply.match(/Fecha y Hora:\s*([^\n\r*]+)/i);
+
+            if (nameFromReply) ticketClientName = nameFromReply[1].trim();
+            if (docFromReply) {
+              const rawDoc = docFromReply[1].trim();
+              ticketDocNumber = rawDoc.startsWith('CC') ? rawDoc : `CC ${rawDoc}`;
+            }
+            if (itemFromReply) ticketItem = itemFromReply[1].trim();
+            if (scheduleFromReply) ticketSchedule = scheduleFromReply[1].trim();
+
+            console.log(`🎟️ [TICKET DE CITA CONFIRMADO]: ${ticketClientName} | ${ticketDocNumber} | ${ticketSchedule}`);
+          }
+
+          // Registrar o Actualizar Contacto y Lead en CRM
           if (contact) {
-            const leadStatus = isAppointmentIntent ? 'CITA_AGENDADA' : (isConsignmentData ? 'EN_PERITAJE' : 'NUEVO');
+            const finalContactName = hasConfirmedTicket ? ticketClientName : ownerName;
+            const finalContactDoc = hasConfirmedTicket ? ticketDocNumber : docNumber;
+            const leadStatus = (hasConfirmedTicket || isAppointmentIntent) ? 'CITA_AGENDADA' : (isConsignmentData ? 'EN_PERITAJE' : 'NUEVO');
+
+            await supabase.from('contacts').update({
+              name: finalContactName,
+              doc_number: finalContactDoc,
+              status: leadStatus,
+              role_type: isConsignmentData ? 'PROPIETARIO_CONSIGNANTE' : 'COMPRADOR'
+            }).eq('id', contact.id);
+
             await supabase.from('leads').insert({
               tenant_id: tenantId,
               contact_id: contact.id,
-              name: ownerName,
+              name: finalContactName,
               phone: `+${cleanPhone}`,
-              interest_item_title: text.slice(0, 100),
+              interest_item_title: hasConfirmedTicket ? `${ticketItem} (${ticketSchedule})` : text.slice(0, 100),
               status: leadStatus,
-              lead_score: isAppointmentIntent ? 99 : 90,
+              lead_score: hasConfirmedTicket ? 100 : (isAppointmentIntent ? 99 : 90),
               intent_level: 'ALTA'
             });
 
-            // Si hay cita agendada o interés en ver el vehículo/moto, alertar a la titular Yury Jaramillo
-            if (isAppointmentIntent && (text.length > 5)) {
+            // Si hay cita agendada confirmada, alertar a la titular Yury Jaramillo
+            if ((hasConfirmedTicket || isAppointmentIntent) && text.length > 3) {
               try {
-                const alertMsg = `🚨 *NUEVA CITA AGENDADA DESDE REDES SOCIALES* 📅✨\n\n• *Cliente:* ${ownerName}\n• *Cédula:* ${docNumber}\n• *Teléfono:* +${cleanPhone}\n• *Mensaje / Solicitud:* "${text.slice(0, 150)}"\n• *Canal:* Anuncio Redes Sociales (Instagram/Facebook Ads)\n• *Asesora Asignada:* Yury Jaramillo (Titular)\n\n_El cliente fue agendado en el sistema para la inspección física y prueba de manejo._`;
+                const alertMsg = `🚨 *NUEVA CITA AGENDADA DESDE REDES SOCIALES* 📅✨\n\n• *Cliente:* ${finalContactName}\n• *Cédula:* ${finalContactDoc}\n• *Teléfono:* +${cleanPhone}\n• *Vehículo / Bien:* ${ticketItem}\n• *Fecha y Hora:* ${ticketSchedule}\n• *Canal:* Anuncios Meta (WhatsApp Ads)\n• *Asesora Asignada:* Yury Jaramillo (Titular)\n\n_El cliente fue registrado en la base de datos de Trinova para la prueba presencial._`;
                 await sock.sendMessage(OWNER_PHONE, { text: alertMsg });
                 console.log(`📲 [ALERTA DE CITA ENVIADA A YURY JARAMILLO (+57 323 5845145)]`);
               } catch (alertErr) {

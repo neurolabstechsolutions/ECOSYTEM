@@ -1095,8 +1095,12 @@ export default function TrinovaDedicatedAdminPage() {
                           <td className="py-2.5 px-1 text-zinc-600">{c.email}</td>
                           <td className="py-2.5 px-1 text-zinc-600">{c.city || 'Barranquilla'}</td>
                           <td className="py-2.5 px-1">
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                              {c.status || 'ACTIVO'}
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                              c.status === 'CITA_AGENDADA' 
+                                ? 'text-emerald-900 bg-emerald-100 border border-emerald-300 shadow-sm' 
+                                : 'text-emerald-700 bg-emerald-50'
+                            }`}>
+                              {c.status === 'CITA_AGENDADA' ? '📅 CITA AGENDADA' : (c.status || 'ACTIVO')}
                             </span>
                           </td>
                         </tr>
