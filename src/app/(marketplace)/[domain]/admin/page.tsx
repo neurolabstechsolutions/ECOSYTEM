@@ -260,9 +260,9 @@ export default function TrinovaDedicatedAdminPage() {
       const res = await fetch('/api/whatsapp/qr', { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
-        if (data.phone || data.status === 'CONNECTED') {
+        if (data.status === 'CONNECTED') {
           setConnectionStatus("CONNECTED")
-          setConnectedNumber(data.phone || "573235845145")
+          setConnectedNumber(data.phone || "573005765530")
           return
         }
 

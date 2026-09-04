@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const { createOpenAI } = require('@ai-sdk/openai');
@@ -293,15 +294,29 @@ async function connectToWhatsApp() {
     }
 
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+      const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+      const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+      console.log('⚠️ [WHATSAPP CLOSED] Código de estado:', statusCode, 'LoggedOut:', isLoggedOut);
+
       connectionStatus = 'DISCONNECTED';
-      console.log('Conexión cerrada. Reconectando...', shouldReconnect);
-      if (shouldReconnect) {
-        connectToWhatsApp();
+      connectedNumber = null;
+
+      if (isLoggedOut) {
+        console.log('🗑️ Sesión cerrada en celular. Limpiando credenciales y generando nuevo QR...');
+        try {
+          fs.rmSync('auth_info_baileys', { recursive: true, force: true });
+        } catch (e) {
+          console.warn('Error limpiando auth_info_baileys:', e.message);
+        }
       }
+
+      setTimeout(() => {
+        console.log('🔄 Reconectando socket de WhatsApp Trinova...');
+        connectToWhatsApp();
+      }, 3000);
     } else if (connection === 'open') {
       connectionStatus = 'CONNECTED';
-      connectedNumber = sock.user?.id?.split(':')[0] || 'Conectado';
+      connectedNumber = sock.user?.id?.split(':')[0] || '573005765530';
       currentQR = null;
       console.log('🎉 ¡WhatsApp Conectado Exitosamente a YJD TRINOVA:', connectedNumber);
     }
