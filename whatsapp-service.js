@@ -1053,17 +1053,31 @@ app.post('/disconnect', async (req, res) => {
   }
 });
 
+app.get('/groq-models', async (req, res) => {
+  try {
+    const resp = await axios.get('https://api.groq.com/openai/v1/models', {
+      headers: {
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`
+      }
+    });
+    res.json({ success: true, models: resp.data.data.map(m => m.id) });
+  } catch (err) {
+    res.json({ success: false, error: err.response?.data || err.message });
+  }
+});
+
 app.get('/test-ai', async (req, res) => {
   const q = req.query.q || 'necesito una marca boxer con presupuesto de 1.300.000';
   const hasGroqKey = !!process.env.GROQ_API_KEY;
   const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
   try {
+    const modelId = req.query.model || 'llama-3.1-8b-instant';
     const result = await generateText({
-      model: groq('llama-3.1-8b-instant'),
+      model: groq(modelId),
       system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S.',
       prompt: q,
     });
-    res.json({ success: true, hasGroqKey, groqKeyPrefix, reply: result.text });
+    res.json({ success: true, modelUsed: modelId, hasGroqKey, groqKeyPrefix, reply: result.text });
   } catch (err) {
     res.json({ success: false, hasGroqKey, groqKeyPrefix, error: err.message, stack: err.stack });
   }
