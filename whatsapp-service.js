@@ -1053,6 +1053,22 @@ app.post('/disconnect', async (req, res) => {
   }
 });
 
+app.get('/test-ai', async (req, res) => {
+  const q = req.query.q || 'necesito una marca boxer con presupuesto de 1.300.000';
+  const hasGroqKey = !!process.env.GROQ_API_KEY;
+  const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
+  try {
+    const result = await generateText({
+      model: groq('llama-3.3-70b-versatile'),
+      system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S.',
+      prompt: q,
+    });
+    res.json({ success: true, hasGroqKey, groqKeyPrefix, reply: result.text });
+  } catch (err) {
+    res.json({ success: false, hasGroqKey, groqKeyPrefix, error: err.message, stack: err.stack });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'HEALTHY',
