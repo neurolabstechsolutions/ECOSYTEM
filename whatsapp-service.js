@@ -641,7 +641,68 @@ REGLAS DE FORMATO PARA WHATSAPP:
 function generateRuleBasedReply(text, pushName, cleanPhone, recentHistory) {
   const lower = text.toLowerCase().trim();
 
-  // 1. Consentimiento / Aprobación / Envío de datos para Cita
+  // 1. Preguntas / Dudas / Objecciones sobre el pago de los $20.000 de Reserva (Nequi)
+  if (
+    lower.includes('por que') || lower.includes('porque') || lower.includes('por qué') ||
+    lower.includes('20000') || lower.includes('20.000') || lower.includes('20 mil') ||
+    lower.includes('cobran') || lower.includes('debo pagar') || lower.includes('tengo que pagar') ||
+    lower.includes('deposito') || lower.includes('depósito') || lower.includes('anticipo') ||
+    lower.includes('reserva') || lower.includes('por que pagan') || lower.includes('gratis') ||
+    (lower.includes('pagar') && lower.includes('cita'))
+  ) {
+    return `¡Con todo el gusto te explico! El depósito de *$20.000 COP* es una política de **compromiso, seguridad física y respeto mutuo del tiempo**, diseñada para brindarte una atención 100% personalizada y segura:
+
+1. 🔒 *Protocolo de Seguridad Física & Control:* Preparamos el registro notarial de tu ingreso en recepción y asignamos personal de seguridad para la prueba en nuestra Sede Principal.
+2. ⏱️ *Bloqueo Exclusivo de Agenda:* Apartamos el tiempo dedicado de nuestra titular (*Yury Jaramillo*) para atenderte solo a ti, sin esperas ni turnos compartidos.
+3. 🏍️🚗 *Alistamiento Técnico:* La unidad se prepara, limpia y verifica con peritaje de 150 puntos para tu prueba presencial.
+
+🛡️ *Y lo más importante: es 100% reembolsable:*
+• ⏱️ *Llegas puntual a tu cita:* Te devolvemos de inmediato el *50%* ($10.000 COP).
+• 🤝 *Compras el bien:* Te reembolsamos o abonamos el *100%* ($20.000 COP) al valor de compra.
+• ❌ *Solo si no asistes sin avisar:* Se retiene para cubrir los costos logísticos del asesor.
+
+Así garantizamos atender a clientes verdaderamente interesados. ¿Te gustaría apartar tu cita? Compártenos tu nombre, cédula (CC) y el día/hora que te convenga.`;
+  }
+
+  // 2. Ubicación, Sede, Dirección y Horarios
+  if (
+    lower.includes('donde estan') || lower.includes('donde están') || lower.includes('donde queda') ||
+    lower.includes('ubicacion') || lower.includes('ubicación') || lower.includes('direccion') ||
+    lower.includes('dirección') || lower.includes('sede') || lower.includes('horario') ||
+    lower.includes('abierto') || lower.includes('atencion') || lower.includes('atención') ||
+    lower.includes('calle') || lower.includes('carrera')
+  ) {
+    return `¡Con gusto! Nuestra Sede Principal y Sala de Negocios está ubicada en:
+
+🏛️ *YJD TRINOVA S.A.S. (NIT 902.095.222-8)*
+📍 *Dirección:* Calle 82 # 21 Sur 06 Esquina, Barranquilla, Atlántico.
+⏰ *Horario de Atención:* Lunes a Sábado de 8:00 AM a 6:00 PM (Jornada Continua).
+
+🛡️ *Protocolo de Seguridad:* Toda visita presencial se atiende bajo cita previa confirmada para garantizar tu acompañamiento de seguridad física y jurídica.
+
+¿Qué día y hora te gustaría visitarnos para agendarte con nuestra titular Yury Jaramillo?`;
+  }
+
+  // 3. Garantías, Peritaje, Financiación y Traspasos
+  if (
+    lower.includes('garantia') || lower.includes('garantía') || lower.includes('peritaje') ||
+    lower.includes('traspaso') || lower.includes('papeles') || lower.includes('credito') ||
+    lower.includes('crédito') || lower.includes('financiacion') || lower.includes('financiación') ||
+    lower.includes('banco') || lower.includes('libre de') || lower.includes('embargo') ||
+    lower.includes('soat') || lower.includes('tecnomecanica') || lower.includes('tecnomecánica')
+  ) {
+    return `En *YJD TRINOVA S.A.S.* todos nuestros vehículos, motos e inmuebles cuentan con el más alto estándar de respaldo legal y técnico:
+
+🛡️ *Garantías & Certificaciones Oficiales:*
+• 🔍 *Peritaje de 150 Puntos Certificado:* Revisión exhaustiva de motor, caja, chasis, estructura, pintura y frenos.
+• 📑 *Historial & Tradición 100% Limpio:* Validación en RUNT, SIMIT, Fiscalía y Registro de Instrumentos Públicos (Libre de embargos, prendas, siniestros y gravámenes).
+• ✍️ *Acompañamiento Notarial:* Contratos de promesa y traspaso seguro respaldados por la empresa.
+• 💳 *Asesoría en Crédito:* Convenios y viabilidad financiera para tu compra.
+
+¿Te gustaría agendar una cita para revisar las unidades disponibles? Compártenos tus datos de contacto (Nombre, CC y Horario).`;
+  }
+
+  // 4. Consentimiento / Aprobación / Envío de datos para Cita
   const isAgreeing = lower === 'si' || lower === 'sí' || lower.includes('de acuerdo') || lower.includes('acepto') || lower.includes('listo') || lower.includes('perfecto') || lower.includes('ya transfiero') || lower.includes('transferí') || lower.includes('comprobante');
   const hasContactInfo = lower.includes('cc') || lower.includes('cédula') || lower.includes('cedula') || /[0-9]{7,10}/.test(lower);
   const hasTime = lower.includes('mañana') || lower.includes('pm') || lower.includes('am') || lower.includes('sabado') || lower.includes('lunes') || lower.includes('martes') || lower.includes('miercoles') || lower.includes('jueves') || lower.includes('viernes');
@@ -671,7 +732,7 @@ function generateRuleBasedReply(text, pushName, cleanPhone, recentHistory) {
 Por favor envíanos la captura del comprobante de Nequi por este medio para validar tu ingreso con el equipo de recepción y seguridad. ¡Te esperamos!`;
   }
 
-  // 2. Venta / Consignación / Proveedores
+  // 5. Venta / Consignación / Proveedores
   if (lower.includes('vender') || lower.includes('consignar') || lower.includes('publicar') || lower.includes('proveedor') || lower.includes('comision') || lower.includes('contrato')) {
     return `¡Bienvenido al Programa de Consignación Segura y Corretaje Notarial de *YJD TRINOVA S.A.S.*! 🔑🚗
 
@@ -702,8 +763,8 @@ Por favor envíanos la captura del comprobante de Nequi por este medio para vali
 👉 *¿Cuál de estos planes prefieres para acelerar la venta de tu vehículo o propiedad (Básico $50k, Pro $80k, Premium $150k o Estándar)?*`;
   }
 
-  // 3. Motocicletas
-  if (lower.includes('moto') || lower.includes('cilindraje') || lower.includes('yamaha') || lower.includes('kawasaki') || lower.includes('ktm') || lower.includes('bmw') || lower.includes('suzuki') || lower.includes('honda') || lower.includes('mt09') || lower.includes('z900') || lower.includes('duke')) {
+  // 6. Motocicletas
+  if (lower.includes('moto') || lower.includes('cilindraje') || lower.includes('yamaha') || lower.includes('kawasaki') || lower.includes('ktm') || lower.includes('bmw') || lower.includes('suzuki') || lower.includes('honda') || lower.includes('mt09') || lower.includes('z900') || lower.includes('duke') || lower.includes('r3') || lower.includes('r6')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Qué excelente elección, las motocicletas de alto cilindraje son una de nuestras especialidades en *YJD TRINOVA S.A.S.* 🏍️💨
 
 🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
@@ -721,7 +782,7 @@ Para agendar tu Cita Presencial en nuestra Sede Principal en Barranquilla con nu
 👉 ¿Te gustaría que coordinemos tu cita presencial? Compártenos tu nombre, cédula (CC) y día/hora de preferencia.`;
   }
 
-  // 4. Carros & Camionetas SUV
+  // 7. Carros & Camionetas SUV
   if (lower.includes('carro') || lower.includes('auto') || lower.includes('camioneta') || lower.includes('suv') || lower.includes('vehiculo') || lower.includes('vehículo') || lower.includes('toyota') || lower.includes('mazda') || lower.includes('chevrolet') || lower.includes('ford') || lower.includes('renault')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Qué gusto atenderte desde *YJD TRINOVA S.A.S.* para la compra de tu próximo vehículo. 🚗✨
 
@@ -740,7 +801,7 @@ Para apartar el horario exclusivo del asesor titular y coordinar con el equipo d
 👉 ¿Estás de acuerdo para agendar tu cita? Compártenos tu nombre, cédula (CC) y día/hora de preferencia.`;
   }
 
-  // 5. Inmuebles / Finca Raíz
+  // 8. Inmuebles / Finca Raíz
   if (lower.includes('casa') || lower.includes('apartamento') || lower.includes('inmueble') || lower.includes('propiedad') || lower.includes('penthouse') || lower.includes('arriendo') || lower.includes('alquiler') || lower.includes('local') || lower.includes('lote')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Bienvenido al área de Bienes Raíces & Finca Raíz Exclusiva de *YJD TRINOVA S.A.S.* 🏢✨
 
@@ -756,7 +817,7 @@ Para coordinar la visita presencial con nuestro asesor inmobiliario y el protoco
 👉 ¿Te gustaría agendar una visita personalizada? Compártenos tus datos y disponibilidad de horario.`;
   }
 
-  // 6. Servicios On-Demand (Peritaje, Búsqueda)
+  // 9. Servicios On-Demand (Peritaje, Búsqueda)
   if (lower.includes('peritaje') || lower.includes('buscar') || lower.includes('requerimiento') || lower.includes('inspeccion') || lower.includes('inspección') || lower.includes('precio') || lower.includes('cuanto vale') || lower.includes('tarifa')) {
     return `¡Con gusto te compartimos nuestras tarifas oficiales de servicios especializados en *YJD TRINOVA S.A.S.*! 📋✨
 
@@ -772,7 +833,7 @@ Para coordinar la visita presencial con nuestro asesor inmobiliario y el protoco
 👉 ¿Cuál de estos servicios requieres para coordinar tu atención de inmediato?`;
   }
 
-  // 7. Saludo y Menú General
+  // 10. Saludo y Menú General
   return `¡Hola${pushName ? `, ${pushName}` : ''}! Bienvenido a *YJD TRINOVA S.A.S.* (NIT 902.095.222-8). 🚗🏍️🏢
 
 🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S.:* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
