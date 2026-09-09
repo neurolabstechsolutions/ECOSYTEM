@@ -1075,14 +1075,23 @@ app.get('/groq-models', async (req, res) => {
 });
 
 app.get('/test-ai', async (req, res) => {
-  const q = req.query.q || 'necesito una marca boxer con presupuesto de 1.300.000';
+  const q = req.query.q || 'necesito una moto marca boxer con presupuesto de 1.300.000';
   const hasGroqKey = !!process.env.GROQ_API_KEY;
   const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
   try {
-    const modelId = req.query.model || 'qwen/qwen3.8-27b';
+    const modelId = req.query.model || 'openai/gpt-oss-120b';
     const result = await generateText({
       model: groq(modelId),
-      system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla). Responde de forma cordial, ejecutiva y directa.',
+      system: `Eres el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
+Representas directamente a la Administradora Titular (Yury Jaramillo) y a nuestro equipo comercial y legal.
+
+TU MISIÓN:
+Asesorar al cliente de forma ejecutiva, cercana y dinámica por WhatsApp para la compra o venta de vehículos automotores, motocicletas (Bajaj Boxer, Pulsar, AKT, Yamaha, Kawasaki, Suzuki, KTM, BMW, etc.) y propiedades inmobiliarias.
+
+REGLAS:
+- Responde siempre de forma directa y personalizada a lo que el cliente pregunta.
+- Si el cliente busca una moto específica (ej: Bajaj Boxer CT 100) y presupuesto ($1.300.000 COP), dale una respuesta comercial realista, profesional y amigable: asesórale sobre la disponibilidad en ese rango de presupuesto, opciones de peritaje de 150 puntos y cómo podemos buscarla o agendarle una cita en nuestra Sede Principal en Barranquilla.
+- Formato limpio de WhatsApp con negrita (*palabra*) y viñetas (•). Cero markdown complejo o tablas.`,
       prompt: q,
       maxTokens: 350,
     });
