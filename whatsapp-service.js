@@ -1074,30 +1074,22 @@ app.get('/groq-models', async (req, res) => {
   }
 });
 
-app.get('/test-ai', async (req, res) => {
-  const q = req.query.q || 'necesito una moto marca boxer con presupuesto de 1.300.000';
-  const hasGroqKey = !!process.env.GROQ_API_KEY;
-  const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
+app.get('/test-history', async (req, res) => {
+  const history = [
+    { role: 'user', content: 'quiero comprar una moto' },
+    { role: 'assistant', content: '¡Hola! Con gusto te asesoramos con nuestras motos.' },
+    { role: 'user', content: 'que requisitos para comprar' }
+  ];
   try {
-    const modelId = req.query.model || 'openai/gpt-oss-120b';
     const result = await generateText({
-      model: groq(modelId),
-      system: `Eres el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
-Representas directamente a la Administradora Titular (Yury Jaramillo) y a nuestro equipo comercial y legal.
-
-TU MISIÓN:
-Asesorar al cliente de forma ejecutiva, cercana y dinámica por WhatsApp para la compra o venta de vehículos automotores, motocicletas (Bajaj Boxer, Pulsar, AKT, Yamaha, Kawasaki, Suzuki, KTM, BMW, etc.) y propiedades inmobiliarias.
-
-REGLAS:
-- Responde siempre de forma directa y personalizada a lo que el cliente pregunta.
-- Si el cliente busca una moto específica (ej: Bajaj Boxer CT 100) y presupuesto ($1.300.000 COP), dale una respuesta comercial realista, profesional y amigable: asesórale sobre la disponibilidad en ese rango de presupuesto, opciones de peritaje de 150 puntos y cómo podemos buscarla o agendarle una cita en nuestra Sede Principal en Barranquilla.
-- Formato limpio de WhatsApp con negrita (*palabra*) y viñetas (•). Cero markdown complejo o tablas.`,
-      prompt: q,
-      maxTokens: 350,
+      model: groq('openai/gpt-oss-120b'),
+      system: 'Eres el Asesor Comercial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).',
+      messages: history,
+      maxTokens: 400,
     });
-    res.json({ success: true, modelUsed: modelId, hasGroqKey, groqKeyPrefix, reply: result.text });
+    res.json({ success: true, reply: result.text });
   } catch (err) {
-    res.json({ success: false, hasGroqKey, groqKeyPrefix, error: err.message, stack: err.stack });
+    res.json({ success: false, error: err.message, stack: err.stack });
   }
 });
 
