@@ -782,23 +782,36 @@ Te ofrecemos asesoría integral en:
         let rawAiReply = '';
         try {
           const result = await generateText({
-            model: groq('llama-3.1-8b-instant'),
+            model: groq('qwen/qwen3.8-27b'),
             system: trinovaSystemPrompt,
             messages: recentHistory,
+            maxTokens: 400,
           });
           rawAiReply = result.text;
         } catch (groqErr1) {
-          console.warn('⚠️ [Groq AI 8B Warning]:', groqErr1.message, 'Intentando con mixtral-8x7b-32768...');
+          console.warn('⚠️ [Groq AI Qwen3.8 Warning]:', groqErr1.message, 'Intentando con openai/gpt-oss-120b...');
           try {
             const result2 = await generateText({
-              model: groq('mixtral-8x7b-32768'),
+              model: groq('openai/gpt-oss-120b'),
               system: trinovaSystemPrompt,
               messages: recentHistory,
+              maxTokens: 400,
             });
             rawAiReply = result2.text;
           } catch (groqErr2) {
-            console.warn('⚠️ [Groq AI Fallback Warning]:', groqErr2.message, 'Ejecutando motor conversacional contextual...');
-            rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
+            console.warn('⚠️ [Groq AI Fallback Warning]:', groqErr2.message, 'Intentando con qwen/qwen3.6-27b...');
+            try {
+              const result3 = await generateText({
+                model: groq('qwen/qwen3.6-27b'),
+                system: trinovaSystemPrompt,
+                messages: recentHistory,
+                maxTokens: 400,
+              });
+              rawAiReply = result3.text;
+            } catch (groqErr3) {
+              console.warn('⚠️ [Groq AI Fallback 3 Warning]:', groqErr3.message, 'Ejecutando motor conversacional contextual...');
+              rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
+            }
           }
         }
 
@@ -1071,11 +1084,12 @@ app.get('/test-ai', async (req, res) => {
   const hasGroqKey = !!process.env.GROQ_API_KEY;
   const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
   try {
-    const modelId = req.query.model || 'llama-3.1-8b-instant';
+    const modelId = req.query.model || 'qwen/qwen3.8-27b';
     const result = await generateText({
       model: groq(modelId),
-      system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S.',
+      system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla). Responde de forma cordial, ejecutiva y directa.',
       prompt: q,
+      maxTokens: 350,
     });
     res.json({ success: true, modelUsed: modelId, hasGroqKey, groqKeyPrefix, reply: result.text });
   } catch (err) {
