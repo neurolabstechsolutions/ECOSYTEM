@@ -549,7 +549,13 @@ function sanitizeWhatsAppText(rawText) {
 Representas directamente a la Administradora Titular (Yury Jaramillo) y al equipo comercial y jurídico de la empresa.
 
 TU OBJETIVO PRINCIPAL:
-Atender al cliente con la más alta excelencia ejecutiva, empatía, calidez y perspicacia comercial por WhatsApp para asesorarlo en la compra, venta o consignación de vehículos, motos de alto cilindraje y propiedades inmobiliarias, así como servicios de peritaje y corretaje notarial.
+Atender al cliente con la más alta excelencia ejecutiva, empatía, calidez y perspicacia comercial por WhatsApp para asesorarlo en la compra, venta o consignación de vehículos, motos de todo cilindraje y propiedades inmobiliarias, así como servicios de peritaje y corretaje notarial.
+
+PORTAFOLIO COMERCIAL YJD TRINOVA:
+• 🏍️ *Motocicletas:* Modelos urbanos, trabajo y alto cilindraje (Bajaj Boxer CT 100, Pulsar, AKT, Yamaha MT/FZ/R3/NMAX, Kawasaki, Suzuki, KTM, BMW, etc.).
+• 🚗 *Vehículos:* Sedanes, hatchbacks, camionetas SUV y 4x4 (Toyota, Mazda, Chevrolet, Renault, Ford, etc.).
+• 🏢 *Inmuebles:* Venta y arriendo de casas, apartamentos, locales y oficinas en Barranquilla.
+• 🔑 *Consignación:* Publicidad y corretaje notarial con firma digital.
 
 REGLAS DE ORO CONVERSACIONALES:
 1. DINAMISMO Y FLUIDEZ REAL (NO SEAS ROBÓTICO NI REPITAS PLANTILLAS):
@@ -782,36 +788,25 @@ Te ofrecemos asesoría integral en:
         let rawAiReply = '';
         try {
           const result = await generateText({
-            model: groq('qwen/qwen3.8-27b'),
+            model: groq('openai/gpt-oss-120b'),
             system: trinovaSystemPrompt,
             messages: recentHistory,
             maxTokens: 400,
           });
           rawAiReply = result.text;
         } catch (groqErr1) {
-          console.warn('⚠️ [Groq AI Qwen3.8 Warning]:', groqErr1.message, 'Intentando con openai/gpt-oss-120b...');
+          console.warn('⚠️ [Groq AI 120B Warning]:', groqErr1.message, 'Intentando con openai/gpt-oss-20b...');
           try {
             const result2 = await generateText({
-              model: groq('openai/gpt-oss-120b'),
+              model: groq('openai/gpt-oss-20b'),
               system: trinovaSystemPrompt,
               messages: recentHistory,
               maxTokens: 400,
             });
             rawAiReply = result2.text;
           } catch (groqErr2) {
-            console.warn('⚠️ [Groq AI Fallback Warning]:', groqErr2.message, 'Intentando con qwen/qwen3.6-27b...');
-            try {
-              const result3 = await generateText({
-                model: groq('qwen/qwen3.6-27b'),
-                system: trinovaSystemPrompt,
-                messages: recentHistory,
-                maxTokens: 400,
-              });
-              rawAiReply = result3.text;
-            } catch (groqErr3) {
-              console.warn('⚠️ [Groq AI Fallback 3 Warning]:', groqErr3.message, 'Ejecutando motor conversacional contextual...');
-              rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
-            }
+            console.warn('⚠️ [Groq AI Fallback Warning]:', groqErr2.message, 'Ejecutando motor conversacional contextual...');
+            rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
           }
         }
 
