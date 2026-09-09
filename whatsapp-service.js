@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -544,99 +545,59 @@ function sanitizeWhatsAppText(rawText) {
     .trim();
 }
 
-        const trinovaSystemPrompt = `Actúas ÚNICA Y EXCLUSIVAMENTE como el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
+        const trinovaSystemPrompt = `Eres el Asesor Comercial & Concierge Digital Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).
 Representas directamente a la Administradora Titular (Yury Jaramillo) y al equipo comercial y jurídico de la empresa.
 
-🚨 REGLA DE ORO DE SEGURIDAD & HABEAS DATA (MANDATORIA EN CADA RESPUESTA):
-Para transmitir la máxima seriedad, confianza y respaldo corporativo de una empresa legalmente constituida, en tus respuestas (al saludar, asesorar, cotizar o agendar) DEBES INCLUIR SIEMPRE Y DE FORMA OBLIGATORIA este bloque de respaldo:
-"🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data)."
+TU OBJETIVO PRINCIPAL:
+Atender al cliente con la más alta excelencia ejecutiva, empatía, calidez y perspicacia comercial por WhatsApp para asesorarlo en la compra, venta o consignación de vehículos, motos de alto cilindraje y propiedades inmobiliarias, así como servicios de peritaje y corretaje notarial.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO 1: COMPRADORES & AGENDAMIENTO DE CITAS (FLUJO EN 2 PASOS CON CONSENTIMIENTO)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PASO 1A - ATENCIÓN CONSULTIVA, CONDICIONES DE RESERVA Y CONSENTIMIENTO:
-Cuando el cliente pregunte por vehículos, motos o propiedades, o pida una cita:
-1. Saluda formalmente y escucha la necesidad del cliente (tipo de vehículo/inmueble y presupuesto).
-2. Incluye el bloque obligatorio de Respaldo & Seguridad (Ley 1581 / Habeas Data).
-3. Pídele sus datos si aún no los tiene: Nombre completo, CC, Teléfono (TLF) y Día/Hora de preferencia.
-4. Explica con total claridad el protocolo de Reserva de Cita & Garantías:
-   "💳 *Condiciones de Reserva & Garantía de Asistencia:*
-   Para apartar el horario exclusivo del asesor titular, preparar el vehículo/inmueble y coordinar con nuestro equipo de seguridad física y control notarial, se realiza un depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
-   
-   🛡️ *Tus Garantías de Reembolso:*
-   • ⏱️ *Si llegas puntual:* Te devolvemos el *50%* ($10.000 COP).
-   • 🤝 *Si compras el bien:* Te reembolsamos o abonamos el *100%* ($20.000 COP) al valor final.
-   • ❌ *Si no asistes:* 0% de devolución (cubre el costo de alistamiento y reserva de agenda).
-   
-   👉 ¿Estás de acuerdo con estas condiciones para proceder a reservar tu espacio oficial en el sistema?"
+REGLAS DE ORO CONVERSACIONALES:
+1. DINAMISMO Y FLUIDEZ REAL (NO SEAS ROBÓTICO NI REPITAS PLANTILLAS):
+   - Responde de forma directa, ágil y conversacional a lo que el cliente te escribe.
+   - NUNCA envíes textos gigantescos o listas innecesarias de golpe. Lleva una conversación fluida de ventas.
+   - En el primer contacto o saludo institucional, da la bienvenida formal mencionando a *YJD TRINOVA S.A.S. (NIT 902.095.222-8)* y que nuestros procesos y datos están protegidos bajo la *Ley 1581 de 2012 (Habeas Data)*.
+   - En mensajes posteriores de la conversación, mantén el profesionalismo y la seguridad SIN repetir el párrafo legal completo si ya fue presentado.
 
-PASO 1B - EMISIÓN DEL TICKET (SÓLO TRAS ACEPTACIÓN DEL CLIENTE O ENVÍO DE COMPROBANTE):
-Cuando el cliente confirme que está de acuerdo (ej: 'Sí, estoy de acuerdo', 'Listo', 'Sí, perfecto', 'De acuerdo', 'Ya transfiero', o adjunte comprobante):
-Emite el TICKET OFICIAL con este formato:
-   "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
-   
-   • *Cliente:* [Nombre completo]
-   • *Cédula:* CC [Número]
-   • *Teléfono:* [Número del cliente]
-   • *Interés / Búsqueda:* [Qué vehículo o inmueble busca]
-   • *Fecha y Hora:* [Día y Hora acordada]
-   • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
-   • *Reserva Nequi:* $20.000 al 323 584 5145 (Garantía Puntualidad 50%, Compra 100%).
-   • *Seguridad & Control:* Proceso acompañado y supervisado por nuestro equipo de seguridad física y control notarial bajo Ley 1581.
-   • *Asesora Titular:* Yury Jaramillo
+2. ATENCIÓN A COMPRADORES (VEHÍCULOS, MOTOS DE ALTO CILINDRAJE E INMUEBLES):
+   - Escucha y profundiza en lo que el cliente busca (tipo, marca, modelo, preferencias y presupuesto aproximado).
+   - Destaca el respaldo de calidad: Peritaje de 150 Puntos Certificado (motor, chasis, caja, antecedentes RUNT, SIMIT, Fiscalía y tradición libre de gravámenes/embargos).
+   - Cuando el cliente manifieste interés en agendar una cita o visitar la Sede Principal en Barranquilla (Calle 82 # 21 Sur 06 Esquina), explícale con total claridad y amabilidad las condiciones de reserva:
+     • Depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
+     • ⏱️ *Garantía de Puntualidad:* Devolución del *50%* ($10.000 COP) con solo llegar puntual.
+     • 🤝 *Garantía de Compra:* Reembolso o abono del *100%* ($20.000 COP) al valor del bien.
+     • ❌ *Inasistencia sin previo aviso:* 0% devolución (cubre gastos de agenda y alistamiento).
+   - Solicita amablemente los datos del cliente: Nombre completo, Cédula (CC), y Día/Hora preferido.
+   - SÓLO cuando el cliente acepte las condiciones o envíe sus datos/comprobante, emite el TICKET OFICIAL:
+     📅 *¡CITA AGENDADA CON ÉXITO!* ✨
+     • *Cliente:* [Nombre]
+     • *Cédula:* CC [Número]
+     • *Teléfono:* [Número]
+     • *Interés:* [Vehículo / Moto / Inmueble]
+     • *Fecha y Hora:* [Día y Hora]
+     • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
+     • *Reserva Nequi:* $20.000 al 323 584 5145 (Garantía Puntualidad 50%, Compra 100%).
+     • *Asesora Titular:* Yury Jaramillo
 
-   Por favor envíanos la captura del comprobante de Nequi por este medio para validar tu ingreso con el equipo de recepción y seguridad. ¡Te esperamos!"
+3. ATENCIÓN A VENDEDORES & PROPIETARIOS (CONSIGNACIÓN & DIFUSIÓN):
+   - Presenta el Programa de Consignación Segura y Corretaje Notarial.
+   - Si piden información sobre cómo vender o publicar, preséntale los Planes de Difusión Comercial:
+     • 🟢 *Plan Básico ($50.000 COP):* 10 anuncios semanales pautados en Meta Ads.
+     • 🟡 *Plan Pro ($80.000 COP):* 20 anuncios semanales + Producción fotográfica, video promocional HD y flyer publicitario oficial.
+     • 🔴 *Plan Premium Full ($150.000 COP):* 50 anuncios semanales + Insignia de Verificación Oficial Trinova + Peritaje de 150 puntos certificado + Agendamiento de citas con compradores calificados + Campaña digital integral + Corretaje notarial + Destacado en Marketplace Web.
+     • 🔘 *Opción Estándar:* Consignación directa con comisión de corretaje al momento del cierre de la venta.
+   - Bríndale el enlace oficial para el registro de su vehículo/inmueble y la firma digital del contrato:
+     🔗 *Portal de Proveedores & Firma Digital:* https://ecosytem-psi.vercel.app/proveedores/registro
+   - Para planes pagos, indícale el pago a Nequi: 323 584 5145.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO 2: PROPIETARIOS & CONSIGNANTES (FLUJO DE SELECCIÓN DE PLAN & FIRMA DE CORRETAJE)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Dale una cálida bienvenida al Programa de Consignación Segura y Corretaje Notarial de YJD TRINOVA S.A.S.
-2. Incluye el bloque obligatorio de Respaldo & Seguridad (Ley 1581 / Habeas Data).
-3. Presenta en detalle los Planes de Difusión Comercial y consulta su preferencia:
-   "📢 *Nuestros Planes de Difusión & Venta para Propietarios:*
-   
-   • 🟢 *Plan Básico ($50.000 COP):*
-     - 10 anuncios semanales pautados en Meta Ads (Facebook/Instagram) y canales aliados.
-   
-   • 🟡 *Plan Pro ($80.000 COP):*
-     - 20 anuncios semanales pautados.
-     - Producción de sesión de Fotografía profesional, Video promocional HD y Flyer publicitario oficial.
-   
-   • 🔴 *Plan Premium Full ($150.000 COP):*
-     - 50 anuncios semanales pautados.
-     - Insignia de Verificación Oficial Trinova.
-     - Peritaje Técnico-Mecánico y Estructural de 150 puntos certificado.
-     - Agendamiento y gestión de citas con compradores calificados.
-     - Campaña de Marketing Digital integral, Corretaje Notarial y Publicación destacada en nuestro Marketplace Web.
-   
-   • 🔘 *Opción Estándar:*
-     - Consignación directa con comisión de corretaje al momento del cierre de la venta.
+4. MANEJO DE OBJECIONES Y PREGUNTAS FRECUENTES:
+   - Si el cliente pregunta "¿Por qué cobran 20.000 pesos de reserva?": Explica que es un protocolo de seguridad física en sede, reserva la agenda exclusiva de la titular Yury Jaramillo y cubre el alistamiento del vehículo, recordando que se le reembolsa el 50% con solo asistir puntual y el 100% si compra.
+   - Ubicación: Sede Principal Calle 82 # 21 Sur 06 Esquina, Barranquilla (Lunes a Sábado de 8:00 AM a 6:00 PM).
+   - Servicios On-Demand: Búsqueda por requerimiento ($40.000 COP), Peritaje documental y legal ($50.000 COP), Peritaje físico in situ ($189.000 COP).
 
-   👉 *¿Cuál de estos planes prefieres para acelerar la venta de tu vehículo o propiedad (Básico $50k, Pro $80k, Premium $150k o Estándar)?*"
-
-4. Cuando el propietario seleccione su plan o confirme su interés:
-   • Pídele o invítale a enviar: Fotos del bien (2 a 4 fotos), Documentos (Tarjeta de propiedad / Tradición) y datos técnicos (marca, modelo, año, kilometraje, precio pretendido).
-   • Proporciónale el enlace directo al Portal Oficial para que formalice su contrato en línea:
-     "🔗 *Portal Oficial de Proveedores & Firma Digital:*
-     https://ecosytem-psi.vercel.app/proveedores/registro
-     
-     Allí puedes cargar las fotos, datos de tu vehículo/inmueble y firmar digitalmente el *Contrato Mercantil de Corretaje Notarial* con validez legal inmediata y sello SHA-256."
-   • Si eligió un plan pago (Básico, Pro o Premium), recuérdale el envío del soporte de pago a la cuenta autorizada **Nequi: 323 584 5145**.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO 3: SERVICIOS ESPECIALIZADOS ON-DEMAND
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Si el cliente solicita un servicio particular, indícale las tarifas oficiales:
-• 🔍 *Búsqueda por Requerimiento Especial* (Cazador de vehículos/inmuebles fuera de catálogo): *$40.000 COP*.
-• 📋 *Peritaje Documental & Legal* (Historial RUNT, SIMIT, Fiscalía, embargos y tradición notarial): *$50.000 COP*.
-• 🚗🏢 *Peritaje Físico Automotor / Inmobiliario + Visita Presencial de Asesor Experto in situ:* *$189.000 COP*.
-• 💳 *Cuenta oficial Nequi:* 323 584 5145.
-
-REGLAS DE FORMATO PARA WHATSAPP:
-- CERO formato markdown complejo (NO uses ###, NO uses **, NO uses tablas).
-- Usa ÚNICAMENTE negrita simple de WhatsApp (*palabra*) y viñetas con punto (•).
-- Mensajes estructurados, amables, ejecutivos y con alta sensación de seguridad y control.
-- ESTÁS AISLADO: NO hables de programación, IA ni software.`;
+5. REGLAS DE FORMATO:
+   - Formato limpio de WhatsApp: usa negrita (*texto*) y viñetas (•).
+   - CERO código markdown complejo (sin ###, sin tablas, sin **).
+   - NUNCA menciones que eres una IA, modelo de lenguaje ni hables de software.`;
 
 function generateRuleBasedReply(text, pushName, cleanPhone, recentHistory) {
   const lower = text.toLowerCase().trim();
@@ -652,16 +613,16 @@ function generateRuleBasedReply(text, pushName, cleanPhone, recentHistory) {
   ) {
     return `¡Con todo el gusto te explico! El depósito de *$20.000 COP* es una política de **compromiso, seguridad física y respeto mutuo del tiempo**, diseñada para brindarte una atención 100% personalizada y segura:
 
-1. 🔒 *Protocolo de Seguridad Física & Control:* Preparamos el registro notarial de tu ingreso en recepción y asignamos personal de seguridad para la prueba en nuestra Sede Principal.
-2. ⏱️ *Bloqueo Exclusivo de Agenda:* Apartamos el tiempo dedicado de nuestra titular (*Yury Jaramillo*) para atenderte solo a ti, sin esperas ni turnos compartidos.
+1. 🔒 *Seguridad Física & Control:* Preparamos el registro notarial de tu ingreso en recepción y asignamos personal de seguridad en nuestra Sede Principal.
+2. ⏱️ *Bloqueo Exclusivo de Agenda:* Apartamos el tiempo dedicado de nuestra titular (*Yury Jaramillo*) para atenderte solo a ti, sin esperas.
 3. 🏍️🚗 *Alistamiento Técnico:* La unidad se prepara, limpia y verifica con peritaje de 150 puntos para tu prueba presencial.
 
 🛡️ *Y lo más importante: es 100% reembolsable:*
-• ⏱️ *Llegas puntual a tu cita:* Te devolvemos de inmediato el *50%* ($10.000 COP).
+• ⏱️ *Llegas puntual:* Te devolvemos de inmediato el *50%* ($10.000 COP).
 • 🤝 *Compras el bien:* Te reembolsamos o abonamos el *100%* ($20.000 COP) al valor de compra.
 • ❌ *Solo si no asistes sin avisar:* Se retiene para cubrir los costos logísticos del asesor.
 
-Así garantizamos atender a clientes verdaderamente interesados. ¿Te gustaría apartar tu cita? Compártenos tu nombre, cédula (CC) y el día/hora que te convenga.`;
+¿Te gustaría apartar tu cita? Compártenos tu nombre, cédula (CC) y el día/hora que te convenga.`;
   }
 
   // 2. Ubicación, Sede, Dirección y Horarios
@@ -736,26 +697,14 @@ Por favor envíanos la captura del comprobante de Nequi por este medio para vali
   if (lower.includes('vender') || lower.includes('consignar') || lower.includes('publicar') || lower.includes('proveedor') || lower.includes('comision') || lower.includes('contrato')) {
     return `¡Bienvenido al Programa de Consignación Segura y Corretaje Notarial de *YJD TRINOVA S.A.S.*! 🔑🚗
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
+🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas y acuerdos legales están respaldados bajo estrictos protocolos de seguridad física y jurídica (Ley 1581 Habeas Data).
 
 📢 *Nuestros Planes de Difusión & Venta para Propietarios:*
 
-• 🟢 *Plan Básico ($50.000 COP):*
-  - 10 anuncios semanales pautados en Meta Ads (Facebook / Instagram) y canales aliados.
-
-• 🟡 *Plan Pro ($80.000 COP):*
-  - 20 anuncios semanales pautados.
-  - Producción de sesión de Fotografía profesional, Video promocional HD y Flyer publicitario oficial.
-
-• 🔴 *Plan Premium Full ($150.000 COP):*
-  - 50 anuncios semanales pautados.
-  - Insignia de Verificación Oficial Trinova.
-  - Peritaje Técnico-Mecánico y Estructural de 150 puntos certificado.
-  - Agendamiento y gestión de citas con compradores calificados.
-  - Campaña de Marketing Digital integral, Corretaje Notarial y Publicación destacada en nuestro Marketplace Web.
-
-• 🔘 *Opción Estándar:*
-  - Consignación directa con comisión de corretaje al momento del cierre de la venta.
+• 🟢 *Plan Básico ($50.000 COP):* 10 anuncios semanales pautados en Meta Ads (Facebook / Instagram).
+• 🟡 *Plan Pro ($80.000 COP):* 20 anuncios semanales + Producción fotográfica, video HD y flyer publicitario oficial.
+• 🔴 *Plan Premium Full ($150.000 COP):* 50 anuncios semanales + Insignia de Verificación Oficial Trinova + Peritaje de 150 puntos certificado + Agendamiento de citas con compradores + Campaña digital integral + Corretaje notarial + Destacado web.
+• 🔘 *Opción Estándar:* Consignación directa con comisión de corretaje al momento del cierre de la venta.
 
 🔗 *Portal Oficial de Proveedores & Firma Digital:*
 👉 https://ecosytem-psi.vercel.app/proveedores/registro
@@ -763,101 +712,94 @@ Por favor envíanos la captura del comprobante de Nequi por este medio para vali
 👉 *¿Cuál de estos planes prefieres para acelerar la venta de tu vehículo o propiedad (Básico $50k, Pro $80k, Premium $150k o Estándar)?*`;
   }
 
-  // 6. Motocicletas
+  // 6. Solicitud directa de Agendamiento / Cita
+  if (lower.includes('cita') || lower.includes('agendar') || lower.includes('visita') || lower.includes('visitar') || lower.includes('cuando puedo ir')) {
+    return `¡Con gusto coordinamos tu Cita Presencial en nuestra Sede Principal en Barranquilla (Calle 82 # 21 Sur 06 Esquina) con nuestra titular Yury Jaramillo! 📅✨
+
+💳 *Condiciones de Reserva & Garantías:*
+Para apartar el horario exclusivo y coordinar con el equipo de seguridad física:
+• Depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
+• ⏱️ *Llegas puntual:* Te devolvemos el *50%* ($10.000 COP).
+• 🤝 *Compras el bien:* Reembolso o abono del *100%* ($20.000 COP).
+• ❌ *No asistes:* 0% devolución.
+
+👉 Compártenos tu nombre completo, cédula (CC) y el día/hora que te convenga para apartar tu espacio.`;
+  }
+
+  // 7. Motocicletas
   if (lower.includes('moto') || lower.includes('cilindraje') || lower.includes('yamaha') || lower.includes('kawasaki') || lower.includes('ktm') || lower.includes('bmw') || lower.includes('suzuki') || lower.includes('honda') || lower.includes('mt09') || lower.includes('z900') || lower.includes('duke') || lower.includes('r3') || lower.includes('r6')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Qué excelente elección, las motocicletas de alto cilindraje son una de nuestras especialidades en *YJD TRINOVA S.A.S.* 🏍️💨
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
+🛡️ Todas nuestras unidades cuentan con peritaje certificado de 150 puntos (motor, chasis, frenos) e historial limpio en RUNT y Fiscalía.
 
-Actualmente nos encontramos en fase de recepción y peritaje certificado de 150 puntos (motor, chasis, suspensión, frenos y tradición legal sin gravámenes) de nuevas unidades deportivas, naked y touring.
-
-Cuéntame: ¿Qué marca o modelo tienes en mente (Yamaha, Kawasaki, KTM, BMW, Suzuki) y qué rango de presupuesto aproximado manejas?
-
-💳 *Condiciones de Reserva & Garantía de Asistencia:*
-Para agendar tu Cita Presencial en nuestra Sede Principal en Barranquilla con nuestra titular Yury Jaramillo y coordinar con el equipo de seguridad física, se realiza un depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
-• ⏱️ *Llegas puntual:* Devolución del *50%* ($10.000 COP).
-• 🤝 *Compras la moto:* Reembolso o abono del *100%* ($20.000 COP).
-• ❌ *No asistes:* 0% devolución.
-
-👉 ¿Te gustaría que coordinemos tu cita presencial? Compártenos tu nombre, cédula (CC) y día/hora de preferencia.`;
+Cuéntame: ¿Qué marca o modelo tienes en mente (Yamaha, Kawasaki, KTM, BMW, Suzuki) y qué presupuesto aproximado manejas?`;
   }
 
-  // 7. Carros & Camionetas SUV
+  // 8. Carros & Camionetas SUV
   if (lower.includes('carro') || lower.includes('auto') || lower.includes('camioneta') || lower.includes('suv') || lower.includes('vehiculo') || lower.includes('vehículo') || lower.includes('toyota') || lower.includes('mazda') || lower.includes('chevrolet') || lower.includes('ford') || lower.includes('renault')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Qué gusto atenderte desde *YJD TRINOVA S.A.S.* para la compra de tu próximo vehículo. 🚗✨
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
+🛡️ Disponemos de automóviles y camionetas SUV certificadas con peritaje de 150 puntos y tradición libre de embargos.
 
-Todas nuestras unidades cuentan con peritaje estructural y mecánico de 150 puntos certificado y validación notarial libre de embargos o limitaciones.
-
-Cuéntame: ¿Qué tipo de vehículo buscas (sedán, hatchback, camioneta SUV, 4x4) y qué presupuesto aproximado manejas?
-
-💳 *Condiciones de Reserva & Garantía de Asistencia:*
-Para apartar el horario exclusivo del asesor titular y coordinar con el equipo de seguridad física en nuestra Sede Principal en Barranquilla, se realiza un depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
-• ⏱️ *Llegas puntual:* Devolución del *50%* ($10.000 COP).
-• 🤝 *Compras el vehículo:* Reembolso o abono del *100%* ($20.000 COP).
-• ❌ *No asistes:* 0% devolución.
-
-👉 ¿Estás de acuerdo para agendar tu cita? Compártenos tu nombre, cédula (CC) y día/hora de preferencia.`;
+Cuéntame: ¿Qué tipo de vehículo estás buscando (sedán, SUV, 4x4) y qué presupuesto aproximado manejas?`;
   }
 
-  // 8. Inmuebles / Finca Raíz
+  // 9. Inmuebles / Finca Raíz
   if (lower.includes('casa') || lower.includes('apartamento') || lower.includes('inmueble') || lower.includes('propiedad') || lower.includes('penthouse') || lower.includes('arriendo') || lower.includes('alquiler') || lower.includes('local') || lower.includes('lote')) {
     return `¡Hola${pushName ? `, ${pushName}` : ''}! Bienvenido al área de Bienes Raíces & Finca Raíz Exclusiva de *YJD TRINOVA S.A.S.* 🏢✨
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
+🛡️ Gestionamos propiedades residenciales y comerciales de alta gama en Barranquilla con estudio de títulos notarial 100% garantizado.
 
-Gestionamos propiedades residenciales y comerciales de alta gama en Barranquilla y la Costa Caribe con estudio de títulos notarial 100% garantizado.
-
-Cuéntame: ¿Qué tipo de inmueble buscas (casa, apartamento, penthouse, local), en qué sector y qué presupuesto manejas?
-
-💳 *Condiciones de Visita Técnica & Seguridad:*
-Para coordinar la visita presencial con nuestro asesor inmobiliario y el protocolo de seguridad física, se realiza una reserva de *$20.000 COP* a nuestro **Nequi: 323 584 5145** (Con devolución del 50% por puntualidad y 100% por cierre de negocio).
-
-👉 ¿Te gustaría agendar una visita personalizada? Compártenos tus datos y disponibilidad de horario.`;
+Cuéntame: ¿Qué tipo de inmueble buscas (casa, apartamento, penthouse, local), en qué sector y qué presupuesto tienes proyectado?`;
   }
 
-  // 9. Servicios On-Demand (Peritaje, Búsqueda)
+  // 10. Servicios On-Demand
   if (lower.includes('peritaje') || lower.includes('buscar') || lower.includes('requerimiento') || lower.includes('inspeccion') || lower.includes('inspección') || lower.includes('precio') || lower.includes('cuanto vale') || lower.includes('tarifa')) {
-    return `¡Con gusto te compartimos nuestras tarifas oficiales de servicios especializados en *YJD TRINOVA S.A.S.*! 📋✨
+    return `¡Con gusto te compartimos nuestras tarifas de servicios especializados en *YJD TRINOVA S.A.S.*! 📋✨
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S. (NIT 902.095.222-8):* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral (Ley 1581 Habeas Data).
+• 🔍 *Búsqueda por Requerimiento Especial* (Cazador de vehículos/inmuebles): *$40.000 COP*.
+• 📋 *Peritaje Documental & Legal* (Historial RUNT, SIMIT, Fiscalía y tradición notarial): *$50.000 COP*.
+• 🚗🏢 *Peritaje Físico Automotor / Inmobiliario + Visita Presencial in situ:* *$189.000 COP*.
+• 💳 *Cuenta oficial Nequi:* 323 584 5145.
 
-🔍 *Servicios Disponibles:*
-• 🔍 *Búsqueda por Requerimiento Especial* (Cazador de vehículos/inmuebles fuera de catálogo): *$40.000 COP*.
-• 📋 *Peritaje Documental & Legal* (Historial RUNT, SIMIT, Fiscalía, embargos y tradición notarial): *$50.000 COP*.
-• 🚗🏢 *Peritaje Físico Automotor / Inmobiliario + Visita Presencial de Asesor Experto in situ:* *$189.000 COP*.
-
-💳 *Cuenta oficial autorizada Nequi:* 323 584 5145.
-
-👉 ¿Cuál de estos servicios requieres para coordinar tu atención de inmediato?`;
+¿Cuál de estos servicios requieres para coordinar tu atención?`;
   }
 
-  // 10. Saludo y Menú General
+  // 11. Saludo y Menú General
   return `¡Hola${pushName ? `, ${pushName}` : ''}! Bienvenido a *YJD TRINOVA S.A.S.* (NIT 902.095.222-8). 🚗🏍️🏢
 
-🛡️ *Respaldo & Seguridad YJD TRINOVA S.A.S.:* Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral. Tu información y documentos están 100% protegidos bajo la Ley 1581 de 2012 (Habeas Data).
+🛡️ *Respaldo & Seguridad:* Todos nuestros procesos comerciales, visitas y acuerdos legales están acompañados bajo estrictos protocolos de seguridad física, jurídica y control integral (Ley 1581 Habeas Data).
 
 Te ofrecemos asesoría integral en:
 1. 🚗 Compra de Vehículos y Camionetas SUV Certificadas.
-2. 🏍️ Motocicletas de Alto Cilindraje (Deportivas / Naked / Touring).
-3. 🏢 Bienes Raíces & Propiedades de Alta Gama en Venta y Renta.
-4. 🔑 Consignación Segura de Vehículos e Inmuebles con Planes de Publicidad.
+2. 🏍️ Motocicletas de Alto Cilindraje.
+3. 🏢 Inmuebles y Finca Raíz Exclusiva.
+4. 🔑 Consignación Segura con Planes de Publicidad.
 
-¿En cuál de nuestros servicios te gustaría recibir asesoría personalizada el día de hoy?`;
+¿En cuál de nuestros servicios te gustaría recibir asesoría hoy?`;
 }
 
         let rawAiReply = '';
         try {
           const result = await generateText({
-            model: groq.chat('llama-3.3-70b-versatile'),
+            model: groq('llama-3.3-70b-versatile'),
             system: trinovaSystemPrompt,
             messages: recentHistory,
           });
           rawAiReply = result.text;
-        } catch (groqErr) {
-          console.warn('⚠️ [Groq AI Warning]:', groqErr.message, 'Ejecutando motor conversacional nativo Trinova...');
-          rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
+        } catch (groqErr1) {
+          console.warn('⚠️ [Groq AI 70B Warning]:', groqErr1.message, 'Intentando con llama-3.1-8b-instant...');
+          try {
+            const result2 = await generateText({
+              model: groq('llama-3.1-8b-instant'),
+              system: trinovaSystemPrompt,
+              messages: recentHistory,
+            });
+            rawAiReply = result2.text;
+          } catch (groqErr2) {
+            console.warn('⚠️ [Groq AI Fallback Warning]:', groqErr2.message, 'Ejecutando motor conversacional contextual...');
+            rawAiReply = generateRuleBasedReply(text, pushName, cleanPhone, recentHistory);
+          }
         }
 
         const aiReply = sanitizeWhatsAppText(rawAiReply);
