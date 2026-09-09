@@ -785,12 +785,27 @@ Te ofrecemos asesoría integral en:
 ¿En cuál de nuestros servicios te gustaría recibir asesoría hoy?`;
 }
 
+        const historySummary = conv.messages.slice(-6).map(m => 
+          `${m.sender === 'user' ? `Cliente (${pushName || 'Interesado'})` : 'Asesor Comercial Trinova'}: ${m.text}`
+        ).join('\n');
+
+        const userTurnPrompt = `Historial reciente del chat de WhatsApp:
+${historySummary}
+
+Información de contexto:
+• Cliente: ${pushName || 'Cliente'} (Teléfono: +${cleanPhone})
+• Inventario destacado disponible:
+${liveInventoryText}
+
+Instrucción:
+Responde al último mensaje del cliente de forma directa, ejecutiva, personalizada y persuasiva como el Asesor Comercial Oficial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla).`;
+
         let rawAiReply = '';
         try {
           const result = await generateText({
             model: groq('openai/gpt-oss-120b'),
             system: trinovaSystemPrompt,
-            messages: recentHistory,
+            prompt: userTurnPrompt,
             maxTokens: 400,
           });
           rawAiReply = result.text;
@@ -800,7 +815,7 @@ Te ofrecemos asesoría integral en:
             const result2 = await generateText({
               model: groq('openai/gpt-oss-20b'),
               system: trinovaSystemPrompt,
-              messages: recentHistory,
+              prompt: userTurnPrompt,
               maxTokens: 400,
             });
             rawAiReply = result2.text;
@@ -1075,16 +1090,18 @@ app.get('/groq-models', async (req, res) => {
 });
 
 app.get('/test-history', async (req, res) => {
-  const history = [
-    { role: 'user', content: 'quiero comprar una moto' },
-    { role: 'assistant', content: '¡Hola! Con gusto te asesoramos con nuestras motos.' },
-    { role: 'user', content: 'que requisitos para comprar' }
-  ];
+  const historyText = `Historial de conversación:
+- Cliente: quiero comprar una moto
+- Asesor: ¡Hola! Con gusto te asesoramos con nuestras motos.
+- Cliente: que requisitos para comprar
+
+Responde al último mensaje del cliente como el Asesor Comercial de YJD TRINOVA:`;
+
   try {
     const result = await generateText({
       model: groq('openai/gpt-oss-120b'),
       system: 'Eres el Asesor Comercial de YJD TRINOVA S.A.S. (NIT 902.095.222-8, Barranquilla, Colombia).',
-      messages: history,
+      prompt: historyText,
       maxTokens: 400,
     });
     res.json({ success: true, reply: result.text });
