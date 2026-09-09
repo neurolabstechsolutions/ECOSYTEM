@@ -407,6 +407,23 @@ async function connectToWhatsApp() {
     }
   });
 
+function extractMessageText(msg) {
+  if (!msg || !msg.message) return '';
+  const m = msg.message;
+  return m.conversation ||
+         m.extendedTextMessage?.text ||
+         m.ephemeralMessage?.message?.extendedTextMessage?.text ||
+         m.ephemeralMessage?.message?.conversation ||
+         m.viewOnceMessage?.message?.extendedTextMessage?.text ||
+         m.viewOnceMessage?.message?.conversation ||
+         m.viewOnceMessageV2?.message?.extendedTextMessage?.text ||
+         m.viewOnceMessageV2?.message?.conversation ||
+         m.imageMessage?.caption ||
+         m.videoMessage?.caption ||
+         m.documentMessage?.caption ||
+         '';
+}
+
   // Manejador de Mensajes Entrantes
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
@@ -415,34 +432,41 @@ async function connectToWhatsApp() {
       if (!msg.message) continue;
 
       const sender = msg.key.remoteJid;
+      if (!sender || sender.includes('status@broadcast')) continue;
       const isGroup = sender.includes('@g.us');
 
-      // Ignorar mensajes propios en chats privados
-      if (msg.key.fromMe && !isGroup) continue;
+      let text = extractMessageText(msg);
+
+      // Manejo de Notas de Voz e Imágenes
+      const isAudio = Boolean(msg.message.audioMessage || msg.message.ephemeralMessage?.message?.audioMessage);
+      const isImage = Boolean(msg.message.imageMessage || msg.message.ephemeralMessage?.message?.imageMessage);
+
+      if (isAudio) {
+        console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de cliente (${sender})...`);
+        text = 'Hola, te envié un audio solicitando información sobre sus vehículos, motos e inmuebles disponibles.';
+      } else if (isImage) {
+        console.log(`📸 [IMAGEN RECIBIDA] Fotografía entrante de cliente (${sender})...`);
+        const caption = msg.message.imageMessage?.caption || msg.message.ephemeralMessage?.message?.imageMessage?.caption || '';
+        text = caption ? `${caption} [Foto adjunta]` : 'Te acabo de enviar una fotografía real del vehículo/bien para la ficha técnica del Marketplace.';
+      }
+
+      if (!text || !text.trim()) continue;
+
+      // Filtrado Antiloop de Mensajes Propios
+      if (msg.key.fromMe) {
+        const isBotOutbound = text.includes('🛡️') || text.includes('YJD TRINOVA') || text.includes('¡CITA AGENDADA') || text.includes('Nequi: 323 584 5145') || text.includes('🚨');
+        if (isBotOutbound || !isGroup && sender !== connectedNumber + '@s.whatsapp.net' && sender !== sock.user?.id) {
+          continue;
+        }
+      }
 
       const cleanPhone = sender.replace(/[^0-9]/g, '');
-      let text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
       
       let rawName = msg.pushName || '';
       let pushName = '';
       if (rawName && !rawName.toLowerCase().includes('trinova') && !rawName.toLowerCase().includes('neurolabs')) {
         pushName = rawName.split(' ')[0];
       }
-
-      // Manejo de Notas de Voz e Imágenes
-      const isAudio = Boolean(msg.message.audioMessage);
-      const isImage = Boolean(msg.message.imageMessage);
-
-      if (isAudio) {
-        console.log(`🎙️ [AUDIO RECIBIDO] Nota de voz entrante de cliente (${cleanPhone})...`);
-        text = 'Hola, te envié un audio solicitando información sobre sus vehículos, motos e inmuebles disponibles.';
-      } else if (isImage) {
-        console.log(`📸 [IMAGEN RECIBIDA] Fotografía entrante de cliente (${cleanPhone})...`);
-        const caption = msg.message.imageMessage.caption || '';
-        text = caption ? `${caption} [Foto adjunta]` : 'Te acabo de enviar una fotografía real del vehículo/bien para la ficha técnica del Marketplace.';
-      }
-
-      if (!text.trim()) continue;
 
       console.log(`📩 [MENSAJE RECIBIDO TRINOVA] De: ${pushName || 'Cliente'} (+${cleanPhone}): "${text}"`);
 
@@ -614,11 +638,28 @@ REGLAS DE FORMATO PARA WHATSAPP:
 - Mensajes estructurados, amables, ejecutivos y con alta sensación de seguridad y control.
 - ESTÁS AISLADO: NO hables de programación, IA ni software.`;
 
-        const { text: rawAiReply } = await generateText({
-          model: groq.chat('openai/gpt-oss-120b'),
-          system: trinovaSystemPrompt,
-          messages: recentHistory,
-        });
+        let rawAiReply = '';
+        try {
+          const result = await generateText({
+            model: groq.chat('llama-3.3-70b-versatile'),
+            system: trinovaSystemPrompt,
+            messages: recentHistory,
+          });
+          rawAiReply = result.text;
+        } catch (groqErr) {
+          console.warn('⚠️ [Groq Primary Model Warning]:', groqErr.message, 'Intentando fallback a llama-3.1-8b-instant...');
+          try {
+            const fallbackResult = await generateText({
+              model: groq.chat('llama-3.1-8b-instant'),
+              system: trinovaSystemPrompt,
+              messages: recentHistory,
+            });
+            rawAiReply = fallbackResult.text;
+          } catch (fallbackErr) {
+            console.error('🚨 [Groq Error Total]:', fallbackErr.message);
+            rawAiReply = `¡Hola! Bienvenido a *YJD TRINOVA S.A.S.* (NIT 902.095.222-8). 🛡️ Todos nuestros procesos comerciales, visitas presenciales y acuerdos legales están acompañados y supervisados bajo estrictos protocolos de seguridad física, jurídica y control integral (Ley 1581 Habeas Data).\n\nCon gusto te brindamos asesoría personalizada para la compra de tu vehículo, moto de alto cilindraje o inmueble, o para consignar tu bien. ¿Qué vehículo o propiedad tienes en mente?`;
+          }
+        }
 
         const aiReply = sanitizeWhatsAppText(rawAiReply);
 
