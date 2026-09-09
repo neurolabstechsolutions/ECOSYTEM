@@ -234,17 +234,138 @@ async function generateInstantPDFQuote(clientName, assetTitle, priceText, client
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Sincronización Permanente de Credenciales WhatsApp con Supabase Cloud
+// ─────────────────────────────────────────────────────────────────────────────
+const AUTH_DIR = 'auth_info_baileys';
+let saveAuthDebounceTimer = null;
+
+async function restoreAuthFromSupabase() {
+  try {
+    const { data: record, error } = await supabase
+      .from('contacts')
+      .select('address')
+      .eq('phone', '+570000000000')
+      .maybeSingle();
+
+    if (error || !record || !record.address) {
+      console.log('ℹ️ [AUTH SYNC] No hay credenciales previas guardadas en Supabase.');
+      return false;
+    }
+
+    let files;
+    try {
+      files = JSON.parse(record.address);
+    } catch (parseErr) {
+      console.warn('⚠️ [AUTH SYNC] Error parseando credenciales de Supabase:', parseErr.message);
+      return false;
+    }
+
+    if (!files || !files['creds.json']) {
+      console.log('ℹ️ [AUTH SYNC] Credenciales vacías o corruptas en Supabase.');
+      return false;
+    }
+
+    if (!fs.existsSync(AUTH_DIR)) {
+      fs.mkdirSync(AUTH_DIR, { recursive: true });
+    }
+
+    for (const [filename, content] of Object.entries(files)) {
+      const filePath = `${AUTH_DIR}/${filename}`;
+      fs.writeFileSync(filePath, content, 'utf-8');
+    }
+
+    console.log(`✅ [AUTH SYNC] ¡Sesión de WhatsApp restaurada exitosamente desde Supabase Cloud! (${Object.keys(files).length} archivos cargados)`);
+    return true;
+  } catch (err) {
+    console.warn('⚠️ [AUTH SYNC] Error restaurando sesión desde Supabase:', err.message);
+    return false;
+  }
+}
+
+async function saveAuthToSupabase() {
+  if (saveAuthDebounceTimer) clearTimeout(saveAuthDebounceTimer);
+
+  saveAuthDebounceTimer = setTimeout(async () => {
+    try {
+      if (!fs.existsSync(AUTH_DIR)) return;
+
+      const fileList = fs.readdirSync(AUTH_DIR);
+      if (fileList.length === 0 || !fileList.includes('creds.json')) return;
+
+      const payload = {};
+      for (const file of fileList) {
+        const filePath = `${AUTH_DIR}/${file}`;
+        if (fs.statSync(filePath).isFile()) {
+          payload[file] = fs.readFileSync(filePath, 'utf-8');
+        }
+      }
+
+      const stringifiedPayload = JSON.stringify(payload);
+      const tenantId = '0814ddb6-1ad3-4f76-873e-d4c0e52c710a';
+
+      const { data: existing } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('phone', '+570000000000')
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('contacts')
+          .update({ address: stringifiedPayload, updated_at: new Date().toISOString() })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('contacts')
+          .insert({
+            tenant_id: tenantId,
+            name: '__WHATSAPP_AUTH_STATE__',
+            phone: '+570000000000',
+            email: 'auth_system@trinova.local',
+            doc_number: 'SYSTEM_AUTH',
+            person_type: 'PERSONA_JURIDICA',
+            role_type: 'PROPIETARIO_CONSIGNANTE',
+            city: 'Barranquilla',
+            status: 'ACTIVO',
+            address: stringifiedPayload
+          });
+      }
+
+      console.log(`☁️ [AUTH SYNC] Sesión de WhatsApp respaldada permanentemente en Supabase Cloud (${fileList.length} archivos).`);
+    } catch (err) {
+      console.warn('⚠️ [AUTH SYNC] Error guardando sesión en Supabase:', err.message);
+    }
+  }, 1200);
+}
+
+async function clearAuthInSupabase() {
+  try {
+    await supabase
+      .from('contacts')
+      .update({ address: null, updated_at: new Date().toISOString() })
+      .eq('phone', '+570000000000');
+    console.log('🗑️ [AUTH SYNC] Credenciales eliminadas de Supabase Cloud.');
+  } catch (err) {
+    console.warn('Error limpiando credenciales en Supabase:', err.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Conectar Baileys WhatsApp Socket
 // ─────────────────────────────────────────────────────────────────────────────
 async function connectToWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+  await restoreAuthFromSupabase();
+  const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
 
   sock = makeWASocket({
     auth: state,
     printQRInTerminal: false,
   });
 
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', async () => {
+    await saveCreds();
+    saveAuthToSupabase();
+  });
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -265,8 +386,9 @@ async function connectToWhatsApp() {
 
       if (isLoggedOut) {
         console.log('🗑️ Sesión cerrada en celular. Limpiando credenciales y generando nuevo QR...');
+        await clearAuthInSupabase();
         try {
-          fs.rmSync('auth_info_baileys', { recursive: true, force: true });
+          fs.rmSync(AUTH_DIR, { recursive: true, force: true });
         } catch (e) {
           console.warn('Error limpiando auth_info_baileys:', e.message);
         }
@@ -281,6 +403,7 @@ async function connectToWhatsApp() {
       connectedNumber = sock.user?.id?.split(':')[0] || '573005765530';
       currentQR = null;
       console.log('🎉 ¡WhatsApp Conectado Exitosamente a YJD TRINOVA:', connectedNumber);
+      saveAuthToSupabase();
     }
   });
 
@@ -719,6 +842,10 @@ app.get('/qr', (req, res) => {
 app.post('/disconnect', async (req, res) => {
   try {
     if (sock) {
+      await clearAuthInSupabase();
+      try {
+        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+      } catch (e) {}
       await sock.logout();
       connectionStatus = 'DISCONNECTED';
       connectedNumber = null;
