@@ -39,44 +39,6 @@ const groq = createOpenAI({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ElevenLabs Configuration (High-Definition Natural Voice)
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_11dc8c0036a97d6031431de25ffc336a45b832dc371d6160';
-const ELEVENLABS_VOICE_ID = 'nPczCjzI2devNBz1zQrb';
-
-// Helper: Generate Natural Human Voice Note with ElevenLabs for Trinova
-async function generateElevenLabsVoiceNote(text) {
-  try {
-    const cleanText = text.replace(/[*_~`#]/g, '').slice(0, 250);
-    console.log(`🎙️ [ELEVENLABS TRINOVA] Generando voz humana comercial: "${cleanText.slice(0, 50)}..."`);
-
-    const response = await axios({
-      method: 'POST',
-      url: `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
-      headers: {
-        'Accept': 'audio/mpeg',
-        'xi-api-key': ELEVENLABS_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        text: cleanText,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.55,
-          similarity_boost: 0.80,
-          style: 0.0,
-          use_speaker_boost: true,
-        },
-      },
-      responseType: 'arraybuffer',
-      timeout: 15000,
-    });
-
-    return Buffer.from(response.data);
-  } catch (err) {
-    console.error('Error generando audio en ElevenLabs:', err.response?.data?.toString() || err.message);
-    return null;
-  }
-}
 
 // Helper: Generate Official YJD TRINOVA S.A.S. Commercial PDF
 async function generateInstantPDFQuote(clientName, assetTitle, priceText, clientPhone) {
@@ -515,31 +477,6 @@ REGLAS DE FORMATO PARA WHATSAPP:
           timestamp: new Date().toISOString(),
         });
 
-        // 2. Nota de voz inteligente con ElevenLabs si aplica
-        const shouldSendVoiceNote = isAudio || 
-                                    text.toLowerCase().includes('audio') || 
-                                    text.toLowerCase().includes('escuch') ||
-                                    text.toLowerCase().includes('voz') || 
-                                    text.toLowerCase().includes('llamada');
-
-        if (shouldSendVoiceNote) {
-          try {
-            console.log(`🎙️ [ELEVENLABS] Generando Nota de Voz para Trinova...`);
-            const voicePrompt = `¡Hola! Con el mayor gusto te atiendo desde YJD Trinova. Cuéntame qué modelo o tipo de vehículo estás buscando, o si deseas consignar y vender tu vehículo con nosotros, para brindarte asesoría personalizada.`;
-
-            const voiceBuffer = await generateElevenLabsVoiceNote(voicePrompt);
-            if (voiceBuffer) {
-              await sock.sendMessage(sender, {
-                audio: voiceBuffer,
-                mimetype: 'audio/mp4',
-                ptt: true,
-              });
-              console.log(`✅ [VOZ ENVIADA] Nota de voz comercial entregada.`);
-            }
-          } catch (vErr) {
-            console.warn('Error enviando nota de voz:', vErr.message);
-          }
-        }
 
         // 3. Ficha Comercial en PDF para Trinova si el usuario la pide
         const wantsQuotePDF = text.toLowerCase().includes('cotiz') || 
