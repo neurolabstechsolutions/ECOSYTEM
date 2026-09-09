@@ -782,16 +782,16 @@ Te ofrecemos asesoría integral en:
         let rawAiReply = '';
         try {
           const result = await generateText({
-            model: groq('llama-3.3-70b-versatile'),
+            model: groq('llama-3.1-8b-instant'),
             system: trinovaSystemPrompt,
             messages: recentHistory,
           });
           rawAiReply = result.text;
         } catch (groqErr1) {
-          console.warn('⚠️ [Groq AI 70B Warning]:', groqErr1.message, 'Intentando con llama-3.1-8b-instant...');
+          console.warn('⚠️ [Groq AI 8B Warning]:', groqErr1.message, 'Intentando con mixtral-8x7b-32768...');
           try {
             const result2 = await generateText({
-              model: groq('llama-3.1-8b-instant'),
+              model: groq('mixtral-8x7b-32768'),
               system: trinovaSystemPrompt,
               messages: recentHistory,
             });
@@ -1059,7 +1059,7 @@ app.get('/test-ai', async (req, res) => {
   const groqKeyPrefix = process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.slice(0, 8) : 'NONE';
   try {
     const result = await generateText({
-      model: groq('llama-3.3-70b-versatile'),
+      model: groq('llama-3.1-8b-instant'),
       system: 'Eres el Asesor Comercial & Concierge Digital de YJD TRINOVA S.A.S.',
       prompt: q,
     });
