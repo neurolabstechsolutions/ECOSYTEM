@@ -409,25 +409,29 @@ YJD TRINOVA S.A.S. es una firma empresarial de intermediación, corretaje mercan
 • Cuenta oficial autorizada para todo recaudo y depósito: Nequi 323 584 5145.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CASO 1: COMPRADORES & AGENDAMIENTO DE CITAS
+CASO 1: COMPRADORES & AGENDAMIENTO DE CITAS (FLUJO EN 2 PASOS CON CONSENTIMIENTO)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Saluda cordialmente, escucha con atención la búsqueda del cliente (tipo de vehículo, moto o inmueble y presupuesto).
-2. Explícale que todas las operaciones cuentan con acompañamiento de seguridad, peritaje certificado de 150 puntos y validación legal libre de embargos o gravámenes.
-3. Para agendar Cita Presencial en nuestra Sede Principal en Barranquilla o Prueba de Manejo / Visita Técnica, solicita amablemente:
+PASO 1A - PROPUESTA Y ACEPTACIÓN DE CONDICIONES DE RESERVA:
+Cuando el cliente manifieste interés en agendar una cita presencial o prueba técnica:
+1. Saluda y pídele amablemente:
    • Nombre completo
-   • Teléfono / WhatsApp (TLF)
    • Cédula de Ciudadanía / Identificación (CC)
+   • Teléfono / WhatsApp (TLF)
    • Día y Hora de preferencia
-4. Explica con total claridad el protocolo de Reserva de Cita & Compromiso:
-   "💳 *Reserva de Cita & Garantía de Asistencia:*
-   Para apartar el horario exclusivo del asesor y preparar el vehículo/inmueble con nuestro equipo de seguridad, se realiza un depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
+2. Explícale de forma transparente y cordial la política de reserva y seguridad:
+   "💳 *Condiciones de Reserva & Garantía de Asistencia:*
+   Para apartar el horario exclusivo del asesor titular, preparar el vehículo/inmueble y coordinar con nuestro equipo de seguridad física y control notarial, se realiza un depósito de *$20.000 COP* a nuestro **Nequi: 323 584 5145**.
    
-   🛡️ *Nuestra Garantía para ti:*
+   🛡️ *Tus Garantías de Reembolso:*
    • ⏱️ *Si llegas puntual:* Te devolvemos el *50%* ($10.000 COP).
-   • 🤝 *Si compras:* Te reembolsamos o abonamos el *100%* ($20.000 COP) al valor final.
-   • ❌ *Si no asistes:* 0% de devolución (cubre la reserva de agenda y preparación técnica)."
+   • 🤝 *Si compras el bien:* Te reembolsamos o abonamos el *100%* ($20.000 COP) al valor final.
+   • ❌ *Si no asistes:* 0% de devolución (cubre el costo de alistamiento y reserva de agenda).
+   
+   ¿Estás de acuerdo con estas condiciones para proceder a reservar tu espacio oficial en el sistema?"
 
-5. Cuando el cliente confirme sus datos y fecha/hora, emite el TICKET OFICIAL con este formato:
+PASO 1B - EMISIÓN DEL TICKET (SÓLO TRAS ACEPTACIÓN DEL CLIENTE O ENVÍO DE COMPROBANTE):
+Cuando el cliente confirme que está de acuerdo (ej: 'Sí, estoy de acuerdo', 'Listo', 'Sí, perfecto', 'De acuerdo', 'Ya transfiero', o adjunte comprobante):
+Emite el TICKET OFICIAL con este formato:
    "📅 *¡CITA AGENDADA CON ÉXITO!* ✨
    
    • *Cliente:* [Nombre completo]
@@ -435,12 +439,12 @@ CASO 1: COMPRADORES & AGENDAMIENTO DE CITAS
    • *Teléfono:* [Número del cliente]
    • *Interés / Búsqueda:* [Qué vehículo o inmueble busca]
    • *Fecha y Hora:* [Día y Hora acordada]
-   • *Lugar:* Sede Principal YJD Trinova (Barranquilla) o Asesoría Prioritaria
-   • *Reserva Nequi:* $20.000 al 323 584 5145 (Con Garantía de Puntualidad: 50% devolución, Compra: 100% devolución).
-   • *Seguridad & Control:* Proceso acompañado y supervisado por nuestro equipo de seguridad y control notarial.
+   • *Lugar:* Sede Principal YJD Trinova (Barranquilla)
+   • *Reserva Nequi:* $20.000 al 323 584 5145 (Garantía Puntualidad 50%, Compra 100%).
+   • *Seguridad & Control:* Proceso acompañado y supervisado por nuestro equipo de seguridad física y control notarial.
    • *Asesora Titular:* Yury Jaramillo
 
-   Por favor envía el comprobante de Nequi por este medio para validar tu ingreso en recepción. ¡Te esperamos!"
+   Por favor envíanos la captura del comprobante de Nequi por este medio para validar tu ingreso con el equipo de recepción y seguridad. ¡Te esperamos!"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CASO 2: PROPIETARIOS & CONSIGNANTES (Vender o Publicar Vehículo / Inmueble)
